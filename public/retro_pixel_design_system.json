@@ -1,0 +1,294 @@
+{
+  "designSystem": {
+    "name": "Retro Pixel Art Gaming UI",
+    "version": "1.0.0",
+    "description": "Design system for creating retro pixel art gaming interfaces and elements",
+    
+    "colorPalettes": {
+      "primary": {
+        "background": {
+          "dark": "#2D1B69",
+          "medium": "#4A2C7A",
+          "light": "#6B46C1"
+        },
+        "accent": {
+          "cyan": "#00FFFF",
+          "magenta": "#FF00FF",
+          "neon_green": "#00FF00",
+          "neon_pink": "#FF1493",
+          "electric_blue": "#0080FF"
+        }
+      },
+      "retro": {
+        "classic": ["#FF6B6B", "#4ECDC4", "#45B7D1", "#96CEB4", "#FECA57"],
+        "gameboy": ["#0F380F", "#306230", "#8BAC0F", "#9BBD0F"],
+        "synthwave": ["#FF006E", "#8338EC", "#3A86FF", "#06FFA5", "#FFBE0B"]
+      },
+      "ui": {
+        "success": "#00FF00",
+        "warning": "#FFFF00", 
+        "error": "#FF0000",
+        "info": "#00FFFF",
+        "neutral": "#808080"
+      }
+    },
+    
+    "typography": {
+      "pixelFonts": {
+        "primary": {
+          "family": "monospace, 'Courier New', Courier",
+          "fallback": "system-ui",
+          "rendering": "pixelated"
+        },
+        "sizes": {
+          "xs": "8px",
+          "sm": "12px", 
+          "md": "16px",
+          "lg": "24px",
+          "xl": "32px",
+          "xxl": "48px"
+        },
+        "weights": {
+          "normal": "400",
+          "bold": "700"
+        },
+        "effects": {
+          "pixelated": "image-rendering: pixelated; image-rendering: -moz-crisp-edges; image-rendering: crisp-edges;",
+          "glow": "text-shadow: 0 0 10px currentColor;",
+          "outline": "text-shadow: -1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000, 1px 1px 0 #000;"
+        }
+      }
+    },
+    
+    "spacing": {
+      "grid": "8px",
+      "sizes": {
+        "xs": "4px",
+        "sm": "8px",
+        "md": "16px", 
+        "lg": "24px",
+        "xl": "32px",
+        "xxl": "48px"
+      }
+    },
+    
+    "components": {
+      "buttons": {
+        "pixelButton": {
+          "base": {
+            "padding": "8px 16px",
+            "border": "2px solid",
+            "borderRadius": "0px",
+            "fontSize": "16px",
+            "fontFamily": "monospace",
+            "textTransform": "uppercase",
+            "cursor": "pointer",
+            "transition": "none",
+            "imageRendering": "pixelated"
+          },
+          "variants": {
+            "primary": {
+              "backgroundColor": "#FF0080",
+              "borderColor": "#FF0080",
+              "color": "#FFFFFF"
+            },
+            "secondary": {
+              "backgroundColor": "#00FFFF", 
+              "borderColor": "#00FFFF",
+              "color": "#000000"
+            },
+            "retro": {
+              "backgroundColor": "#FFD700",
+              "borderColor": "#FFD700", 
+              "color": "#000000"
+            }
+          },
+          "states": {
+            "hover": {
+              "transform": "scale(1.05)",
+              "filter": "brightness(1.2)"
+            },
+            "active": {
+              "transform": "scale(0.95)"
+            },
+            "disabled": {
+              "opacity": "0.5",
+              "cursor": "not-allowed"
+            }
+          }
+        }
+      },
+      
+      "cards": {
+        "pixelCard": {
+          "base": {
+            "border": "2px solid #FFFFFF",
+            "borderRadius": "0px",
+            "backgroundColor": "rgba(0, 0, 0, 0.8)",
+            "padding": "16px",
+            "imageRendering": "pixelated"
+          },
+          "variants": {
+            "game": {
+              "border": "2px solid #00FFFF",
+              "backgroundColor": "rgba(45, 27, 105, 0.9)"
+            },
+            "inventory": {
+              "border": "2px solid #FFD700",
+              "backgroundColor": "rgba(0, 0, 0, 0.9)"
+            }
+          }
+        }
+      },
+      
+      "gameElements": {
+        "healthBar": {
+          "container": {
+            "width": "200px",
+            "height": "20px",
+            "border": "2px solid #FFFFFF",
+            "backgroundColor": "#000000"
+          },
+          "fill": {
+            "height": "100%",
+            "backgroundColor": "#00FF00",
+            "transition": "width 0.3s ease"
+          },
+          "variants": {
+            "health": { "fillColor": "#00FF00" },
+            "mana": { "fillColor": "#0080FF" },
+            "experience": { "fillColor": "#FFD700" }
+          }
+        },
+        
+        "pixelIcons": {
+          "size": "16px",
+          "imageRendering": "pixelated",
+          "filter": "none"
+        },
+        
+        "gameUI": {
+          "scoreboard": {
+            "backgroundColor": "rgba(0, 0, 0, 0.8)",
+            "border": "2px solid #FFFFFF",
+            "padding": "8px",
+            "fontFamily": "monospace",
+            "color": "#FFFFFF"
+          }
+        }
+      },
+      
+      "effects": {
+        "glitch": {
+          "animation": "glitch 0.3s infinite",
+          "keyframes": {
+            "0%": { "transform": "translate(0)" },
+            "20%": { "transform": "translate(-2px, 2px)" },
+            "40%": { "transform": "translate(-2px, -2px)" },
+            "60%": { "transform": "translate(2px, 2px)" },
+            "80%": { "transform": "translate(2px, -2px)" },
+            "100%": { "transform": "translate(0)" }
+          }
+        },
+        
+        "pixelate": {
+          "imageRendering": "pixelated",
+          "imageRendering": "-moz-crisp-edges",
+          "imageRendering": "crisp-edges"
+        },
+        
+        "neonGlow": {
+          "boxShadow": "0 0 20px currentColor, inset 0 0 20px rgba(255, 255, 255, 0.1)",
+          "textShadow": "0 0 10px currentColor"
+        },
+        
+        "scanlines": {
+          "background": "repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0, 255, 0, 0.03) 2px, rgba(0, 255, 0, 0.03) 4px)"
+        }
+      }
+    },
+    
+    "patterns": {
+      "gameBackgrounds": {
+        "cityscape": {
+          "background": "linear-gradient(180deg, #2D1B69 0%, #1A0B3D 100%)",
+          "elements": "Silhouetted buildings, pixel clouds"
+        },
+        "starfield": {
+          "background": "#000022",
+          "elements": "Scattered pixel stars, animated twinkle"
+        },
+        "retro_grid": {
+          "background": "linear-gradient(45deg, transparent 49%, rgba(255, 0, 128, 0.2) 50%, transparent 51%)"
+        }
+      },
+      
+      "animations": {
+        "idle": {
+          "duration": "2s",
+          "direction": "alternate",
+          "iterationCount": "infinite",
+          "timingFunction": "ease-in-out"
+        },
+        "bounce": {
+          "keyframes": "0%, 100% { transform: translateY(0px) } 50% { transform: translateY(-10px) }",
+          "duration": "1s",
+          "iterationCount": "infinite"
+        },
+        "pulse": {
+          "keyframes": "0%, 100% { opacity: 1 } 50% { opacity: 0.5 }",
+          "duration": "1.5s", 
+          "iterationCount": "infinite"
+        }
+      }
+    },
+    
+    "layouts": {
+      "gameScreen": {
+        "display": "grid",
+        "gridTemplateRows": "auto 1fr auto",
+        "gridTemplateColumns": "1fr",
+        "minHeight": "100vh",
+        "backgroundColor": "#2D1B69"
+      },
+      
+      "hudOverlay": {
+        "position": "fixed",
+        "top": "0",
+        "left": "0", 
+        "right": "0",
+        "bottom": "0",
+        "pointerEvents": "none",
+        "zIndex": "1000"
+      },
+      
+      "inventoryGrid": {
+        "display": "grid",
+        "gridTemplateColumns": "repeat(auto-fit, minmax(64px, 1fr))",
+        "gap": "4px",
+        "padding": "8px"
+      }
+    },
+    
+    "guidelines": {
+      "pixelPerfect": {
+        "useMultiplesOf8": "All dimensions should be multiples of 8px for authentic pixel feel",
+        "avoidAntiAliasing": "Use image-rendering: pixelated for all pixel art elements",
+        "sharpEdges": "No border-radius except 0px",
+        "boldColors": "Use high contrast, saturated colors typical of retro games"
+      },
+      
+      "interactivity": {
+        "immediateResponse": "No smooth transitions for pixel art elements", 
+        "scalingEffects": "Use transform: scale() for button interactions",
+        "colorShifts": "Use filter: brightness() or hue-rotate() for state changes"
+      },
+      
+      "accessibility": {
+        "contrast": "Ensure 4.5:1 contrast ratio minimum",
+        "animation": "Provide reduced-motion alternatives",
+        "colorBlindness": "Don't rely solely on color for important information"
+      }
+    }
+  }
+}
