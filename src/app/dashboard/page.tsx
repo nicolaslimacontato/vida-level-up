@@ -10,6 +10,7 @@ import { LevelUpNotification } from "@/components/LevelUpNotification";
 import { useRPG } from "@/hooks/useRPG";
 import { Button } from "@/components/ui/button";
 import { Target, Trophy, Heart, Gift, BarChart3 } from "lucide-react";
+import ASCIIText from '@/blocks/TextAnimations/ASCIIText/ASCIIText';
 
 export default function DashboardPage() {
   const [activeTab, setActiveTab] = useState("quests");
@@ -239,8 +240,14 @@ export default function DashboardPage() {
       <div className="container mx-auto px-4 py-8 max-w-6xl">
         {/* Título da página */}
         <div className="text-center mb-8">
-          <h1 className="text-4xl font-bold text-foreground mb-2">
-            Vida Level Up
+          <h1 className="text-4xl font-bold text-foreground mb-2 flex justify-center h-[200px] w-full">
+            <ASCIIText
+              text="Vida Level Up"
+              enableWaves={false}
+              planeBaseHeight={40}
+              textFontSize={20}
+              asciiFontSize={1}
+            />
           </h1>
           <p className="text-muted-foreground text-lg">
             Transforme suas tarefas diárias em uma aventura épica!
