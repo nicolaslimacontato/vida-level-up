@@ -240,13 +240,13 @@ export default function DashboardPage() {
       <div className="container mx-auto px-4 py-8 max-w-6xl">
         {/* Título da página */}
         <div className="text-center mb-8">
-          <h1 className="text-4xl font-bold text-foreground mb-2 flex justify-center h-[200px] w-full">
+          <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold text-foreground mb-2 flex justify-center items-center w-full h-40 sm:h-48 md:h-56 relative">
             <ASCIIText
               text="Vida Level Up"
               enableWaves={false}
-              planeBaseHeight={40}
-              textFontSize={20}
-              asciiFontSize={1}
+              planeBaseHeight={48}
+              textFontSize={128}
+              asciiFontSize={6}
             />
           </h1>
           <p className="text-muted-foreground text-lg">

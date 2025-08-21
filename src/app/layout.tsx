@@ -54,6 +54,10 @@ export default function RootLayout({
                   </a>
                   <ThemeToggle />
                 </nav>
+                {/* Mobile theme toggle */}
+                <div className="md:hidden">
+                  <ThemeToggle />
+                </div>
               </div>
             </div>
           </header>

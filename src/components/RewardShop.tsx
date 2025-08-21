@@ -127,14 +127,13 @@ function RewardCard({
 
   return (
     <Card
-      className={`transition-all duration-200 hover:shadow-md ${
-        isAvailable
+      className={`transition-all duration-200 hover:shadow-md ${isAvailable
           ? "bg-card border-border hover:border-primary/50"
           : "bg-green-50 dark:bg-green-900/20 border-green-200 dark:border-green-700"
-      }`}
+        }`}
     >
       <CardHeader className="pb-3">
-        <div className="flex items-start justify-between">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
           <div className="flex-1">
             <div className="flex items-center gap-2 mb-2">
               <span className="text-2xl">{categoryIcon}</span>
@@ -145,20 +144,18 @@ function RewardCard({
               </span>
             </div>
             <CardTitle
-              className={`text-lg ${
-                isAvailable
+              className={`text-lg ${isAvailable
                   ? "text-card-foreground"
                   : "text-green-700 dark:text-green-300 line-through"
-              } transition-colors`}
+                } transition-colors`}
             >
               {reward.name}
             </CardTitle>
             <p
-              className={`text-sm mt-1 ${
-                isAvailable
+              className={`text-sm mt-1 ${isAvailable
                   ? "text-muted-foreground"
                   : "text-green-600 dark:text-green-400"
-              } transition-colors`}
+                } transition-colors`}
             >
               {reward.description}
             </p>
@@ -167,7 +164,7 @@ function RewardCard({
       </CardHeader>
 
       <CardContent>
-        <div className="flex items-center justify-between">
+        <div className="flex flex-col sm:flex-row items-center sm:items-center justify-between gap-3">
           <div className="flex items-center gap-1 bg-amber-100 dark:bg-amber-900/30 text-amber-800 dark:text-amber-200 px-3 py-2 rounded-full font-medium">
             <Coins className="w-4 h-4" />
             {reward.cost} 🪙
@@ -177,7 +174,7 @@ function RewardCard({
             <Button
               onClick={() => onPurchase(reward.id)}
               disabled={!canAfford}
-              className={canAfford ? "" : "opacity-50 cursor-not-allowed"}
+              className={`${canAfford ? "" : "opacity-50 cursor-not-allowed"} w-full sm:w-auto`}
             >
               {canAfford ? "Comprar" : "Moedas Insuficientes"}
             </Button>

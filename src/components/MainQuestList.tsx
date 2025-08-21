@@ -74,30 +74,27 @@ function MainQuestCard({
 
   return (
     <Card
-      className={`transition-all duration-200 hover:shadow-md ${
-        isCompleted
+      className={`transition-all duration-200 hover:shadow-md ${isCompleted
           ? "bg-green-50 dark:bg-green-900/20 border-green-200 dark:border-green-700"
           : "bg-card border-border hover:border-primary/50"
-      }`}
+        }`}
     >
       <CardHeader>
-        <div className="flex items-start justify-between">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
           <div className="flex-1">
             <CardTitle
-              className={`text-xl ${
-                isCompleted
+              className={`text-xl ${isCompleted
                   ? "text-green-700 dark:text-green-300 line-through"
                   : "text-card-foreground"
-              } transition-colors`}
+                } transition-colors`}
             >
               {quest.title}
             </CardTitle>
             <p
-              className={`text-sm mt-2 ${
-                isCompleted
+              className={`text-sm mt-2 ${isCompleted
                   ? "text-green-600 dark:text-green-400"
                   : "text-muted-foreground"
-              } transition-colors`}
+                } transition-colors`}
             >
               {quest.description}
             </p>
@@ -139,37 +136,34 @@ function MainQuestCard({
           {quest.steps.map((step, index) => (
             <div
               key={step.id}
-              className={`flex items-center justify-between p-3 rounded-lg border ${
-                step.completed
+              className={`flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 p-3 rounded-lg border ${step.completed
                   ? "bg-green-50 dark:bg-green-900/20 border-green-200 dark:border-green-700"
                   : "bg-gray-50 dark:bg-gray-900/20 border-gray-200 dark:border-gray-700"
-              }`}
+                }`}
             >
-              <div className="flex-1">
+              <div className="flex-1 w-full">
                 <div className="flex items-center gap-2">
                   <span className="text-sm font-medium text-muted-foreground">
                     {index + 1}.
                   </span>
                   <span
-                    className={`font-medium ${
-                      step.completed
+                    className={`font-medium ${step.completed
                         ? "text-green-700 dark:text-green-300 line-through"
                         : "text-foreground"
-                    }`}
+                      }`}
                   >
                     {step.title}
                   </span>
                 </div>
                 <p
-                  className={`text-sm mt-1 ${
-                    step.completed
+                  className={`text-sm mt-1 ${step.completed
                       ? "text-green-600 dark:text-green-400"
                       : "text-muted-foreground"
-                  }`}
+                    }`}
                 >
                   {step.description}
                 </p>
-                <div className="flex items-center gap-2 mt-2">
+                <div className="flex flex-wrap items-center gap-2 mt-2">
                   <span className="text-xs bg-yellow-100 dark:bg-yellow-900/30 text-yellow-800 dark:text-yellow-200 px-2 py-1 rounded-full">
                     {step.xpReward} XP
                   </span>
@@ -183,14 +177,14 @@ function MainQuestCard({
                 <Button
                   size="sm"
                   onClick={() => onCompleteStep(quest.id, step.id)}
-                  className="ml-4"
+                  className="sm:ml-4 w-full sm:w-auto"
                 >
                   Completar
                 </Button>
               )}
 
               {step.completed && (
-                <CheckCircle className="w-5 h-5 text-green-500 ml-4" />
+                <CheckCircle className="w-5 h-5 text-green-500 sm:ml-4" />
               )}
             </div>
           ))}

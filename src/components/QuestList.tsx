@@ -71,7 +71,7 @@ function QuestCard({ quest, onComplete, isCompleted }: QuestCardProps) {
       }`}
     >
       <CardHeader className="pb-3">
-        <div className="flex items-start justify-between">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
           <div className="flex-1">
             <CardTitle
               className={`text-lg ${

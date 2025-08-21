@@ -62,7 +62,7 @@ export function UserHeader({ user, getXPForNextLevel, getLevelProgress }: UserHe
         </div>
 
         {/* Cards de XP e moedas */}
-        <div className="grid grid-cols-3 gap-4 text-center">
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 text-center">
           <div className="bg-gradient-to-b bg-muted dark:bg-muted  rounded-lg p-3 border border-ring dark:border-ring shadow-sm">
             <div className="text-2xl font-bold text-amber-700 dark:text-amber-300">{user.totalXP}</div>
             <div className="text-xs text-amber-600 dark:text-amber-400 font-medium">XP Total</div>
