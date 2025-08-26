@@ -21,10 +21,10 @@ export interface User {
   mana: number;
   maxMana: number;
   attributes: {
-    strength: number;    // Força - exercícios
+    strength: number; // Força - exercícios
     intelligence: number; // Inteligência - estudos
-    charisma: number;    // Carisma - socialização
-    discipline: number;  // Disciplina - consistência
+    charisma: number; // Carisma - socialização
+    discipline: number; // Disciplina - consistência
   };
 }
 

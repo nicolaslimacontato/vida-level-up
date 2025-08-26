@@ -19,8 +19,8 @@ export function MainQuestList({
     <div className="space-y-6">
       {/* Quests Principais Ativas */}
       <div>
-        <h2 className="text-xl font-semibold text-foreground mb-4 flex items-center gap-2">
-          <Target className="w-5 h-5 text-purple-500" />
+        <h2 className="text-foreground mb-4 flex items-center gap-2 text-xl font-semibold">
+          <Target className="h-5 w-5 text-purple-500" />
           Missões Principais ({activeQuests.length})
         </h2>
         <div className="grid gap-6">
@@ -37,8 +37,8 @@ export function MainQuestList({
       {/* Quests Principais Concluídas */}
       {completedQuests.length > 0 && (
         <div>
-          <h2 className="text-xl font-semibold text-foreground mb-4 flex items-center gap-2">
-            <Flag className="w-5 h-5 text-green-500" />
+          <h2 className="text-foreground mb-4 flex items-center gap-2 text-xl font-semibold">
+            <Flag className="h-5 w-5 text-green-500" />
             Missões Concluídas ({completedQuests.length})
           </h2>
           <div className="grid gap-6">
@@ -74,56 +74,61 @@ function MainQuestCard({
 
   return (
     <Card
-      className={`transition-all duration-200 hover:shadow-md ${isCompleted
-          ? "bg-green-50 dark:bg-green-900/20 border-green-200 dark:border-green-700"
+      className={`transition-all duration-200 hover:shadow-md ${
+        isCompleted
+          ? "border-green-200 bg-green-50 dark:border-green-700 dark:bg-green-900/20"
           : "bg-card border-border hover:border-primary/50"
-        }`}
+      }`}
     >
       <CardHeader>
-        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+        <div className="flex flex-col items-start justify-between gap-3 sm:flex-row sm:items-center">
           <div className="flex-1">
             <CardTitle
-              className={`text-xl ${isCompleted
-                  ? "text-green-700 dark:text-green-300 line-through"
+              className={`text-xl ${
+                isCompleted
+                  ? "text-green-700 line-through dark:text-green-300"
                   : "text-card-foreground"
-                } transition-colors`}
+              } transition-colors`}
             >
               {quest.title}
             </CardTitle>
             <p
-              className={`text-sm mt-2 ${isCompleted
+              className={`mt-2 text-sm ${
+                isCompleted
                   ? "text-green-600 dark:text-green-400"
                   : "text-muted-foreground"
-                } transition-colors`}
+              } transition-colors`}
             >
               {quest.description}
             </p>
 
             {/* Barra de Progresso */}
             <div className="mt-3">
-              <div className="flex justify-between text-sm text-muted-foreground mb-1">
+              <div className="text-muted-foreground mb-1 flex justify-between text-sm">
                 <span>
                   Progresso: {completedSteps}/{totalSteps}
                 </span>
                 <span>{Math.round(progress)}%</span>
               </div>
-              <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2">
+              <div className="h-2 w-full rounded-full bg-gray-200 dark:bg-gray-700">
                 <div
-                  className="bg-gradient-to-r from-blue-500 to-purple-500 h-2 rounded-full transition-all duration-300"
+                  className="h-2 rounded-full bg-gradient-to-r from-blue-500 to-purple-500 transition-all duration-300"
                   style={{ width: `${progress}%` }}
                 />
               </div>
             </div>
 
             {/* Recompensas */}
-            <div className="flex items-center gap-2 mt-3">
-              <div className="flex items-center gap-1 bg-yellow-100 dark:bg-yellow-900/30 text-yellow-800 dark:text-yellow-200 px-2 py-1 rounded-full text-xs font-medium">
-                <Trophy className="w-3 h-3" />
+            <div className="mt-3 flex items-center gap-2">
+              <div className="flex items-center gap-1 rounded-full bg-yellow-100 px-2 py-1 text-xs font-medium text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-200">
+                <Trophy className="h-3 w-3" />
                 {quest.xpReward} XP
               </div>
-              <div className="flex items-center gap-1 bg-amber-100 dark:bg-amber-900/30 text-amber-800 dark:text-amber-200 px-2 py-1 rounded-full text-xs font-medium">
-                <Coins className="w-3 h-3" />
-                {quest.coinReward} 🪙
+              <div className="flex items-center gap-1 rounded-full bg-amber-100 px-2 py-1 text-xs font-medium text-amber-800 dark:bg-amber-900/30 dark:text-amber-200">
+                <Coins className="h-3 w-3" />
+                <span className="coin-text">
+                  <span className="coin-emoji">🪙</span> {quest.coinReward}
+                </span>
               </div>
             </div>
           </div>
@@ -132,43 +137,48 @@ function MainQuestCard({
 
       <CardContent>
         <div className="space-y-3">
-          <h4 className="font-medium text-sm text-muted-foreground">Etapas:</h4>
+          <h4 className="text-muted-foreground text-sm font-medium">Etapas:</h4>
           {quest.steps.map((step, index) => (
             <div
               key={step.id}
-              className={`flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 p-3 rounded-lg border ${step.completed
-                  ? "bg-green-50 dark:bg-green-900/20 border-green-200 dark:border-green-700"
-                  : "bg-gray-50 dark:bg-gray-900/20 border-gray-200 dark:border-gray-700"
-                }`}
+              className={`flex flex-col items-start justify-between gap-3 rounded-lg border p-3 sm:flex-row sm:items-center ${
+                step.completed
+                  ? "border-green-200 bg-green-50 dark:border-green-700 dark:bg-green-900/20"
+                  : "border-gray-200 bg-gray-50 dark:border-gray-700 dark:bg-gray-900/20"
+              }`}
             >
-              <div className="flex-1 w-full">
+              <div className="w-full flex-1">
                 <div className="flex items-center gap-2">
-                  <span className="text-sm font-medium text-muted-foreground">
+                  <span className="text-muted-foreground text-sm font-medium">
                     {index + 1}.
                   </span>
                   <span
-                    className={`font-medium ${step.completed
-                        ? "text-green-700 dark:text-green-300 line-through"
+                    className={`font-medium ${
+                      step.completed
+                        ? "text-green-700 line-through dark:text-green-300"
                         : "text-foreground"
-                      }`}
+                    }`}
                   >
                     {step.title}
                   </span>
                 </div>
                 <p
-                  className={`text-sm mt-1 ${step.completed
+                  className={`mt-1 text-sm ${
+                    step.completed
                       ? "text-green-600 dark:text-green-400"
                       : "text-muted-foreground"
-                    }`}
+                  }`}
                 >
                   {step.description}
                 </p>
-                <div className="flex flex-wrap items-center gap-2 mt-2">
-                  <span className="text-xs bg-yellow-100 dark:bg-yellow-900/30 text-yellow-800 dark:text-yellow-200 px-2 py-1 rounded-full">
+                <div className="mt-2 flex flex-wrap items-center gap-2">
+                  <span className="rounded-full bg-yellow-100 px-2 py-1 text-xs text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-200">
                     {step.xpReward} XP
                   </span>
-                  <span className="text-xs bg-amber-100 dark:bg-amber-900/30 text-amber-800 dark:text-amber-200 px-2 py-1 rounded-full">
-                    {step.coinReward} 🪙
+                  <span className="rounded-full bg-amber-100 px-2 py-1 text-xs text-amber-800 dark:bg-amber-900/30 dark:text-amber-200">
+                    <span className="coin-text">
+                      <span className="coin-emoji">🪙</span> {step.coinReward}
+                    </span>
                   </span>
                 </div>
               </div>
@@ -177,14 +187,14 @@ function MainQuestCard({
                 <Button
                   size="sm"
                   onClick={() => onCompleteStep(quest.id, step.id)}
-                  className="sm:ml-4 w-full sm:w-auto"
+                  className="w-full sm:ml-4 sm:w-auto"
                 >
                   Completar
                 </Button>
               )}
 
               {step.completed && (
-                <CheckCircle className="w-5 h-5 text-green-500 sm:ml-4" />
+                <CheckCircle className="h-5 w-5 text-green-500 sm:ml-4" />
               )}
             </div>
           ))}

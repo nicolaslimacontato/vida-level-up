@@ -5,30 +5,36 @@
 ### **1. "Unknown at rule @custom-variant"**
 
 **Problema:**
+
 ```
 Unknown at rule @custom-variant
 ```
 
 **Causa:**
+
 - `@custom-variant` é uma funcionalidade experimental do CSS
 - Não é suportada pela maioria dos navegadores e editores
 
 **Solução:**
+
 - ❌ **NÃO use:** `@custom-variant dark (&:is(.dark *));`
 - ✅ **Use:** O sistema já configurado com `darkMode: "class"` no Tailwind
 
 ### **2. "Unknown at rule @apply"**
 
 **Problema:**
+
 ```
 Unknown at rule @apply
 ```
 
 **Causa:**
+
 - O editor não reconhece as diretivas do Tailwind CSS
 - Falta de configuração do VS Code/Cursor
 
 **Solução:**
+
 1. **Instale a extensão:** `bradlc.vscode-tailwindcss`
 2. **Configure o VS Code:** Use os arquivos em `.vscode/`
 3. **Reinicie o editor** após instalar a extensão
@@ -36,30 +42,36 @@ Unknown at rule @apply
 ### **3. "Unknown at rule @layer"**
 
 **Problema:**
+
 ```
 Unknown at rule @layer
 ```
 
 **Causa:**
+
 - Mesmo problema do `@apply`
 - Editor não reconhece diretivas do Tailwind
 
 **Solução:**
+
 - Mesma solução do problema `@apply`
 - Instale a extensão do Tailwind CSS
 
 ### **4. "Unknown at rule @theme"**
 
 **Problema:**
+
 ```
 Unknown at rule @theme
 ```
 
 **Causa:**
+
 - Diretiva experimental do Tailwind
 - Pode não ser necessária no seu projeto
 
 **Solução:**
+
 - Remova se não estiver usando
 - Use variáveis CSS normais se necessário
 
@@ -80,6 +92,7 @@ Unknown at rule @theme
 ### **Configuração do VS Code**
 
 Arquivo: `.vscode/settings.json`
+
 ```json
 {
   "css.validate": false,
@@ -95,6 +108,7 @@ Arquivo: `.vscode/settings.json`
 ### **Dados Customizados CSS**
 
 Arquivo: `.vscode/css_custom_data.json`
+
 ```json
 {
   "version": 1.1,
@@ -128,7 +142,7 @@ Arquivo: `.vscode/css_custom_data.json`
 
 ```tsx
 // Componente com tema escuro
-<div className="bg-white dark:bg-slate-800 text-slate-800 dark:text-white">
+<div className="bg-white text-slate-800 dark:bg-slate-800 dark:text-white">
   <h1>Meu Título</h1>
   <p>Meu texto</p>
 </div>

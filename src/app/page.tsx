@@ -16,15 +16,15 @@ export default function HomePage() {
   }, [router]);
 
   return (
-    <div className="min-h-screen bg-background flex items-center justify-center">
+    <div className="bg-background flex min-h-screen items-center justify-center">
       <div className="text-center">
-        <h1 className="text-4xl font-bold text-foreground mb-4">
-          Vida Level Up
+        <h1 className="text-foreground mb-4 text-2xl font-bold">
+          🎮 Vida Level Up
         </h1>
-        <p className="text-muted-foreground text-lg mb-6">
-          Carregando sua aventura...
+        <p className="text-muted-foreground mb-6 text-lg">
+          Carregando sua aventura... (Fonte Press Start 2P ativada!)
         </p>
-        <div className="animate-spin rounded-full h-16 w-16 border-4 border-primary border-t-transparent mx-auto"></div>
+        <div className="border-primary mx-auto h-16 w-16 animate-spin rounded-full border-4 border-t-transparent"></div>
       </div>
     </div>
   );

@@ -1,7 +1,7 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Reward } from "@/types/rpg";
-import { Gift, Coins, ShoppingCart, CheckCircle } from "lucide-react";
+import { Coins, ShoppingCart, CheckCircle } from "lucide-react";
 
 interface RewardShopProps {
   rewards: Reward[];
@@ -19,28 +19,24 @@ export function RewardShop({
 
   return (
     <div className="space-y-6">
-      {/* Cabeçalho da Loja */}
+      {/* Saldo de Moedas */}
       <div className="text-center">
-        <h2 className="text-2xl font-bold text-foreground mb-2 flex items-center justify-center gap-2">
-          <Gift className="w-6 h-6 text-purple-500" />
-          Loja de Recompensas
-        </h2>
-        <div className="flex items-center justify-center gap-2 text-lg text-muted-foreground">
-          <Coins className="w-5 h-5 text-amber-500" />
-          <span className="font-semibold text-amber-600 dark:text-amber-400">
-            {userCoins} 🪙
+        <div className="mx-auto flex w-fit items-center justify-center gap-2 rounded-lg border border-amber-200 bg-amber-50 px-4 py-2 text-lg dark:border-amber-800 dark:bg-amber-950/30">
+          <Coins className="h-5 w-5 text-amber-500" />
+          <span className="coin-text font-semibold text-amber-600 dark:text-amber-400">
+            <span className="coin-emoji">🪙</span> {userCoins}
           </span>
-          <span>disponíveis</span>
+          <span className="text-muted-foreground">disponíveis</span>
         </div>
       </div>
 
       {/* Recompensas Disponíveis */}
       <div>
-        <h3 className="text-xl font-semibold text-foreground mb-4 flex items-center gap-2">
-          <ShoppingCart className="w-5 h-5 text-blue-500" />
+        <h3 className="text-foreground mb-4 flex items-center gap-2 text-xl font-semibold">
+          <ShoppingCart className="h-5 w-5 text-blue-500" />
           Recompensas Disponíveis ({availableRewards.length})
         </h3>
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
           {availableRewards.map((reward) => (
             <RewardCard
               key={reward.id}
@@ -56,11 +52,11 @@ export function RewardShop({
       {/* Recompensas Compradas */}
       {purchasedRewards.length > 0 && (
         <div>
-          <h3 className="text-xl font-semibold text-foreground mb-4 flex items-center gap-2">
-            <CheckCircle className="w-5 h-5 text-green-500" />
+          <h3 className="text-foreground mb-4 flex items-center gap-2 text-xl font-semibold">
+            <CheckCircle className="h-5 w-5 text-green-500" />
             Recompensas Compradas ({purchasedRewards.length})
           </h3>
-          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
             {purchasedRewards.map((reward) => (
               <RewardCard
                 key={reward.id}
@@ -127,35 +123,38 @@ function RewardCard({
 
   return (
     <Card
-      className={`transition-all duration-200 hover:shadow-md ${isAvailable
+      className={`transition-all duration-200 hover:shadow-md ${
+        isAvailable
           ? "bg-card border-border hover:border-primary/50"
-          : "bg-green-50 dark:bg-green-900/20 border-green-200 dark:border-green-700"
-        }`}
+          : "border-green-200 bg-green-50 dark:border-green-700 dark:bg-green-900/20"
+      }`}
     >
       <CardHeader className="pb-3">
-        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+        <div className="flex flex-col items-start justify-between gap-3 sm:flex-row sm:items-center">
           <div className="flex-1">
-            <div className="flex items-center gap-2 mb-2">
+            <div className="mb-2 flex items-center gap-2">
               <span className="text-2xl">{categoryIcon}</span>
               <span
-                className={`px-2 py-1 rounded-full text-xs font-medium ${categoryColor}`}
+                className={`rounded-full px-2 py-1 text-xs font-medium ${categoryColor}`}
               >
                 {reward.category}
               </span>
             </div>
             <CardTitle
-              className={`text-lg ${isAvailable
+              className={`text-lg ${
+                isAvailable
                   ? "text-card-foreground"
-                  : "text-green-700 dark:text-green-300 line-through"
-                } transition-colors`}
+                  : "text-green-700 line-through dark:text-green-300"
+              } transition-colors`}
             >
               {reward.name}
             </CardTitle>
             <p
-              className={`text-sm mt-1 ${isAvailable
+              className={`mt-1 text-sm ${
+                isAvailable
                   ? "text-muted-foreground"
                   : "text-green-600 dark:text-green-400"
-                } transition-colors`}
+              } transition-colors`}
             >
               {reward.description}
             </p>
@@ -164,26 +163,47 @@ function RewardCard({
       </CardHeader>
 
       <CardContent>
-        <div className="flex flex-col sm:flex-row items-center sm:items-center justify-between gap-3">
-          <div className="flex items-center gap-1 bg-amber-100 dark:bg-amber-900/30 text-amber-800 dark:text-amber-200 px-3 py-2 rounded-full font-medium">
-            <Coins className="w-4 h-4" />
-            {reward.cost} 🪙
+        <div className="space-y-3">
+          {/* Preço */}
+          <div className="mx-auto flex w-fit items-center justify-center gap-1 rounded-full bg-amber-100 px-3 py-2 font-medium text-amber-800 dark:bg-amber-900/30 dark:text-amber-200">
+            <span className="coin-text font-bold">
+              <span className="coin-emoji">🪙</span> {reward.cost}
+            </span>
           </div>
 
+          {/* Status/Ação */}
           {isAvailable && (
-            <Button
-              onClick={() => onPurchase(reward.id)}
-              disabled={!canAfford}
-              className={`${canAfford ? "" : "opacity-50 cursor-not-allowed"} w-full sm:w-auto`}
-            >
-              {canAfford ? "Comprar" : "Moedas Insuficientes"}
-            </Button>
+            <div className="space-y-2">
+              <Button
+                onClick={() => onPurchase(reward.id)}
+                disabled={!canAfford}
+                className={`w-full ${
+                  canAfford
+                    ? "bg-primary hover:bg-primary/90"
+                    : "cursor-not-allowed bg-gray-400 hover:bg-gray-400"
+                }`}
+              >
+                {canAfford ? "🛒 Comprar" : "💸 Sem Moedas"}
+              </Button>
+
+              {!canAfford && (
+                <div className="text-center">
+                  <span className="rounded-full bg-red-50 px-2 py-1 text-xs text-red-500 dark:bg-red-950/50 dark:text-red-400">
+                    Faltam{" "}
+                    <span className="coin-text">
+                      <span className="coin-emoji">🪙</span>{" "}
+                      {reward.cost - userCoins}
+                    </span>
+                  </span>
+                </div>
+              )}
+            </div>
           )}
 
           {!isAvailable && (
-            <div className="flex items-center gap-2 text-green-600 dark:text-green-400 font-medium">
-              <CheckCircle className="w-5 h-5" />
-              Comprado!
+            <div className="flex items-center justify-center gap-2 rounded-full bg-green-50 px-3 py-2 font-medium text-green-600 dark:bg-green-950/50 dark:text-green-400">
+              <CheckCircle className="h-4 w-4" />
+              <span>Comprado!</span>
             </div>
           )}
         </div>

@@ -16,8 +16,8 @@ export function QuestList({ quests, onCompleteQuest }: QuestListProps) {
     <div className="space-y-6">
       {/* Quests Pendentes */}
       <div>
-        <h2 className="text-xl font-semibold text-foreground mb-4 flex items-center gap-2">
-          <Circle className="w-5 h-5 text-blue-500" />
+        <h2 className="text-foreground mb-4 flex items-center gap-2 text-xl font-semibold">
+          <Circle className="h-5 w-5 text-blue-500" />
           Quests Pendentes ({pendingQuests.length})
         </h2>
         <div className="grid gap-4">
@@ -35,8 +35,8 @@ export function QuestList({ quests, onCompleteQuest }: QuestListProps) {
       {/* Quests Concluídas */}
       {completedQuests.length > 0 && (
         <div>
-          <h2 className="text-xl font-semibold text-foreground mb-4 flex items-center gap-2">
-            <CheckCircle className="w-5 h-5 text-green-500" />
+          <h2 className="text-foreground mb-4 flex items-center gap-2 text-xl font-semibold">
+            <CheckCircle className="h-5 w-5 text-green-500" />
             Quests Concluídas ({completedQuests.length})
           </h2>
           <div className="grid gap-4">
@@ -66,24 +66,24 @@ function QuestCard({ quest, onComplete, isCompleted }: QuestCardProps) {
     <Card
       className={`transition-all duration-200 hover:shadow-md ${
         isCompleted
-          ? "bg-green-50 dark:bg-green-900/20 border-green-200 dark:border-green-700"
+          ? "border-green-200 bg-green-50 dark:border-green-700 dark:bg-green-900/20"
           : "bg-card border-border hover:border-primary/50"
       }`}
     >
       <CardHeader className="pb-3">
-        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+        <div className="flex flex-col items-start justify-between gap-3 sm:flex-row sm:items-center">
           <div className="flex-1">
             <CardTitle
               className={`text-lg ${
                 isCompleted
-                  ? "text-green-700 dark:text-green-300 line-through"
+                  ? "text-green-700 line-through dark:text-green-300"
                   : "text-card-foreground"
               } transition-colors`}
             >
               {quest.title}
             </CardTitle>
             <p
-              className={`text-sm mt-1 ${
+              className={`mt-1 text-sm ${
                 isCompleted
                   ? "text-green-600 dark:text-green-400"
                   : "text-muted-foreground"
@@ -93,13 +93,15 @@ function QuestCard({ quest, onComplete, isCompleted }: QuestCardProps) {
             </p>
           </div>
           <div className="flex items-center gap-2">
-            <div className="flex items-center gap-1 bg-yellow-100 dark:bg-yellow-900/30 text-yellow-800 dark:text-yellow-200 px-2 py-1 rounded-full text-xs font-medium">
-              <Trophy className="w-3 h-3" />
+            <div className="flex items-center gap-1 rounded-full bg-yellow-100 px-2 py-1 text-xs font-medium text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-200">
+              <Trophy className="h-3 w-3" />
               {quest.xpReward} XP
             </div>
-            <div className="flex items-center gap-1 bg-amber-100 dark:bg-amber-900/30 text-amber-800 dark:text-amber-200 px-2 py-1 rounded-full text-xs font-medium">
-              <Coins className="w-3 h-3" />
-              {quest.coinReward} 🪙
+            <div className="flex items-center gap-1 rounded-full bg-amber-100 px-2 py-1 text-xs font-medium text-amber-800 dark:bg-amber-900/30 dark:text-amber-200">
+              <Coins className="h-3 w-3" />
+              <span className="coin-text">
+                <span className="coin-emoji">🪙</span> {quest.coinReward}
+              </span>
             </div>
           </div>
         </div>
@@ -111,8 +113,8 @@ function QuestCard({ quest, onComplete, isCompleted }: QuestCardProps) {
           </Button>
         )}
         {isCompleted && (
-          <div className="flex items-center justify-center gap-2 text-green-600 dark:text-green-400 font-medium">
-            <CheckCircle className="w-5 h-5" />
+          <div className="flex items-center justify-center gap-2 font-medium text-green-600 dark:text-green-400">
+            <CheckCircle className="h-5 w-5" />
             Quest Concluída!
           </div>
         )}

@@ -5,7 +5,6 @@
 1. **Acesse o Dashboard**: Ao abrir o projeto, você será redirecionado automaticamente para `/dashboard`
 
 2. **Visualize seu Status**: No topo da página, você verá:
-
    - Seu nível atual
    - XP atual e necessário para o próximo nível
    - Barra de progresso visual

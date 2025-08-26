@@ -37,36 +37,47 @@ export function LevelUpNotification({
       }`}
     >
       <div className="absolute inset-0 bg-black/50" onClick={onClose} />
-      <Card className="relative max-w-md w-full mx-4 bg-gradient-to-br from-yellow-400 to-orange-500 text-white border-0 shadow-2xl">
+      <Card className="relative mx-4 w-full max-w-md border-0 bg-gradient-to-br from-yellow-400 to-orange-500 text-white shadow-2xl">
         <CardContent className="p-8 text-center">
           <div className="mb-6">
-            <div className="w-20 h-20 bg-white/20 rounded-full flex items-center justify-center mx-auto mb-4">
-              <Trophy className="w-12 h-12 text-white" />
+            <div className="mx-auto mb-4 flex h-20 w-20 items-center justify-center rounded-full bg-white/20">
+              <Trophy className="h-12 w-12 text-white" />
             </div>
-            <div className="flex justify-center gap-2 mb-4">
-              <Sparkles className="w-6 h-6 text-yellow-200 animate-pulse" />
-              <Star className="w-6 h-6 text-yellow-200 animate-pulse" style={{animationDelay: '0.5s'}} />
-              <Sparkles className="w-6 h-6 text-yellow-200 animate-pulse" style={{animationDelay: '1s'}} />
+            <div className="mb-4 flex justify-center gap-2">
+              <Sparkles className="h-6 w-6 animate-pulse text-yellow-200" />
+              <Star
+                className="h-6 w-6 animate-pulse text-yellow-200"
+                style={{ animationDelay: "0.5s" }}
+              />
+              <Sparkles
+                className="h-6 w-6 animate-pulse text-yellow-200"
+                style={{ animationDelay: "1s" }}
+              />
             </div>
           </div>
 
-          <h2 className="text-3xl font-bold mb-2">
-            🎉 Parabéns! 🎉
-          </h2>
-          <p className="text-xl mb-4">Você subiu para o nível</p>
-          <div className="text-6xl font-bold text-white mb-4">
-            {level}
-          </div>
-          <p className="text-yellow-100 text-sm">
+          <h2 className="mb-2 text-3xl font-bold">🎉 Parabéns! 🎉</h2>
+          <p className="mb-4 text-xl">Você subiu para o nível</p>
+          <div className="mb-4 text-6xl font-bold text-white">{level}</div>
+          <p className="text-sm text-yellow-100">
             Continue completando quests para subir ainda mais!
           </p>
-          
+
           {/* Elementos decorativos */}
           <div className="mt-6 flex justify-center space-x-2">
-            <div className="w-3 h-3 bg-yellow-200 rounded-full animate-pulse"></div>
-            <div className="w-3 h-3 bg-yellow-200 rounded-full animate-pulse" style={{animationDelay: '0.3s'}}></div>
-            <div className="w-3 h-3 bg-yellow-200 rounded-full animate-pulse" style={{animationDelay: '0.6s'}}></div>
-            <div className="w-3 h-3 bg-yellow-200 rounded-full animate-pulse" style={{animationDelay: '0.9s'}}></div>
+            <div className="h-3 w-3 animate-pulse rounded-full bg-yellow-200"></div>
+            <div
+              className="h-3 w-3 animate-pulse rounded-full bg-yellow-200"
+              style={{ animationDelay: "0.3s" }}
+            ></div>
+            <div
+              className="h-3 w-3 animate-pulse rounded-full bg-yellow-200"
+              style={{ animationDelay: "0.6s" }}
+            ></div>
+            <div
+              className="h-3 w-3 animate-pulse rounded-full bg-yellow-200"
+              style={{ animationDelay: "0.9s" }}
+            ></div>
           </div>
         </CardContent>
       </Card>

@@ -37,22 +37,27 @@ Transforme suas tarefas diárias em uma aventura épica! Complete quests, ganhe 
 ## 🛠️ Instalação e Execução
 
 ### Pré-requisitos
-- Node.js 18+ 
+
+- Node.js 18+
 - npm ou yarn
 
 ### Passos
+
 1. Clone o repositório:
+
 ```bash
 git clone <url-do-repositorio>
 cd vida-level-up
 ```
 
 2. Instale as dependências:
+
 ```bash
 npm install
 ```
 
 3. Execute o projeto:
+
 ```bash
 npm run dev
 ```
@@ -81,6 +86,7 @@ src/
 ## 🎨 Personalização
 
 ### Adicionando Novas Quests
+
 Edite o arquivo `src/hooks/useRPG.ts` e adicione novas quests no array `INITIAL_QUESTS`:
 
 ```typescript
@@ -95,6 +101,7 @@ Edite o arquivo `src/hooks/useRPG.ts` e adicione novas quests no array `INITIAL_
 ```
 
 ### Modificando o Sistema de XP
+
 Altere a função `getXPForNextLevel` para mudar a progressão:
 
 ```typescript

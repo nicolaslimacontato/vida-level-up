@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { User, Quest, MainQuest, Reward } from "@/types/rpg";
+import { useGameAudio } from "./useGameAudio";
 
 const INITIAL_QUESTS: Quest[] = [
   {
@@ -226,20 +227,58 @@ const INITIAL_USER: User = {
 export function useRPG() {
   const [user, setUser] = useState<User>(INITIAL_USER);
   const [quests, setQuests] = useState<Quest[]>(INITIAL_QUESTS);
-  const [mainQuests, setMainQuests] = useState<MainQuest[]>(INITIAL_MAIN_QUESTS);
+  const [mainQuests, setMainQuests] =
+    useState<MainQuest[]>(INITIAL_MAIN_QUESTS);
   const [rewards, setRewards] = useState<Reward[]>(INITIAL_REWARDS);
   const [showLevelUp, setShowLevelUp] = useState(false);
   const [newLevel, setNewLevel] = useState(1);
 
-  // Carregar dados do localStorage ao inicializar
+  // Sistema de áudio do jogo
+  const { playLevelUpSound, playOrbSoundWithVariation, preloadGameSounds } =
+    useGameAudio();
+
+  // Carregar dados do localStorage ao inicializar e preload dos sons
   useEffect(() => {
+    // Preload dos sons do jogo
+    preloadGameSounds();
+
     const savedUser = localStorage.getItem("rpg-user");
     const savedQuests = localStorage.getItem("rpg-quests");
     const savedMainQuests = localStorage.getItem("rpg-main-quests");
     const savedRewards = localStorage.getItem("rpg-rewards");
 
     if (savedUser) {
-      setUser(JSON.parse(savedUser));
+      const userData = JSON.parse(savedUser);
+      // Validar e corrigir dados se necessário
+      if (userData.currentXP < 0 || isNaN(userData.currentXP)) {
+        // Recalcular baseado no totalXP
+        let tempLevel = 1;
+        let tempCurrentXP = userData.totalXP;
+
+        // Calcular nível correto
+        while (true) {
+          let totalXPForNextLevel = 0;
+          for (let i = 1; i <= tempLevel; i++) {
+            totalXPForNextLevel += Math.floor(100 * Math.pow(i, 1.5));
+          }
+          if (userData.totalXP >= totalXPForNextLevel) {
+            tempLevel++;
+          } else {
+            break;
+          }
+        }
+
+        // Calcular currentXP
+        let totalXPForCurrentLevel = 0;
+        for (let i = 1; i < tempLevel; i++) {
+          totalXPForCurrentLevel += Math.floor(100 * Math.pow(i, 1.5));
+        }
+        tempCurrentXP = userData.totalXP - totalXPForCurrentLevel;
+
+        userData.level = tempLevel;
+        userData.currentXP = Math.max(0, tempCurrentXP);
+      }
+      setUser(userData);
     }
     if (savedQuests) {
       setQuests(JSON.parse(savedQuests));
@@ -269,18 +308,51 @@ export function useRPG() {
     localStorage.setItem("rpg-rewards", JSON.stringify(rewards));
   }, [rewards]);
 
-  // Calcular XP necessário para o próximo nível
+  // Calcular XP necessário para o próximo nível (progressão exponencial)
   const getXPForNextLevel = (level: number): number => {
-    return level * 100;
+    // Fórmula: baseXP * (level^1.5) para progressão equilibrada
+    const baseXP = 100;
+    return Math.floor(baseXP * Math.pow(level, 1.5));
   };
 
-  // Verificar se o usuário subiu de nível
-  const checkLevelUp = (newXP: number, currentLevel: number): number => {
-    const xpNeeded = getXPForNextLevel(currentLevel);
-    if (newXP >= xpNeeded) {
-      return currentLevel + 1;
+  // Calcular XP total necessário para alcançar um nível específico
+  const getTotalXPForLevel = (level: number): number => {
+    let totalXP = 0;
+    for (let i = 1; i < level; i++) {
+      totalXP += getXPForNextLevel(i);
     }
-    return currentLevel;
+    return totalXP;
+  };
+
+  // Verificar se o usuário subiu de nível e calcular novo currentXP
+  const processLevelUp = (
+    newTotalXP: number,
+    currentLevel: number,
+  ): { level: number; currentXP: number } => {
+    let level = currentLevel;
+    let currentXP = user.currentXP;
+
+    // Calcular o nível baseado no XP total
+    while (true) {
+      const totalXPNeeded = getTotalXPForLevel(level + 1);
+      if (newTotalXP >= totalXPNeeded) {
+        level++;
+      } else {
+        break;
+      }
+    }
+
+    // Calcular currentXP baseado no excesso para o nível atual
+    if (level > currentLevel) {
+      const totalXPForCurrentLevel = getTotalXPForLevel(level);
+      currentXP = newTotalXP - totalXPForCurrentLevel;
+    } else {
+      // Se não subiu de nível, apenas adiciona o XP ganho
+      const xpGained = newTotalXP - user.totalXP;
+      currentXP = user.currentXP + xpGained;
+    }
+
+    return { level, currentXP };
   };
 
   // Completar uma quest
@@ -289,22 +361,30 @@ export function useRPG() {
     if (!quest || quest.completed) return;
 
     const newQuests = quests.map((q) =>
-      q.id === questId ? { ...q, completed: true } : q
+      q.id === questId ? { ...q, completed: true } : q,
     );
     setQuests(newQuests);
 
     // Adicionar XP e moedas ao usuário
     const newTotalXP = user.totalXP + quest.xpReward;
-    const newCurrentXP = user.currentXP + quest.xpReward;
     const newCoins = user.coins + quest.coinReward;
-    const newLevel = checkLevelUp(newCurrentXP, user.level);
+    const { level: newLevel, currentXP: newCurrentXP } = processLevelUp(
+      newTotalXP,
+      user.level,
+    );
 
     // Atualizar atributos baseado na categoria da quest
     const newAttributes = { ...user.attributes };
     if (quest.category === "daily") {
-      if (quest.title.toLowerCase().includes("exercitar") || quest.title.toLowerCase().includes("treino")) {
+      if (
+        quest.title.toLowerCase().includes("exercitar") ||
+        quest.title.toLowerCase().includes("treino")
+      ) {
         newAttributes.strength += 1;
-      } else if (quest.title.toLowerCase().includes("ler") || quest.title.toLowerCase().includes("estudar")) {
+      } else if (
+        quest.title.toLowerCase().includes("ler") ||
+        quest.title.toLowerCase().includes("estudar")
+      ) {
         newAttributes.intelligence += 1;
       } else if (quest.title.toLowerCase().includes("socializar")) {
         newAttributes.charisma += 1;
@@ -313,10 +393,15 @@ export function useRPG() {
       }
     }
 
+    // Tocar som de ganhar XP (orb)
+    playOrbSoundWithVariation();
+
     // Verificar se subiu de nível
     if (newLevel > user.level) {
       setNewLevel(newLevel);
       setShowLevelUp(true);
+      // Tocar som de level up
+      playLevelUpSound();
     }
 
     setUser({
@@ -345,7 +430,7 @@ export function useRPG() {
 
         // Verificar se todos os passos foram completados
         const allCompleted = newSteps.every((step) => step.completed);
-        
+
         return {
           ...q,
           steps: newSteps,
@@ -361,14 +446,21 @@ export function useRPG() {
     const step = quest.steps.find((s) => s.id === stepId);
     if (step) {
       const newTotalXP = user.totalXP + step.xpReward;
-      const newCurrentXP = user.currentXP + step.xpReward;
       const newCoins = user.coins + step.coinReward;
-      const newLevel = checkLevelUp(newCurrentXP, user.level);
+      const { level: newLevel, currentXP: newCurrentXP } = processLevelUp(
+        newTotalXP,
+        user.level,
+      );
+
+      // Tocar som de ganhar XP (orb)
+      playOrbSoundWithVariation();
 
       // Verificar se subiu de nível
       if (newLevel > user.level) {
         setNewLevel(newLevel);
         setShowLevelUp(true);
+        // Tocar som de level up
+        playLevelUpSound();
       }
 
       setUser({
@@ -387,7 +479,7 @@ export function useRPG() {
     if (!reward || reward.purchased || user.coins < reward.cost) return;
 
     const newRewards = rewards.map((r) =>
-      r.id === rewardId ? { ...r, purchased: true } : r
+      r.id === rewardId ? { ...r, purchased: true } : r,
     );
     setRewards(newRewards);
 
@@ -416,15 +508,26 @@ export function useRPG() {
   // Calcular progresso para o próximo nível (0-100)
   const getLevelProgress = (): number => {
     const xpNeeded = getXPForNextLevel(user.level);
+    if (xpNeeded === 0) return 100;
     const progress = (user.currentXP / xpNeeded) * 100;
     return Math.min(100, Math.max(0, progress));
   };
 
   // Calcular progresso dos atributos (0-100)
-  const getAttributeProgress = (attribute: keyof User['attributes']): number => {
+  const getAttributeProgress = (
+    attribute: keyof User["attributes"],
+  ): number => {
     const current = user.attributes[attribute];
     const max = 100; // Máximo de 100 para cada atributo
     return Math.min(100, (current / max) * 100);
+  };
+
+  // Resetar sistema XP (função para debug/reset)
+  const resetXPSystem = () => {
+    setUser(INITIAL_USER);
+    setQuests(INITIAL_QUESTS);
+    setMainQuests(INITIAL_MAIN_QUESTS);
+    setRewards(INITIAL_REWARDS);
   };
 
   return {
@@ -438,6 +541,7 @@ export function useRPG() {
     completeMainQuestStep,
     purchaseReward,
     resetDailyQuests,
+    resetXPSystem,
     getXPForNextLevel,
     getRemainingXP,
     getLevelProgress,

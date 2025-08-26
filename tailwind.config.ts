@@ -19,7 +19,22 @@ const config: Config = {
     },
     extend: {
       fontFamily: {
-        sans: ["'Pixelify Sans'", "ui-sans-serif", "sans-serif"],
+        retro: [
+          "var(--font-retro)",
+          '"Courier New"',
+          '"Lucida Console"',
+          '"Monaco"',
+          "monospace",
+        ],
+        sans: [
+          "var(--font-retro)",
+          '"Courier New"',
+          '"Lucida Console"',
+          '"Monaco"',
+          "monospace",
+          "system-ui",
+          "sans-serif",
+        ],
       },
       colors: {
         border: "hsl(var(--border))",
@@ -77,7 +92,7 @@ const config: Config = {
       },
     },
   },
-  plugins: [require("tailwindcss-animate")],
+  plugins: [require("tailwindcss-animate"), require("tailwind-scrollbar")],
 } satisfies Config;
 
 export default config;
