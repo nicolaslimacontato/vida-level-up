@@ -127,15 +127,8 @@ export default function DashboardPage() {
   );
 
   return (
-    <div className="bg-background min-h-screen">
+    <div className="bg-background min-h-full">
       <div className="container mx-auto max-w-6xl px-4 py-8">
-        {/* Título da página */}
-        <div className="mb-8 text-center">
-          <p className="text-muted-foreground text-title2">
-            Transforme suas tarefas em uma aventura <strong>RPG!</strong>
-          </p>
-        </div>
-
         {/* Status do usuário */}
         <div className="mb-8">
           <UserHeader
@@ -272,7 +265,7 @@ export default function DashboardPage() {
           </div>
 
           {/* Seção de Missões Principais */}
-          <div>
+          <div id="main-quests">
             <div className="mb-4 flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <Trophy className="h-6 w-6 text-purple-500" />
@@ -426,7 +419,7 @@ export default function DashboardPage() {
           </div>
 
           {/* Seção Secundária com Tabs */}
-          <div>
+          <div id="stats">
             <div className="mb-4 space-y-4">
               <h2 className="text-title1 font-bold">Informações Extras</h2>
 
@@ -488,7 +481,7 @@ export default function DashboardPage() {
               )}
 
               {activeSecondaryTab === "shop" && (
-                <div className="space-y-4">
+                <div className="space-y-4" id="shop">
                   <h3 className="text-title2 flex items-center gap-2 font-semibold">
                     <Gift className="h-5 w-5 text-pink-500" />
                     Loja de Recompensas

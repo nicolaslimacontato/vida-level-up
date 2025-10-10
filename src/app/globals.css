@@ -460,3 +460,35 @@
   outline: 2px solid #3b82f6;
   outline-offset: 2px;
 }
+
+/* Sidebar Styles */
+.sidebar-transition {
+  transition: transform 300ms cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Smooth scroll for anchor links */
+html {
+  scroll-behavior: smooth;
+}
+
+/* Custom scrollbar for sidebar and main content */
+aside::-webkit-scrollbar,
+main::-webkit-scrollbar {
+  width: 6px;
+}
+
+aside::-webkit-scrollbar-track,
+main::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+aside::-webkit-scrollbar-thumb,
+main::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 3px;
+}
+
+aside::-webkit-scrollbar-thumb:hover,
+main::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
+}
