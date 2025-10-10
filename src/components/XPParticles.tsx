@@ -93,6 +93,7 @@ export function XPParticles({
                 boxShadow: `0 0 8px ${particle.color}`,
                 animationDelay: `${particle.delay}ms`,
                 animationDuration: "1.5s",
+                animationFillMode: "forwards",
                 "--target-x": `${deltaX}px`,
                 "--target-y": `${deltaY}px`,
               } as React.CSSProperties & {

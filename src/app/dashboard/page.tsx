@@ -29,11 +29,9 @@ export default function DashboardPage() {
   // Sistema de partículas XP
   const {
     triggerParticles,
-    dailyQuestButtonRef,
-    mainQuestButtonRef,
+    buttonRect,
     xpBarRef,
     triggerParticleEffect,
-    getCurrentButtonRef,
     setTriggerParticles,
   } = useXPParticles();
 
@@ -55,13 +53,22 @@ export default function DashboardPage() {
   } = useRPG();
 
   // Wrapper functions com efeito de partículas
-  const handleCompleteQuest = (questId: string) => {
-    triggerParticleEffect("daily");
+  const handleCompleteQuest = (
+    questId: string,
+    event: React.MouseEvent<HTMLButtonElement>,
+  ) => {
+    const rect = event.currentTarget.getBoundingClientRect();
+    triggerParticleEffect(rect);
     completeQuest(questId);
   };
 
-  const handleCompleteMainQuestStep = (questId: string, stepId: string) => {
-    triggerParticleEffect("main");
+  const handleCompleteMainQuestStep = (
+    questId: string,
+    stepId: string,
+    event: React.MouseEvent<HTMLButtonElement>,
+  ) => {
+    const rect = event.currentTarget.getBoundingClientRect();
+    triggerParticleEffect(rect);
     completeMainQuestStep(questId, stepId);
   };
 
@@ -82,7 +89,10 @@ export default function DashboardPage() {
   // Funções de navegação para quests diárias
   const nextQuests = () => {
     setQuestIndex((prev) => {
-      const maxIndex = Math.max(0, quests.length - questsPerPage);
+      const maxIndex = Math.max(
+        0,
+        Math.ceil(quests.length / questsPerPage) - 1,
+      );
       return Math.min(prev + 1, maxIndex);
     });
   };
@@ -94,7 +104,10 @@ export default function DashboardPage() {
   // Funções de navegação para missões principais
   const nextMainQuests = () => {
     setMainQuestIndex((prev) => {
-      const maxIndex = Math.max(0, mainQuests.length - mainQuestsPerPage);
+      const maxIndex = Math.max(
+        0,
+        Math.ceil(mainQuests.length / mainQuestsPerPage) - 1,
+      );
       return Math.min(prev + 1, maxIndex);
     });
   };
@@ -104,10 +117,13 @@ export default function DashboardPage() {
   };
 
   // Obter quests visíveis
-  const visibleQuests = quests.slice(questIndex, questIndex + questsPerPage);
+  const visibleQuests = quests.slice(
+    questIndex * questsPerPage,
+    questIndex * questsPerPage + questsPerPage,
+  );
   const visibleMainQuests = mainQuests.slice(
-    mainQuestIndex,
-    mainQuestIndex + mainQuestsPerPage,
+    mainQuestIndex * mainQuestsPerPage,
+    mainQuestIndex * mainQuestsPerPage + mainQuestsPerPage,
   );
 
   return (
@@ -146,8 +162,8 @@ export default function DashboardPage() {
               {/* Navegação */}
               <div className="flex items-center gap-2">
                 <span className="text-title3 text-muted-foreground">
-                  {questIndex + 1}-
-                  {Math.min(questIndex + questsPerPage, quests.length)} de{" "}
+                  {questIndex * questsPerPage + 1}-
+                  {Math.min((questIndex + 1) * questsPerPage, quests.length)} de{" "}
                   {quests.length}
                 </span>
                 <Button
@@ -163,7 +179,9 @@ export default function DashboardPage() {
                   variant="outline"
                   size="sm"
                   onClick={nextQuests}
-                  disabled={questIndex >= quests.length - questsPerPage}
+                  disabled={
+                    questIndex >= Math.ceil(quests.length / questsPerPage) - 1
+                  }
                   className="h-8 w-8 p-0 hover:bg-blue-100 disabled:opacity-50 dark:hover:bg-blue-900"
                 >
                   <ChevronRight className="h-4 w-4" />
@@ -217,8 +235,7 @@ export default function DashboardPage() {
                       </div>
                       <Button
                         size="sm"
-                        onClick={() => handleCompleteQuest(quest.id)}
-                        ref={dailyQuestButtonRef}
+                        onClick={(e) => handleCompleteQuest(quest.id, e)}
                         disabled={quest.completed}
                         className={
                           quest.completed
@@ -268,9 +285,9 @@ export default function DashboardPage() {
               {/* Navegação */}
               <div className="flex items-center gap-2">
                 <span className="text-muted-foreground text-title3">
-                  {mainQuestIndex + 1}-
+                  {mainQuestIndex * mainQuestsPerPage + 1}-
                   {Math.min(
-                    mainQuestIndex + mainQuestsPerPage,
+                    (mainQuestIndex + 1) * mainQuestsPerPage,
                     mainQuests.length,
                   )}{" "}
                   de {mainQuests.length}
@@ -289,7 +306,8 @@ export default function DashboardPage() {
                   size="sm"
                   onClick={nextMainQuests}
                   disabled={
-                    mainQuestIndex >= mainQuests.length - mainQuestsPerPage
+                    mainQuestIndex >=
+                    Math.ceil(mainQuests.length / mainQuestsPerPage) - 1
                   }
                   className="h-8 w-8 p-0 hover:bg-purple-100 disabled:opacity-50 dark:hover:bg-purple-900"
                 >
@@ -366,13 +384,13 @@ export default function DashboardPage() {
                             <Button
                               size="sm"
                               variant={step.completed ? "secondary" : "default"}
-                              onClick={() =>
+                              onClick={(e) =>
                                 handleCompleteMainQuestStep(
                                   mainQuest.id,
                                   step.id,
+                                  e,
                                 )
                               }
-                              ref={mainQuestButtonRef}
                               disabled={step.completed}
                               className="text-paragraph ml-2"
                             >
@@ -582,7 +600,7 @@ export default function DashboardPage() {
                         >
                           🔄 Resetar Sistema
                         </Button>
-                        <p className="text-muted-foreground text-par mt-2">
+                        <p className="text-muted-foreground text-title1 mt-2">
                           ⚠️ Isso irá resetar todo o progresso
                         </p>
                       </div>
@@ -605,9 +623,7 @@ export default function DashboardPage() {
       {/* Sistema de Partículas XP */}
       <XPParticles
         trigger={triggerParticles}
-        buttonRect={
-          getCurrentButtonRef()?.current?.getBoundingClientRect() || null
-        }
+        buttonRect={buttonRect}
         xpBarRect={xpBarRef.current?.getBoundingClientRect() || null}
         particleCount={8}
         onComplete={() => setTriggerParticles(false)}
