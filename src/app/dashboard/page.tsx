@@ -20,7 +20,6 @@ import {
   ChevronLeft,
   ChevronRight,
 } from "lucide-react";
-import { AudioTest } from "@/components/AudioTest";
 
 export default function DashboardPage() {
   const [questIndex, setQuestIndex] = useState(0);
@@ -260,15 +259,15 @@ export default function DashboardPage() {
             <div className="mb-4 flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <Trophy className="h-6 w-6 text-purple-500" />
-                <h2 className="text-2xl font-bold">Missões Principais</h2>
-                <span className="text-muted-foreground bg-secondary rounded px-2 py-1 text-sm">
+                <h2 className="text-title1 font-bold">Missões Principais</h2>
+                <span className="text-muted-foreground bg-secondary text-title3 rounded px-2 py-1">
                   {mainQuests.filter((q) => !q.completed).length} ativas
                 </span>
               </div>
 
               {/* Navegação */}
               <div className="flex items-center gap-2">
-                <span className="text-muted-foreground text-sm">
+                <span className="text-muted-foreground text-title3">
                   {mainQuestIndex + 1}-
                   {Math.min(
                     mainQuestIndex + mainQuestsPerPage,
@@ -310,14 +309,14 @@ export default function DashboardPage() {
                     <div className="absolute inset-0 -translate-x-full -skew-x-12 bg-gradient-to-r from-transparent via-white/10 to-transparent transition-transform duration-1000 ease-out group-hover:translate-x-full"></div>
 
                     <div className="mb-4 flex items-start justify-between">
-                      <h3 className="text-foreground text-xl font-bold">
+                      <h3 className="text-foreground text-title2 font-bold">
                         {mainQuest.title}
                       </h3>
                       <div className="text-right">
-                        <div className="text-sm font-semibold text-yellow-600">
+                        <div className="text-title3 font-semibold text-yellow-600">
                           +{mainQuest.xpReward} XP
                         </div>
-                        <div className="text-sm text-amber-600">
+                        <div className="text-title3 text-amber-600">
                           <span className="coin-text">
                             <span className="coin-emoji">🪙</span>{" "}
                             {mainQuest.coinReward}
@@ -325,13 +324,13 @@ export default function DashboardPage() {
                         </div>
                       </div>
                     </div>
-                    <p className="text-muted-foreground mb-4 text-sm">
+                    <p className="text-muted-foreground text-title3 mb-4">
                       {mainQuest.description}
                     </p>
 
                     {/* Progress bar */}
                     <div className="mb-4">
-                      <div className="mb-1 flex justify-between text-xs">
+                      <div className="text-paragraph mb-1 flex justify-between">
                         <span>Progresso</span>
                         <span>
                           {mainQuest.steps.filter((s) => s.completed).length}/
@@ -357,10 +356,10 @@ export default function DashboardPage() {
                         >
                           <div className="flex items-start justify-between">
                             <div className="flex-1">
-                              <h4 className="text-sm font-medium">
+                              <h4 className="text-title3 font-medium">
                                 {step.title}
                               </h4>
-                              <p className="text-muted-foreground text-xs">
+                              <p className="text-muted-foreground text-paragraph">
                                 {step.description}
                               </p>
                             </div>
@@ -375,7 +374,7 @@ export default function DashboardPage() {
                               }
                               ref={mainQuestButtonRef}
                               disabled={step.completed}
-                              className="ml-2 text-xs"
+                              className="text-paragraph ml-2"
                             >
                               {step.completed ? "✓" : "Fazer"}
                             </Button>
@@ -410,21 +409,22 @@ export default function DashboardPage() {
 
           {/* Seção Secundária com Tabs */}
           <div>
-            <div className="mb-4 flex items-center justify-between">
-              <h2 className="text-2xl font-bold">Informações Extras</h2>
+            <div className="mb-4 space-y-4">
+              <h2 className="text-title1 font-bold">Informações Extras</h2>
 
-              {/* Tabs de Navegação */}
-              <div className="flex gap-2">
+              {/* Tabs de Navegação - Responsivo */}
+              <div className="flex flex-wrap gap-2 sm:flex-nowrap">
                 <Button
                   variant={
                     activeSecondaryTab === "character" ? "default" : "outline"
                   }
                   size="sm"
                   onClick={() => setActiveSecondaryTab("character")}
-                  className="flex items-center gap-2"
+                  className="flex flex-1 items-center justify-center gap-2 sm:flex-initial"
                 >
                   <Heart className="h-4 w-4" />
-                  Status
+                  <span className="hidden sm:inline">Status</span>
+                  <span className="sm:hidden">Status</span>
                 </Button>
                 <Button
                   variant={
@@ -432,10 +432,11 @@ export default function DashboardPage() {
                   }
                   size="sm"
                   onClick={() => setActiveSecondaryTab("shop")}
-                  className="flex items-center gap-2"
+                  className="flex flex-1 items-center justify-center gap-2 sm:flex-initial"
                 >
                   <Gift className="h-4 w-4" />
-                  Loja
+                  <span className="hidden sm:inline">Loja</span>
+                  <span className="sm:hidden">Loja</span>
                 </Button>
                 <Button
                   variant={
@@ -443,19 +444,20 @@ export default function DashboardPage() {
                   }
                   size="sm"
                   onClick={() => setActiveSecondaryTab("stats")}
-                  className="flex items-center gap-2"
+                  className="flex flex-1 items-center justify-center gap-2 sm:flex-initial"
                 >
                   <BarChart3 className="h-4 w-4" />
-                  Estatísticas
+                  <span className="hidden sm:inline">Estatísticas</span>
+                  <span className="sm:hidden">Stats</span>
                 </Button>
               </div>
             </div>
 
             {/* Conteúdo da Tab Ativa */}
-            <div className="min-h-[400px] rounded-xl border-2 border-slate-300 bg-gradient-to-br from-slate-50 to-gray-100 p-6 dark:border-slate-700 dark:from-slate-950 dark:to-gray-900">
+            <div className="min-h-[300px] rounded-xl border-2 border-slate-300 bg-gradient-to-br from-slate-50 to-gray-100 p-3 sm:p-6 dark:border-slate-700 dark:from-slate-950 dark:to-gray-900">
               {activeSecondaryTab === "character" && (
                 <div className="space-y-4">
-                  <h3 className="flex items-center gap-2 text-xl font-semibold">
+                  <h3 className="text-title2 flex items-center gap-2 font-semibold">
                     <Heart className="h-5 w-5 text-red-500" />
                     Status do Personagem
                   </h3>
@@ -469,7 +471,7 @@ export default function DashboardPage() {
 
               {activeSecondaryTab === "shop" && (
                 <div className="space-y-4">
-                  <h3 className="flex items-center gap-2 text-xl font-semibold">
+                  <h3 className="text-title2 flex items-center gap-2 font-semibold">
                     <Gift className="h-5 w-5 text-pink-500" />
                     Loja de Recompensas
                   </h3>
@@ -485,96 +487,88 @@ export default function DashboardPage() {
 
               {activeSecondaryTab === "stats" && (
                 <div className="space-y-6">
-                  <h3 className="flex items-center gap-2 text-xl font-semibold">
+                  <h3 className="text-title2 flex items-center gap-2 font-semibold">
                     <BarChart3 className="h-5 w-5 text-blue-500" />
                     Estatísticas & Debug
                   </h3>
 
                   {/* Estatísticas Gerais */}
-                  <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4">
-                    <div className="bg-card text-card-foreground rounded-lg border p-4 text-center">
-                      <div className="text-primary text-2xl font-bold">
+                  <div className="grid grid-cols-2 gap-2 sm:gap-4 md:grid-cols-4">
+                    <div className="bg-card text-title2 rounded-lg border p-2 text-center sm:p-4">
+                      <div className="text-primary text-title3 font-bold">
                         {quests.length}
                       </div>
-                      <div className="text-muted-foreground text-sm">
+                      <div className="text-muted-foreground text-paragraph">
                         Total de Quests
                       </div>
                     </div>
-                    <div className="bg-card text-card-foreground rounded-lg border p-4 text-center">
-                      <div className="text-2xl font-bold text-green-600 dark:text-green-400">
+                    <div className="bg-card text-title2 rounded-lg border p-2 text-center sm:p-4">
+                      <div className="text-title3 font-bold text-green-600 dark:text-green-400">
                         {quests.filter((q) => q.completed).length}
                       </div>
-                      <div className="text-muted-foreground text-sm">
+                      <div className="text-muted-foreground text-paragraph">
                         Quests Concluídas
                       </div>
                     </div>
-                    <div className="bg-card text-card-foreground rounded-lg border p-4 text-center">
-                      <div className="text-2xl font-bold text-yellow-600 dark:text-yellow-400">
+                    <div className="bg-card text-title2 rounded-lg border p-2 text-center sm:p-4">
+                      <div className="text-title3 font-bold text-yellow-600 dark:text-yellow-400">
                         {quests.filter((q) => !q.completed).length}
                       </div>
-                      <div className="text-muted-foreground text-sm">
+                      <div className="text-muted-foreground text-paragraph">
                         Quests Pendentes
                       </div>
                     </div>
-                    <div className="bg-card text-card-foreground rounded-lg border p-4 text-center">
-                      <div className="text-2xl font-bold text-amber-600 dark:text-amber-400">
+                    <div className="bg-card text-title2 rounded-lg border p-2 text-center sm:p-4">
+                      <div className="text-title3 font-bold text-amber-600 dark:text-amber-400">
                         {user.coins}
                       </div>
-                      <div className="text-muted-foreground text-sm">
+                      <div className="text-muted-foreground text-paragraph">
                         Moedas 🪙
                       </div>
                     </div>
                   </div>
 
                   {/* Informações de Debug do Sistema XP */}
-                  <div className="bg-card text-card-foreground rounded-lg border p-4">
+                  <div className="bg-card text-title2 rounded-lg border p-3 sm:p-4">
                     <h4 className="mb-4 flex items-center gap-2 font-semibold">
                       <BarChart3 className="h-4 w-4 text-blue-500" />
                       Sistema XP - Info Técnica
                     </h4>
 
                     {/* Grid 2x2 para os dados do XP */}
-                    <div className="mb-6 grid grid-cols-2 gap-4">
+                    <div className="mb-6 grid grid-cols-2 gap-2 sm:gap-4">
                       <div className="text-center">
-                        <div className="text-lg font-bold text-purple-600">
+                        <div className="text-title3 font-bold text-purple-600">
                           {user.level}
                         </div>
-                        <div className="text-muted-foreground text-xs">
+                        <div className="text-muted-foreground text-paragraph">
                           Nível Atual
                         </div>
                       </div>
                       <div className="text-center">
-                        <div className="text-lg font-bold text-blue-600">
+                        <div className="text-title3 font-bold text-blue-600">
                           {user.currentXP}
                         </div>
-                        <div className="text-muted-foreground text-xs">
+                        <div className="text-muted-foreground text-paragraph">
                           XP Atual
                         </div>
                       </div>
                       <div className="text-center">
-                        <div className="text-lg font-bold text-green-600">
+                        <div className="text-title3 font-bold text-green-600">
                           {getXPForNextLevel(user.level)}
                         </div>
-                        <div className="text-muted-foreground text-xs">
+                        <div className="text-muted-foreground text-paragraph">
                           XP p/ Próximo Nível
                         </div>
                       </div>
                       <div className="text-center">
-                        <div className="text-lg font-bold text-amber-600">
+                        <div className="text-title3 font-bold text-amber-600">
                           {user.totalXP}
                         </div>
-                        <div className="text-muted-foreground text-xs">
+                        <div className="text-muted-foreground text-paragraph">
                           XP Total
                         </div>
                       </div>
-                    </div>
-
-                    {/* Teste de Áudio */}
-                    <div className="border-t pt-4">
-                      <h4 className="mb-4 text-center font-semibold">
-                        🎵 Teste de Sistema de Áudio
-                      </h4>
-                      <AudioTest />
                     </div>
 
                     {/* Botão de Reset separado no final */}
@@ -582,13 +576,13 @@ export default function DashboardPage() {
                       <div className="text-center">
                         <Button
                           variant="destructive"
-                          size="sm"
+                          size="default"
                           onClick={resetXPSystem}
                           className="w-full max-w-xs"
                         >
-                          🔄 Resetar Sistema (Debug)
+                          🔄 Resetar Sistema
                         </Button>
-                        <p className="text-muted-foreground mt-2 text-xs">
+                        <p className="text-muted-foreground text-par mt-2">
                           ⚠️ Isso irá resetar todo o progresso
                         </p>
                       </div>

@@ -21,11 +21,11 @@ export function CharacterStatus({
     <div className="space-y-6">
       {/* Cabeçalho do Personagem */}
       <div className="text-center">
-        <h2 className="text-foreground mb-2 flex items-center justify-center gap-2 text-2xl font-bold">
+        <h2 className="text-foreground text-title1 mb-2 flex items-center justify-center gap-2 font-bold">
           <Crown className="h-6 w-6 text-yellow-500" />
           Seu Personagem
         </h2>
-        <div className="text-muted-foreground flex items-center justify-center gap-4 text-lg">
+        <div className="text-muted-foreground text-title3 flex items-center justify-center gap-4">
           <div className="flex items-center gap-2">
             <Target className="h-5 w-5 text-blue-500" />
             <span className="font-semibold text-blue-600 dark:text-blue-400">
@@ -46,14 +46,14 @@ export function CharacterStatus({
         {/* Barra de Vida */}
         <Card>
           <CardHeader className="pb-3">
-            <CardTitle className="flex items-center gap-2 text-lg">
+            <CardTitle className="text-title3 flex items-center gap-2">
               <Heart className="h-5 w-5 text-red-500" />
               Vida
             </CardTitle>
           </CardHeader>
           <CardContent>
             <div className="space-y-2">
-              <div className="text-muted-foreground flex justify-between text-sm">
+              <div className="text-muted-foreground text-title3 flex justify-between">
                 <span>
                   {user.health}/{user.maxHealth}
                 </span>
@@ -67,14 +67,14 @@ export function CharacterStatus({
         {/* Barra de Mana */}
         <Card>
           <CardHeader className="pb-3">
-            <CardTitle className="flex items-center gap-2 text-lg">
+            <CardTitle className="text-title3 flex items-center gap-2">
               <Zap className="h-5 w-5 text-blue-500" />
               Energia Mental
             </CardTitle>
           </CardHeader>
           <CardContent>
             <div className="space-y-2">
-              <div className="text-muted-foreground flex justify-between text-sm">
+              <div className="text-muted-foreground text-title3 flex justify-between">
                 <span>
                   {user.mana}/{user.maxMana}
                 </span>
@@ -89,7 +89,7 @@ export function CharacterStatus({
       {/* Atributos */}
       <Card>
         <CardHeader>
-          <CardTitle className="flex items-center gap-2 text-xl">
+          <CardTitle className="text-title2 flex items-center gap-2">
             <TrendingUp className="h-6 w-6 text-green-500" />
             Atributos
           </CardTitle>
@@ -102,7 +102,7 @@ export function CharacterStatus({
                 <span className="flex items-center gap-2 font-medium">
                   💪 Força
                 </span>
-                <span className="text-muted-foreground text-sm">
+                <span className="text-muted-foreground text-title3">
                   {user.attributes.strength}/100
                 </span>
               </div>
@@ -110,7 +110,7 @@ export function CharacterStatus({
                 value={getAttributeProgress("strength")}
                 className="h-2"
               />
-              <p className="text-muted-foreground text-xs">
+              <p className="text-muted-foreground text-paragraph">
                 Aumenta com exercícios e treinos
               </p>
             </div>
@@ -121,7 +121,7 @@ export function CharacterStatus({
                 <span className="flex items-center gap-2 font-medium">
                   🧠 Inteligência
                 </span>
-                <span className="text-muted-foreground text-sm">
+                <span className="text-muted-foreground text-title3">
                   {user.attributes.intelligence}/100
                 </span>
               </div>
@@ -129,7 +129,7 @@ export function CharacterStatus({
                 value={getAttributeProgress("intelligence")}
                 className="h-2"
               />
-              <p className="text-muted-foreground text-xs">
+              <p className="text-muted-foreground text-paragraph">
                 Aumenta com estudos e leitura
               </p>
             </div>
@@ -140,7 +140,7 @@ export function CharacterStatus({
                 <span className="flex items-center gap-2 font-medium">
                   😊 Carisma
                 </span>
-                <span className="text-muted-foreground text-sm">
+                <span className="text-muted-foreground text-title3">
                   {user.attributes.charisma}/100
                 </span>
               </div>
@@ -148,7 +148,7 @@ export function CharacterStatus({
                 value={getAttributeProgress("charisma")}
                 className="h-2"
               />
-              <p className="text-muted-foreground text-xs">
+              <p className="text-muted-foreground text-paragraph">
                 Aumenta com socialização
               </p>
             </div>
@@ -159,7 +159,7 @@ export function CharacterStatus({
                 <span className="flex items-center gap-2 font-medium">
                   ⚡ Disciplina
                 </span>
-                <span className="text-muted-foreground text-sm">
+                <span className="text-muted-foreground text-title3">
                   {user.attributes.discipline}/100
                 </span>
               </div>
@@ -167,7 +167,7 @@ export function CharacterStatus({
                 value={getAttributeProgress("discipline")}
                 className="h-2"
               />
-              <p className="text-muted-foreground text-xs">
+              <p className="text-muted-foreground text-paragraph">
                 Aumenta com consistência
               </p>
             </div>
@@ -178,19 +178,19 @@ export function CharacterStatus({
       {/* Progresso do Nível */}
       <Card>
         <CardHeader>
-          <CardTitle className="flex items-center gap-2 text-xl">
+          <CardTitle className="text-title2 flex items-center gap-2">
             <Target className="h-6 w-6 text-purple-500" />
             Progresso para o Próximo Nível
           </CardTitle>
         </CardHeader>
         <CardContent>
           <div className="space-y-2">
-            <div className="text-muted-foreground flex justify-between text-sm">
+            <div className="text-muted-foreground text-title3 flex justify-between">
               <span>XP Atual: {user.currentXP}</span>
               <span>Próximo Nível: {user.level * 100}</span>
             </div>
             <Progress value={getLevelProgress()} className="h-3" />
-            <p className="text-muted-foreground text-center text-xs">
+            <p className="text-muted-foreground text-paragraph text-center">
               Continue completando quests para subir de nível!
             </p>
           </div>

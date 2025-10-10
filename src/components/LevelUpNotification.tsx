@@ -56,10 +56,10 @@ export function LevelUpNotification({
             </div>
           </div>
 
-          <h2 className="mb-2 text-3xl font-bold">🎉 Parabéns! 🎉</h2>
-          <p className="mb-4 text-xl">Você subiu para o nível</p>
+          <h2 className="text-title1 mb-2 font-bold">🎉 Parabéns! 🎉</h2>
+          <p className="text-title2 mb-4">Você subiu para o nível</p>
           <div className="mb-4 text-6xl font-bold text-white">{level}</div>
-          <p className="text-sm text-yellow-100">
+          <p className="text-title3 text-yellow-100">
             Continue completando quests para subir ainda mais!
           </p>
 

@@ -21,7 +21,7 @@ export function RewardShop({
     <div className="space-y-6">
       {/* Saldo de Moedas */}
       <div className="text-center">
-        <div className="mx-auto flex w-fit items-center justify-center gap-2 rounded-lg border border-amber-200 bg-amber-50 px-4 py-2 text-lg dark:border-amber-800 dark:bg-amber-950/30">
+        <div className="text-title3 mx-auto flex w-fit items-center justify-center gap-2 rounded-lg border border-amber-200 bg-amber-50 px-4 py-2 dark:border-amber-800 dark:bg-amber-950/30">
           <Coins className="h-5 w-5 text-amber-500" />
           <span className="coin-text font-semibold text-amber-600 dark:text-amber-400">
             <span className="coin-emoji">🪙</span> {userCoins}
@@ -32,11 +32,11 @@ export function RewardShop({
 
       {/* Recompensas Disponíveis */}
       <div>
-        <h3 className="text-foreground mb-4 flex items-center gap-2 text-xl font-semibold">
+        <h3 className="text-foreground text-title2 mb-4 flex items-center gap-2 font-semibold">
           <ShoppingCart className="h-5 w-5 text-blue-500" />
           Recompensas Disponíveis ({availableRewards.length})
         </h3>
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
           {availableRewards.map((reward) => (
             <RewardCard
               key={reward.id}
@@ -52,11 +52,11 @@ export function RewardShop({
       {/* Recompensas Compradas */}
       {purchasedRewards.length > 0 && (
         <div>
-          <h3 className="text-foreground mb-4 flex items-center gap-2 text-xl font-semibold">
+          <h3 className="text-foreground text-title2 mb-4 flex items-center gap-2 font-semibold">
             <CheckCircle className="h-5 w-5 text-green-500" />
             Recompensas Compradas ({purchasedRewards.length})
           </h3>
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
             {purchasedRewards.map((reward) => (
               <RewardCard
                 key={reward.id}
@@ -129,28 +129,28 @@ function RewardCard({
           : "border-green-200 bg-green-50 dark:border-green-700 dark:bg-green-900/20"
       }`}
     >
-      <CardHeader className="pb-3">
-        <div className="flex flex-col items-start justify-between gap-3 sm:flex-row sm:items-center">
+      <CardHeader className="pb-2">
+        <div className="flex flex-col items-start justify-between gap-2 sm:flex-row sm:items-center">
           <div className="flex-1">
-            <div className="mb-2 flex items-center gap-2">
-              <span className="text-2xl">{categoryIcon}</span>
+            <div className="mb-1 flex items-center gap-2">
+              <span className="text-title3">{categoryIcon}</span>
               <span
-                className={`rounded-full px-2 py-1 text-xs font-medium ${categoryColor}`}
+                className={`text-paragraph rounded-full px-2 py-1 font-medium ${categoryColor}`}
               >
                 {reward.category}
               </span>
             </div>
             <CardTitle
-              className={`text-lg ${
+              className={`text-title3 ${
                 isAvailable
-                  ? "text-card-foreground"
+                  ? "text-foreground"
                   : "text-green-700 line-through dark:text-green-300"
               } transition-colors`}
             >
               {reward.name}
             </CardTitle>
             <p
-              className={`mt-1 text-sm ${
+              className={`text-paragraph mt-1 ${
                 isAvailable
                   ? "text-muted-foreground"
                   : "text-green-600 dark:text-green-400"
@@ -162,10 +162,10 @@ function RewardCard({
         </div>
       </CardHeader>
 
-      <CardContent>
-        <div className="space-y-3">
+      <CardContent className="pt-2">
+        <div className="space-y-2">
           {/* Preço */}
-          <div className="mx-auto flex w-fit items-center justify-center gap-1 rounded-full bg-amber-100 px-3 py-2 font-medium text-amber-800 dark:bg-amber-900/30 dark:text-amber-200">
+          <div className="mx-auto flex w-fit items-center justify-center gap-1 rounded-full bg-amber-100 px-2 py-1 font-medium text-amber-800 dark:bg-amber-900/30 dark:text-amber-200">
             <span className="coin-text font-bold">
               <span className="coin-emoji">🪙</span> {reward.cost}
             </span>
@@ -188,22 +188,22 @@ function RewardCard({
 
               {!canAfford && (
                 <div className="text-center">
-                  <span className="rounded-full bg-red-50 px-2 py-1 text-xs text-red-500 dark:bg-red-950/50 dark:text-red-400">
-                    Faltam{" "}
+                  <div className="text-paragraph inline-flex items-center gap-1 rounded-full bg-red-50 px-2 py-1 text-red-500 dark:bg-red-950/50 dark:text-red-400">
+                    <span>Faltam</span>
                     <span className="coin-text">
-                      <span className="coin-emoji">🪙</span>{" "}
-                      {reward.cost - userCoins}
+                      <span>{reward.cost - userCoins}</span>
+                      <span className="coin-emoji">🪙</span>
                     </span>
-                  </span>
+                  </div>
                 </div>
               )}
             </div>
           )}
 
           {!isAvailable && (
-            <div className="flex items-center justify-center gap-2 rounded-full bg-green-50 px-3 py-2 font-medium text-green-600 dark:bg-green-950/50 dark:text-green-400">
-              <CheckCircle className="h-4 w-4" />
-              <span>Comprado!</span>
+            <div className="flex items-center justify-center gap-2 rounded-full bg-green-50 px-2 py-1 font-medium text-green-600 dark:bg-green-950/50 dark:text-green-400">
+              <CheckCircle className="h-3 w-3" />
+              <span className="text-paragraph">Comprado!</span>
             </div>
           )}
         </div>

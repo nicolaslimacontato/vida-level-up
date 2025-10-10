@@ -10,7 +10,7 @@ export default function ThemeToggle() {
       <div className="flex min-w-fit items-center rounded-full bg-gray-200 p-1 shadow-inner dark:bg-gray-700">
         <button
           onClick={() => setTheme("light")}
-          className={`flex items-center justify-center rounded-full p-1.5 text-sm transition-all duration-200 ease-in-out ${
+          className={`text-title3 flex items-center justify-center rounded-full p-1.5 transition-all duration-200 ease-in-out ${
             theme === "light"
               ? "scale-110 bg-white text-yellow-600 shadow-md"
               : "text-gray-600 hover:scale-105 hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-100"
@@ -23,7 +23,7 @@ export default function ThemeToggle() {
 
         <button
           onClick={() => setTheme("system")}
-          className={`flex items-center justify-center rounded-full p-1.5 text-sm transition-all duration-200 ease-in-out ${
+          className={`text-title3 flex items-center justify-center rounded-full p-1.5 transition-all duration-200 ease-in-out ${
             theme === "system"
               ? "scale-110 bg-white text-blue-600 shadow-md dark:bg-gray-800 dark:text-blue-400"
               : "text-gray-600 hover:scale-105 hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-100"
@@ -36,7 +36,7 @@ export default function ThemeToggle() {
 
         <button
           onClick={() => setTheme("dark")}
-          className={`flex items-center justify-center rounded-full p-1.5 text-sm transition-all duration-200 ease-in-out ${
+          className={`text-title3 flex items-center justify-center rounded-full p-1.5 transition-all duration-200 ease-in-out ${
             theme === "dark"
               ? "scale-110 bg-gray-800 text-blue-400 shadow-md"
               : "text-gray-600 hover:scale-105 hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-100"

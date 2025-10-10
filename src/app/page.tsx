@@ -18,10 +18,10 @@ export default function HomePage() {
   return (
     <div className="bg-background flex min-h-screen items-center justify-center">
       <div className="text-center">
-        <h1 className="text-foreground mb-4 text-2xl font-bold">
+        <h1 className="text-foreground text-title1 mb-4 font-bold">
           🎮 Vida Level Up
         </h1>
-        <p className="text-muted-foreground mb-6 text-lg">
+        <p className="text-muted-foreground text-title3 mb-6">
           Carregando sua aventura... (Fonte Press Start 2P ativada!)
         </p>
         <div className="border-primary mx-auto h-16 w-16 animate-spin rounded-full border-4 border-t-transparent"></div>

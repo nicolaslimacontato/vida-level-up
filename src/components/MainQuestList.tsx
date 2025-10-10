@@ -19,7 +19,7 @@ export function MainQuestList({
     <div className="space-y-6">
       {/* Quests Principais Ativas */}
       <div>
-        <h2 className="text-foreground mb-4 flex items-center gap-2 text-xl font-semibold">
+        <h2 className="text-foreground text-title2 mb-4 flex items-center gap-2 font-semibold">
           <Target className="h-5 w-5 text-purple-500" />
           Missões Principais ({activeQuests.length})
         </h2>
@@ -37,7 +37,7 @@ export function MainQuestList({
       {/* Quests Principais Concluídas */}
       {completedQuests.length > 0 && (
         <div>
-          <h2 className="text-foreground mb-4 flex items-center gap-2 text-xl font-semibold">
+          <h2 className="text-foreground text-title2 mb-4 flex items-center gap-2 font-semibold">
             <Flag className="h-5 w-5 text-green-500" />
             Missões Concluídas ({completedQuests.length})
           </h2>
@@ -84,16 +84,16 @@ function MainQuestCard({
         <div className="flex flex-col items-start justify-between gap-3 sm:flex-row sm:items-center">
           <div className="flex-1">
             <CardTitle
-              className={`text-xl ${
+              className={`text-title2 ${
                 isCompleted
                   ? "text-green-700 line-through dark:text-green-300"
-                  : "text-card-foreground"
+                  : "text-title2"
               } transition-colors`}
             >
               {quest.title}
             </CardTitle>
             <p
-              className={`mt-2 text-sm ${
+              className={`text-title3 mt-2 ${
                 isCompleted
                   ? "text-green-600 dark:text-green-400"
                   : "text-muted-foreground"
@@ -104,7 +104,7 @@ function MainQuestCard({
 
             {/* Barra de Progresso */}
             <div className="mt-3">
-              <div className="text-muted-foreground mb-1 flex justify-between text-sm">
+              <div className="text-muted-foreground text-title3 mb-1 flex justify-between">
                 <span>
                   Progresso: {completedSteps}/{totalSteps}
                 </span>
@@ -120,11 +120,11 @@ function MainQuestCard({
 
             {/* Recompensas */}
             <div className="mt-3 flex items-center gap-2">
-              <div className="flex items-center gap-1 rounded-full bg-yellow-100 px-2 py-1 text-xs font-medium text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-200">
+              <div className="text-paragraph flex items-center gap-1 rounded-full bg-yellow-100 px-2 py-1 font-medium text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-200">
                 <Trophy className="h-3 w-3" />
                 {quest.xpReward} XP
               </div>
-              <div className="flex items-center gap-1 rounded-full bg-amber-100 px-2 py-1 text-xs font-medium text-amber-800 dark:bg-amber-900/30 dark:text-amber-200">
+              <div className="text-paragraph flex items-center gap-1 rounded-full bg-amber-100 px-2 py-1 font-medium text-amber-800 dark:bg-amber-900/30 dark:text-amber-200">
                 <Coins className="h-3 w-3" />
                 <span className="coin-text">
                   <span className="coin-emoji">🪙</span> {quest.coinReward}
@@ -137,7 +137,9 @@ function MainQuestCard({
 
       <CardContent>
         <div className="space-y-3">
-          <h4 className="text-muted-foreground text-sm font-medium">Etapas:</h4>
+          <h4 className="text-muted-foreground text-title3 font-medium">
+            Etapas:
+          </h4>
           {quest.steps.map((step, index) => (
             <div
               key={step.id}
@@ -149,7 +151,7 @@ function MainQuestCard({
             >
               <div className="w-full flex-1">
                 <div className="flex items-center gap-2">
-                  <span className="text-muted-foreground text-sm font-medium">
+                  <span className="text-muted-foreground text-title3 font-medium">
                     {index + 1}.
                   </span>
                   <span
@@ -163,7 +165,7 @@ function MainQuestCard({
                   </span>
                 </div>
                 <p
-                  className={`mt-1 text-sm ${
+                  className={`text-title3 mt-1 ${
                     step.completed
                       ? "text-green-600 dark:text-green-400"
                       : "text-muted-foreground"
@@ -172,10 +174,10 @@ function MainQuestCard({
                   {step.description}
                 </p>
                 <div className="mt-2 flex flex-wrap items-center gap-2">
-                  <span className="rounded-full bg-yellow-100 px-2 py-1 text-xs text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-200">
+                  <span className="text-paragraph rounded-full bg-yellow-100 px-2 py-1 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-200">
                     {step.xpReward} XP
                   </span>
-                  <span className="rounded-full bg-amber-100 px-2 py-1 text-xs text-amber-800 dark:bg-amber-900/30 dark:text-amber-200">
+                  <span className="text-paragraph rounded-full bg-amber-100 px-2 py-1 text-amber-800 dark:bg-amber-900/30 dark:text-amber-200">
                     <span className="coin-text">
                       <span className="coin-emoji">🪙</span> {step.coinReward}
                     </span>

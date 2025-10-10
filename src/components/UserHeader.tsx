@@ -36,20 +36,20 @@ export function UserHeader({
   return (
     <Card className="w-full border-2 shadow-lg">
       <CardHeader className="pb-3">
-        <CardTitle className="flex items-center gap-3 text-xl">
+        <CardTitle className="text-title2 flex items-center gap-3">
           <div className="relative">
-            <div className="flex h-14 w-14 items-center justify-center rounded-full border-2 border-amber-700 bg-gradient-to-br from-yellow-400 to-orange-500 text-lg font-bold text-slate-900 shadow-inner">
+            <div className="text-title3 flex h-14 w-14 items-center justify-center rounded-full border-2 border-amber-700 bg-gradient-to-br from-yellow-400 to-orange-500 font-bold text-slate-900 shadow-inner">
               {user.level}
             </div>
             <div className="absolute -right-1 -bottom-1 flex h-6 w-6 items-center justify-center rounded-full border-2 border-amber-800 bg-green-500">
-              <span className="text-xs font-bold text-white">XP</span>
+              <span className="pl-0.5 text-[8px] font-bold text-white">XP</span>
             </div>
           </div>
           <div>
-            <div className="text-lg font-bold text-amber-700 dark:text-amber-300">
+            <div className="text-title3 font-bold text-amber-700 dark:text-amber-300">
               Nível {user.level}
             </div>
-            <div className="text-sm font-medium text-amber-600 dark:text-amber-400">
+            <div className="text-title3 font-medium text-amber-600 dark:text-amber-400">
               Aventureiro da Vida Real
             </div>
           </div>
@@ -58,7 +58,7 @@ export function UserHeader({
 
       <CardContent className="space-y-4">
         <div className="space-y-2">
-          <div className="flex justify-between text-sm">
+          <div className="flex justify-between text-title3">
             <span className="font-medium text-amber-700 dark:text-amber-300">
               Progresso para o próximo nível
             </span>
@@ -181,7 +181,7 @@ export function UserHeader({
             {/* Efeito visual quando ganha XP */}
             {xpGained && (
               <div className="absolute -top-4 left-1/2 -translate-x-1/2 transform">
-                <div className="flex animate-bounce items-center gap-1 text-sm font-bold text-green-400">
+                <div className="flex animate-bounce items-center gap-1 text-title3 font-bold text-green-400">
                   <span className="text-yellow-300">+XP</span>
                   <div className="h-2 w-2 animate-pulse rounded-full bg-green-400"></div>
                 </div>
@@ -193,30 +193,28 @@ export function UserHeader({
         {/* Cards de XP e moedas */}
         <div className="grid grid-cols-1 gap-4 text-center sm:grid-cols-3">
           <div className="bg-muted dark:bg-muted border-ring dark:border-ring rounded-lg border bg-gradient-to-b p-3 shadow-sm">
-            <div className="text-2xl font-bold text-amber-700 dark:text-amber-300">
+            <div className="text-title2 font-bold text-amber-700 dark:text-amber-300">
               {user.totalXP}
             </div>
-            <div className="text-xs font-medium text-amber-600 dark:text-amber-400">
+            <div className="text-paragraph font-medium text-amber-600 dark:text-amber-400">
               XP Total
             </div>
           </div>
           <div className="bg-muted dark:bg-muted border-ring dark:border-ring rounded-lg border bg-gradient-to-b p-3 shadow-sm">
-            <div className="text-2xl font-bold text-green-600 dark:text-green-400">
+            <div className="text-title2 font-bold text-green-600 dark:text-green-400">
               {xpForNextLevel - user.currentXP}
             </div>
-            <div className="text-xs font-medium text-amber-600 dark:text-amber-400">
+            <div className="text-paragraph font-medium text-amber-600 dark:text-amber-400">
               XP Restante
             </div>
           </div>
           <div className="bg-muted dark:bg-muted border-ring dark:border-ring rounded-lg border bg-gradient-to-b p-3 shadow-sm">
-            <div className="flex items-center justify-center gap-1 text-2xl font-bold text-amber-600 dark:text-amber-400">
+            <div className="text-title2 flex items-center justify-center gap-1 font-bold text-amber-600 dark:text-amber-400">
               <Coins className="h-5 w-5" />
-              <span className="coin-text">
-                <span className="coin-emoji">🪙</span> {user.coins}
-              </span>
+              <span className="coin-text">{user.coins}</span>
             </div>
-            <div className="text-xs font-medium text-amber-600 dark:text-amber-400">
-              Moedas 🪙
+            <div className="text-paragraph font-medium text-amber-600 dark:text-amber-400">
+              Moedas
             </div>
           </div>
         </div>
