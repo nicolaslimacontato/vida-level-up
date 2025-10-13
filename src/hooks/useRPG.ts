@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { User, Quest, MainQuest, Reward } from "@/types/rpg";
 import { useGameAudio } from "./useGameAudio";
+import { checkDailyReset, resetDailyQuests as resetDailyQuestsUtil, updateUserStreak } from "./useDailyReset";
 
 const INITIAL_QUESTS: Quest[] = [
   {
@@ -216,6 +217,16 @@ const INITIAL_USER: User = {
   maxHealth: 100,
   mana: 100,
   maxMana: 100,
+  currentStreak: 0,
+  bestStreak: 0,
+  lastAccessDate: new Date().toISOString(),
+  completedQuestsToday: false,
+  inventory: [],
+  activeEffects: {
+    hasStreakProtection: false,
+    xpBoostActive: false,
+    coinMultiplierActive: false,
+  },
   attributes: {
     strength: 1,
     intelligence: 1,
@@ -278,41 +289,148 @@ export function useRPG() {
         userData.level = tempLevel;
         userData.currentXP = Math.max(0, tempCurrentXP);
       }
-      setUser(userData);
+
+      // Garantir que campos de streak existem (migração de dados antigos)
+      if (userData.currentStreak === undefined) {
+        userData.currentStreak = 0;
+      }
+      if (userData.bestStreak === undefined) {
+        userData.bestStreak = 0;
+      }
+      if (!userData.lastAccessDate) {
+        userData.lastAccessDate = new Date().toISOString();
+      }
+      if (userData.completedQuestsToday === undefined) {
+        userData.completedQuestsToday = false;
+      }
+      if (!userData.inventory) {
+        userData.inventory = [];
+      }
+      if (!userData.activeEffects) {
+        userData.activeEffects = {
+          hasStreakProtection: false,
+          xpBoostActive: false,
+          coinMultiplierActive: false,
+        };
+      }
+
+      // Verificar reset diário APÓS carregar dados
+      const resetInfo = checkDailyReset(userData.lastAccessDate);
+      if (resetInfo.shouldReset) {
+        const updatedUser = updateUserStreak(userData, resetInfo.daysPassed);
+        setUser(updatedUser);
+
+        // Streak atualizado
+      } else {
+        setUser(userData);
+      }
     }
-    if (savedQuests) {
-      setQuests(JSON.parse(savedQuests));
+
+    // Carregar quests com validação
+    let loadedQuests = INITIAL_QUESTS;
+    if (savedQuests && savedQuests !== "undefined") {
+      try {
+        loadedQuests = JSON.parse(savedQuests);
+      } catch (e) {
+        console.error("Erro ao carregar quests, usando padrão:", e);
+        loadedQuests = INITIAL_QUESTS;
+      }
     }
-    if (savedMainQuests) {
-      setMainQuests(JSON.parse(savedMainQuests));
+
+    // Resetar quests diárias se necessário
+    if (savedUser) {
+      const userData = JSON.parse(savedUser);
+      const resetInfo = checkDailyReset(userData.lastAccessDate);
+      if (resetInfo.shouldReset) {
+        loadedQuests = resetDailyQuestsUtil(loadedQuests);
+        // Quests diárias resetadas
+      }
     }
-    if (savedRewards) {
-      setRewards(JSON.parse(savedRewards));
+
+    setQuests(loadedQuests);
+
+    // Carregar main quests com validação
+    if (savedMainQuests && savedMainQuests !== "undefined") {
+      try {
+        setMainQuests(JSON.parse(savedMainQuests));
+      } catch (e) {
+        console.error("Erro ao carregar main quests, usando padrão:", e);
+        setMainQuests(INITIAL_MAIN_QUESTS);
+      }
     }
-  }, []);
+
+    // Carregar rewards com validação
+    if (savedRewards && savedRewards !== "undefined") {
+      try {
+        setRewards(JSON.parse(savedRewards));
+      } catch (e) {
+        console.error("Erro ao carregar rewards, usando padrão:", e);
+        setRewards(INITIAL_REWARDS);
+      }
+    }
+  }, [preloadGameSounds]);
 
   // Salvar dados no localStorage sempre que houver mudanças
   useEffect(() => {
-    localStorage.setItem("rpg-user", JSON.stringify(user));
+    if (user) {
+      localStorage.setItem("rpg-user", JSON.stringify(user));
+    }
   }, [user]);
 
   useEffect(() => {
-    localStorage.setItem("rpg-quests", JSON.stringify(quests));
+    if (quests && quests.length > 0) {
+      localStorage.setItem("rpg-quests", JSON.stringify(quests));
+    }
   }, [quests]);
 
   useEffect(() => {
-    localStorage.setItem("rpg-main-quests", JSON.stringify(mainQuests));
+    if (mainQuests && mainQuests.length > 0) {
+      localStorage.setItem("rpg-main-quests", JSON.stringify(mainQuests));
+    }
   }, [mainQuests]);
 
   useEffect(() => {
-    localStorage.setItem("rpg-rewards", JSON.stringify(rewards));
+    if (rewards && rewards.length > 0) {
+      localStorage.setItem("rpg-rewards", JSON.stringify(rewards));
+    }
   }, [rewards]);
+
+  // Calcular multiplicador de streak (10% por dia)
+  const getStreakMultiplier = (streak: number): number => {
+    return 1 + streak * 0.1;
+  };
+
+  // ========== EFEITOS DOS ATRIBUTOS ==========
+
+  // Força: Reduz XP necessário para level up (máx 30%)
+  const getStrengthXPReduction = (strength: number): number => {
+    const reduction = Math.floor(strength * 0.5); // 0.5% por ponto
+    return Math.min(reduction, 30); // Máximo 30%
+  };
+
+  // Inteligência: Bônus de XP em quests de estudo (máx 50%)
+  const getIntelligenceBonus = (intelligence: number): number => {
+    const bonus = Math.floor(intelligence * 2); // 2% por ponto
+    return Math.min(bonus, 50); // Máximo 50%
+  };
+
+  // Carisma: Desconto na loja (máx 40%)
+  const getCharismaDiscount = (charisma: number): number => {
+    const discount = Math.floor(charisma * 1); // 1% por ponto
+    return Math.min(discount, 40); // Máximo 40%
+  };
 
   // Calcular XP necessário para o próximo nível (progressão exponencial)
   const getXPForNextLevel = (level: number): number => {
     // Fórmula: baseXP * (level^1.5) para progressão equilibrada
     const baseXP = 100;
-    return Math.floor(baseXP * Math.pow(level, 1.5));
+    const xpNeeded = Math.floor(baseXP * Math.pow(level, 1.5));
+
+    // Aplicar redução de Força
+    const reduction = getStrengthXPReduction(user.attributes.strength);
+    const reducedXP = Math.floor(xpNeeded * (1 - reduction / 100));
+
+    return reducedXP;
   };
 
   // Calcular XP total necessário para alcançar um nível específico
@@ -365,8 +483,23 @@ export function useRPG() {
     );
     setQuests(newQuests);
 
+    // Aplicar multiplicador de streak ao XP
+    const streakMultiplier = getStreakMultiplier(user.currentStreak);
+    let xpWithStreak = Math.floor(quest.xpReward * streakMultiplier);
+
+    // Aplicar bônus de Inteligência em quests de estudo
+    const isStudyQuest =
+      quest.title.toLowerCase().includes("ler") ||
+      quest.title.toLowerCase().includes("estudar") ||
+      quest.title.toLowerCase().includes("aprender");
+
+    if (isStudyQuest) {
+      const intelligenceBonus = getIntelligenceBonus(user.attributes.intelligence);
+      xpWithStreak = Math.floor(xpWithStreak * (1 + intelligenceBonus / 100));
+    }
+
     // Adicionar XP e moedas ao usuário
-    const newTotalXP = user.totalXP + quest.xpReward;
+    const newTotalXP = user.totalXP + xpWithStreak;
     const newCoins = user.coins + quest.coinReward;
     const { level: newLevel, currentXP: newCurrentXP } = processLevelUp(
       newTotalXP,
@@ -410,6 +543,7 @@ export function useRPG() {
       currentXP: newCurrentXP,
       totalXP: newTotalXP,
       coins: newCoins,
+      completedQuestsToday: true, // Marcar que completou quest hoje
       attributes: newAttributes,
     });
   };
@@ -445,7 +579,11 @@ export function useRPG() {
     // Adicionar recompensas do passo
     const step = quest.steps.find((s) => s.id === stepId);
     if (step) {
-      const newTotalXP = user.totalXP + step.xpReward;
+      // Aplicar multiplicador de streak ao XP
+      const streakMultiplier = getStreakMultiplier(user.currentStreak);
+      const xpWithStreak = Math.floor(step.xpReward * streakMultiplier);
+
+      const newTotalXP = user.totalXP + xpWithStreak;
       const newCoins = user.coins + step.coinReward;
       const { level: newLevel, currentXP: newCurrentXP } = processLevelUp(
         newTotalXP,
@@ -476,18 +614,27 @@ export function useRPG() {
   // Comprar uma recompensa
   const purchaseReward = (rewardId: string) => {
     const reward = rewards.find((r) => r.id === rewardId);
-    if (!reward || reward.purchased || user.coins < reward.cost) return;
+    if (!reward || reward.purchased) return;
+
+    // Calcular preço com desconto de Carisma
+    const discount = getCharismaDiscount(user.attributes.charisma);
+    const finalPrice = Math.floor(reward.cost * (1 - discount / 100));
+
+    // Verificar se tem moedas suficientes
+    if (user.coins < finalPrice) return;
 
     const newRewards = rewards.map((r) =>
       r.id === rewardId ? { ...r, purchased: true } : r,
     );
     setRewards(newRewards);
 
-    // Deduzir moedas
+    // Deduzir moedas (com desconto aplicado)
     setUser({
       ...user,
-      coins: user.coins - reward.cost,
+      coins: user.coins - finalPrice,
     });
+
+    // Desconto de Carisma aplicado
   };
 
   // Resetar quests diárias (para usar no futuro)
@@ -522,6 +669,278 @@ export function useRPG() {
     return Math.min(100, (current / max) * 100);
   };
 
+  // Comprar item da loja
+  const purchaseItem = (itemId: string) => {
+    // Importar dinamicamente para evitar dependência circular
+    import("@/data/shopItems").then(({ SHOP_ITEMS }) => {
+      const item = SHOP_ITEMS.find((i) => i.id === itemId);
+      if (!item) {
+        console.error("Item não encontrado:", itemId);
+        return;
+      }
+
+      // Calcular preço final com desconto de carisma
+      const discount = getCharismaDiscount(user.attributes.charisma);
+      const finalPrice = Math.floor(item.price * (1 - discount / 100));
+
+      // Verificar se tem moedas suficientes
+      if (user.coins < finalPrice) {
+        return;
+      }
+
+      // Verificar se já tem o item no inventário (para consumíveis)
+      const existingItemIndex = user.inventory.findIndex(
+        (invItem) => invItem.id === itemId,
+      );
+
+      if (existingItemIndex >= 0) {
+        // Se já tem o item, incrementar quantidade
+        const updatedInventory = [...user.inventory];
+        updatedInventory[existingItemIndex] = {
+          ...updatedInventory[existingItemIndex],
+          quantity: (updatedInventory[existingItemIndex].quantity || 1) + 1,
+        };
+        setUser({
+          ...user,
+          coins: user.coins - finalPrice,
+          inventory: updatedInventory,
+        });
+      } else {
+        // Adicionar novo item ao inventário
+        const newItem = {
+          ...item,
+          quantity: 1,
+          acquiredAt: new Date().toISOString(),
+        };
+        setUser({
+          ...user,
+          coins: user.coins - finalPrice,
+          inventory: [...user.inventory, newItem],
+        });
+      }
+
+      // Compra realizada com sucesso
+    });
+  };
+
+  // Usar item do inventário
+  const useItem = (itemId: string, attribute?: string) => {
+    const itemIndex = user.inventory.findIndex((item) => item.id === itemId);
+    if (itemIndex === -1) {
+      return;
+    }
+
+    const item = user.inventory[itemIndex];
+
+    // Verificar se é consumível e não foi usado
+    if (item.type !== "consumable" || item.usedAt) {
+      return;
+    }
+
+    // Aplicar efeito do item
+    let updatedUser = { ...user };
+    let updatedInventory = [...user.inventory];
+
+    switch (item.effect) {
+      case "streak_protection":
+        updatedUser = {
+          ...updatedUser,
+          activeEffects: {
+            ...updatedUser.activeEffects,
+            hasStreakProtection: true,
+          },
+        };
+        // Barreira de Streak ativada
+        break;
+
+      case "xp_boost":
+        updatedUser = {
+          ...updatedUser,
+          activeEffects: {
+            ...updatedUser.activeEffects,
+            xpBoostActive: true,
+            xpBoostUntil: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(), // 24h
+          },
+        };
+        // Poção de XP ativada
+        break;
+
+      case "coin_multiplier":
+        updatedUser = {
+          ...updatedUser,
+          activeEffects: {
+            ...updatedUser.activeEffects,
+            coinMultiplierActive: true,
+            coinMultiplierUntil: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(), // 24h
+          },
+        };
+        // Multiplicador de moedas ativado
+        break;
+
+      case "attribute_point":
+        if (!attribute) {
+          return;
+        }
+        const validAttributes = ["strength", "intelligence", "charisma", "discipline"];
+        if (!validAttributes.includes(attribute)) {
+          return;
+        }
+
+        updatedUser = {
+          ...updatedUser,
+          attributes: {
+            ...updatedUser.attributes,
+            [attribute]: Math.min(100, updatedUser.attributes[attribute as keyof typeof updatedUser.attributes] + 1),
+          },
+        };
+        // Atributo aumentado
+        break;
+
+      case "rest_day":
+        // Rest day - dia de descanso
+        break;
+
+      default:
+      // Item usado
+    }
+
+    // Marcar item como usado e atualizar inventário
+    updatedInventory[itemIndex] = {
+      ...item,
+      usedAt: new Date().toISOString(),
+      quantity: Math.max(0, (item.quantity || 1) - 1),
+    };
+
+    // Se quantidade chegou a 0, remover do inventário
+    if (updatedInventory[itemIndex].quantity === 0) {
+      updatedInventory.splice(itemIndex, 1);
+    }
+
+    updatedUser = {
+      ...updatedUser,
+      inventory: updatedInventory,
+    };
+
+    setUser(updatedUser);
+    // Item usado com sucesso
+  };
+
+  // ========== CRUD DE QUESTS ==========
+
+  // Adicionar nova quest
+  const addQuest = (questData: Omit<Quest, "id" | "completed">) => {
+    // Validar dados
+    if (!questData.title.trim()) {
+      return false;
+    }
+
+    if (questData.xpReward <= 0 || questData.coinReward <= 0) {
+      return false;
+    }
+
+    // Verificar se título já existe
+    const existingQuest = quests.find(q => q.title.toLowerCase() === questData.title.toLowerCase());
+    if (existingQuest) {
+      return false;
+    }
+
+    // Criar nova quest
+    const newQuest: Quest = {
+      id: `quest-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+      title: questData.title.trim(),
+      description: questData.description.trim(),
+      xpReward: questData.xpReward,
+      coinReward: questData.coinReward,
+      category: questData.category,
+      completed: false,
+      progress: questData.progress || 0,
+      maxProgress: questData.maxProgress || 1,
+      deadline: questData.deadline,
+    };
+
+    setQuests([...quests, newQuest]);
+    return true;
+  };
+
+  // Atualizar quest existente
+  const updateQuest = (questId: string, updates: Partial<Quest>) => {
+    const questIndex = quests.findIndex(q => q.id === questId);
+    if (questIndex === -1) {
+      return false;
+    }
+
+    const quest = quests[questIndex];
+    const updatedQuest = { ...quest, ...updates };
+
+    // Validar título único (se mudou)
+    if (updates.title && updates.title !== quest.title) {
+      const existingQuest = quests.find(q =>
+        q.id !== questId && q.title.toLowerCase() === updates.title!.toLowerCase()
+      );
+      if (existingQuest) {
+        return false;
+      }
+    }
+
+    // Validar valores (se mudaram)
+    if (updates.xpReward !== undefined && updates.xpReward <= 0) {
+      return false;
+    }
+    if (updates.coinReward !== undefined && updates.coinReward <= 0) {
+      return false;
+    }
+
+    const updatedQuests = [...quests];
+    updatedQuests[questIndex] = updatedQuest;
+    setQuests(updatedQuests);
+    return true;
+  };
+
+  // Deletar quest
+  const deleteQuest = (questId: string) => {
+    const questIndex = quests.findIndex(q => q.id === questId);
+    if (questIndex === -1) {
+      return false;
+    }
+
+    const updatedQuests = quests.filter(q => q.id !== questId);
+    setQuests(updatedQuests);
+    return true;
+  };
+
+  // Duplicar quest
+  const duplicateQuest = (questId: string) => {
+    const quest = quests.find(q => q.id === questId);
+    if (!quest) {
+      return false;
+    }
+
+    const duplicatedQuest: Quest = {
+      ...quest,
+      id: `quest-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+      title: `${quest.title} (Cópia)`,
+      completed: false,
+      progress: 0,
+    };
+
+    setQuests([...quests, duplicatedQuest]);
+    return true;
+  };
+
+  // Adicionar quest a partir de template
+  const addQuestFromTemplate = (templateData: any) => {
+    const questData = {
+      title: templateData.title,
+      description: templateData.description,
+      xpReward: templateData.xpReward,
+      coinReward: templateData.coinReward,
+      category: templateData.category,
+      progress: 0,
+      maxProgress: 1,
+    };
+    return addQuest(questData);
+  };
+
   // Resetar sistema XP (função para debug/reset)
   const resetXPSystem = () => {
     setUser(INITIAL_USER);
@@ -540,12 +959,24 @@ export function useRPG() {
     completeQuest,
     completeMainQuestStep,
     purchaseReward,
+    purchaseItem,
+    useItem,
+    // CRUD de Quests
+    addQuest,
+    updateQuest,
+    deleteQuest,
+    duplicateQuest,
+    addQuestFromTemplate,
     resetDailyQuests,
     resetXPSystem,
     getXPForNextLevel,
     getRemainingXP,
     getLevelProgress,
     getAttributeProgress,
+    getStreakMultiplier,
+    getStrengthXPReduction,
+    getIntelligenceBonus,
+    getCharismaDiscount,
     setShowLevelUp,
   };
 }

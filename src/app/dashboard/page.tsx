@@ -8,7 +8,7 @@ import { CharacterStatus } from "@/components/CharacterStatus";
 import { RewardShop } from "@/components/RewardShop";
 import { LevelUpNotification } from "@/components/LevelUpNotification";
 import { XPParticles } from "@/components/XPParticles";
-import { useRPG } from "@/hooks/useRPG";
+import { useRPGContext } from "@/contexts/RPGContext";
 import { useXPParticles } from "@/hooks/useXPParticles";
 import { Button } from "@/components/ui/button";
 import {
@@ -49,8 +49,12 @@ export default function DashboardPage() {
     getXPForNextLevel,
     getLevelProgress,
     getAttributeProgress,
+    getStreakMultiplier,
+    getStrengthXPReduction,
+    getIntelligenceBonus,
+    getCharismaDiscount,
     setShowLevelUp,
-  } = useRPG();
+  } = useRPGContext();
 
   // Wrapper functions com efeito de partículas
   const handleCompleteQuest = (
@@ -88,6 +92,7 @@ export default function DashboardPage() {
 
   // Funções de navegação para quests diárias
   const nextQuests = () => {
+    if (!quests) return;
     setQuestIndex((prev) => {
       const maxIndex = Math.max(
         0,
@@ -103,6 +108,7 @@ export default function DashboardPage() {
 
   // Funções de navegação para missões principais
   const nextMainQuests = () => {
+    if (!mainQuests) return;
     setMainQuestIndex((prev) => {
       const maxIndex = Math.max(
         0,
@@ -116,15 +122,19 @@ export default function DashboardPage() {
     setMainQuestIndex((prev) => Math.max(prev - 1, 0));
   };
 
-  // Obter quests visíveis
-  const visibleQuests = quests.slice(
-    questIndex * questsPerPage,
-    questIndex * questsPerPage + questsPerPage,
-  );
-  const visibleMainQuests = mainQuests.slice(
-    mainQuestIndex * mainQuestsPerPage,
-    mainQuestIndex * mainQuestsPerPage + mainQuestsPerPage,
-  );
+  // Obter quests visíveis (com verificação de segurança)
+  const visibleQuests = quests
+    ? quests.slice(
+        questIndex * questsPerPage,
+        questIndex * questsPerPage + questsPerPage,
+      )
+    : [];
+  const visibleMainQuests = mainQuests
+    ? mainQuests.slice(
+        mainQuestIndex * mainQuestsPerPage,
+        mainQuestIndex * mainQuestsPerPage + mainQuestsPerPage,
+      )
+    : [];
 
   return (
     <div className="bg-background min-h-full">
@@ -135,6 +145,7 @@ export default function DashboardPage() {
             user={user}
             getXPForNextLevel={getXPForNextLevel}
             getLevelProgress={getLevelProgress}
+            getStreakMultiplier={getStreakMultiplier}
             xpBarRef={xpBarRef}
           />
         </div>
@@ -148,7 +159,8 @@ export default function DashboardPage() {
                 <Target className="text-primary h-6 w-6" />
                 <h2 className="text-title1 font-bold">Quests Diárias</h2>
                 <span className="text-title3 text-muted-foreground bg-secondary rounded px-2 py-1">
-                  {quests.filter((q) => !q.completed).length} pendentes
+                  {quests ? quests.filter((q) => !q.completed).length : 0}{" "}
+                  pendentes
                 </span>
               </div>
 
@@ -156,8 +168,11 @@ export default function DashboardPage() {
               <div className="flex items-center gap-2">
                 <span className="text-title3 text-muted-foreground">
                   {questIndex * questsPerPage + 1}-
-                  {Math.min((questIndex + 1) * questsPerPage, quests.length)} de{" "}
-                  {quests.length}
+                  {Math.min(
+                    (questIndex + 1) * questsPerPage,
+                    quests?.length || 0,
+                  )}{" "}
+                  de {quests?.length || 0}
                 </span>
                 <Button
                   variant="outline"
@@ -173,6 +188,7 @@ export default function DashboardPage() {
                   size="sm"
                   onClick={nextQuests}
                   disabled={
+                    !quests ||
                     questIndex >= Math.ceil(quests.length / questsPerPage) - 1
                   }
                   className="h-8 w-8 p-0 hover:bg-blue-100 disabled:opacity-50 dark:hover:bg-blue-900"
@@ -244,7 +260,7 @@ export default function DashboardPage() {
               </div>
 
               {/* Indicadores de páginas */}
-              {quests.length > questsPerPage && (
+              {quests && quests.length > questsPerPage && (
                 <div className="mt-4 flex justify-center gap-2">
                   {Array.from({
                     length: Math.ceil(quests.length / questsPerPage),
@@ -271,7 +287,10 @@ export default function DashboardPage() {
                 <Trophy className="h-6 w-6 text-purple-500" />
                 <h2 className="text-title1 font-bold">Missões Principais</h2>
                 <span className="text-muted-foreground bg-secondary text-title3 rounded px-2 py-1">
-                  {mainQuests.filter((q) => !q.completed).length} ativas
+                  {mainQuests
+                    ? mainQuests.filter((q) => !q.completed).length
+                    : 0}{" "}
+                  ativas
                 </span>
               </div>
 
@@ -281,9 +300,9 @@ export default function DashboardPage() {
                   {mainQuestIndex * mainQuestsPerPage + 1}-
                   {Math.min(
                     (mainQuestIndex + 1) * mainQuestsPerPage,
-                    mainQuests.length,
+                    mainQuests?.length || 0,
                   )}{" "}
-                  de {mainQuests.length}
+                  de {mainQuests?.length || 0}
                 </span>
                 <Button
                   variant="outline"
@@ -299,8 +318,9 @@ export default function DashboardPage() {
                   size="sm"
                   onClick={nextMainQuests}
                   disabled={
+                    !mainQuests ||
                     mainQuestIndex >=
-                    Math.ceil(mainQuests.length / mainQuestsPerPage) - 1
+                      Math.ceil(mainQuests.length / mainQuestsPerPage) - 1
                   }
                   className="h-8 w-8 p-0 hover:bg-purple-100 disabled:opacity-50 dark:hover:bg-purple-900"
                 >
@@ -398,7 +418,7 @@ export default function DashboardPage() {
               </div>
 
               {/* Indicadores de páginas */}
-              {mainQuests.length > mainQuestsPerPage && (
+              {mainQuests && mainQuests.length > mainQuestsPerPage && (
                 <div className="mt-4 flex justify-center gap-2">
                   {Array.from({
                     length: Math.ceil(mainQuests.length / mainQuestsPerPage),
@@ -476,6 +496,9 @@ export default function DashboardPage() {
                     user={user}
                     getAttributeProgress={getAttributeProgress}
                     getLevelProgress={getLevelProgress}
+                    getStrengthXPReduction={getStrengthXPReduction}
+                    getIntelligenceBonus={getIntelligenceBonus}
+                    getCharismaDiscount={getCharismaDiscount}
                   />
                 </div>
               )}
@@ -490,6 +513,9 @@ export default function DashboardPage() {
                     <RewardShop
                       rewards={rewards}
                       userCoins={user.coins}
+                      charismaDiscount={getCharismaDiscount(
+                        user.attributes.charisma,
+                      )}
                       onPurchaseReward={purchaseReward}
                     />
                   </div>
@@ -507,7 +533,7 @@ export default function DashboardPage() {
                   <div className="grid grid-cols-2 gap-2 sm:gap-4 md:grid-cols-4">
                     <div className="bg-card text-title2 rounded-lg border p-2 text-center sm:p-4">
                       <div className="text-primary text-title3 font-bold">
-                        {quests.length}
+                        {quests?.length || 0}
                       </div>
                       <div className="text-muted-foreground text-paragraph">
                         Total de Quests
@@ -515,7 +541,7 @@ export default function DashboardPage() {
                     </div>
                     <div className="bg-card text-title2 rounded-lg border p-2 text-center sm:p-4">
                       <div className="text-title3 font-bold text-green-600 dark:text-green-400">
-                        {quests.filter((q) => q.completed).length}
+                        {quests ? quests.filter((q) => q.completed).length : 0}
                       </div>
                       <div className="text-muted-foreground text-paragraph">
                         Quests Concluídas
@@ -523,7 +549,7 @@ export default function DashboardPage() {
                     </div>
                     <div className="bg-card text-title2 rounded-lg border p-2 text-center sm:p-4">
                       <div className="text-title3 font-bold text-yellow-600 dark:text-yellow-400">
-                        {quests.filter((q) => !q.completed).length}
+                        {quests ? quests.filter((q) => !q.completed).length : 0}
                       </div>
                       <div className="text-muted-foreground text-paragraph">
                         Quests Pendentes

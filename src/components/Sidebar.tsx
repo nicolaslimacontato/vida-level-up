@@ -3,11 +3,14 @@
 import { useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { useRPGContext } from "@/contexts/RPGContext";
 import {
   Home,
   Target,
   Trophy,
   Gift,
+  ShoppingBag,
+  Package,
   BarChart3,
   Settings,
   Menu,
@@ -33,6 +36,17 @@ const menuItems = [
   },
   {
     name: "Loja",
+    href: "/shop",
+    icon: ShoppingBag,
+  },
+  {
+    name: "Inventário",
+    href: "/inventory",
+    icon: Package,
+    disabled: false,
+  },
+  {
+    name: "Recompensas",
     href: "/dashboard#shop",
     icon: Gift,
   },
@@ -52,6 +66,7 @@ const menuItems = [
 export function Sidebar() {
   const [isOpen, setIsOpen] = useState(false);
   const pathname = usePathname();
+  const { user } = useRPGContext();
 
   const toggleSidebar = () => setIsOpen(!isOpen);
 
@@ -101,6 +116,10 @@ export function Sidebar() {
                 (item.href.includes("#") &&
                   pathname === item.href.split("#")[0]);
 
+              // Badge para inventário
+              const inventoryCount =
+                item.name === "Inventário" ? user.inventory.length : 0;
+
               return (
                 <Link
                   key={item.name}
@@ -115,7 +134,12 @@ export function Sidebar() {
                   }`}
                 >
                   <Icon className="h-5 w-5" />
-                  <span>{item.name}</span>
+                  <span className="flex-1">{item.name}</span>
+                  {inventoryCount > 0 && (
+                    <span className="bg-primary text-primary-foreground rounded-full px-2 py-0.5 text-xs font-bold">
+                      {inventoryCount}
+                    </span>
+                  )}
                 </Link>
               );
             })}

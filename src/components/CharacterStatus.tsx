@@ -7,12 +7,18 @@ interface CharacterStatusProps {
   user: User;
   getAttributeProgress: (attribute: keyof User["attributes"]) => number;
   getLevelProgress: () => number;
+  getStrengthXPReduction?: (strength: number) => number;
+  getIntelligenceBonus?: (intelligence: number) => number;
+  getCharismaDiscount?: (charisma: number) => number;
 }
 
 export function CharacterStatus({
   user,
   getAttributeProgress,
   getLevelProgress,
+  getStrengthXPReduction,
+  getIntelligenceBonus,
+  getCharismaDiscount,
 }: CharacterStatusProps) {
   const healthProgress = (user.health / user.maxHealth) * 100;
   const manaProgress = (user.mana / user.maxMana) * 100;
@@ -113,6 +119,13 @@ export function CharacterStatus({
               <p className="text-muted-foreground text-paragraph">
                 Aumenta com exercícios e treinos
               </p>
+              {getStrengthXPReduction &&
+                getStrengthXPReduction(user.attributes.strength) > 0 && (
+                  <p className="text-paragraph text-green-600 dark:text-green-400">
+                    ✨ -{getStrengthXPReduction(user.attributes.strength)}% XP
+                    necessário para level up
+                  </p>
+                )}
             </div>
 
             {/* Inteligência */}
@@ -132,6 +145,13 @@ export function CharacterStatus({
               <p className="text-muted-foreground text-paragraph">
                 Aumenta com estudos e leitura
               </p>
+              {getIntelligenceBonus &&
+                getIntelligenceBonus(user.attributes.intelligence) > 0 && (
+                  <p className="text-paragraph text-blue-600 dark:text-blue-400">
+                    ✨ +{getIntelligenceBonus(user.attributes.intelligence)}% XP
+                    em quests de estudo
+                  </p>
+                )}
             </div>
 
             {/* Carisma */}
@@ -151,6 +171,13 @@ export function CharacterStatus({
               <p className="text-muted-foreground text-paragraph">
                 Aumenta com socialização
               </p>
+              {getCharismaDiscount &&
+                getCharismaDiscount(user.attributes.charisma) > 0 && (
+                  <p className="text-paragraph text-purple-600 dark:text-purple-400">
+                    ✨ -{getCharismaDiscount(user.attributes.charisma)}%
+                    desconto na loja
+                  </p>
+                )}
             </div>
 
             {/* Disciplina */}
@@ -168,7 +195,10 @@ export function CharacterStatus({
                 className="h-2"
               />
               <p className="text-muted-foreground text-paragraph">
-                Aumenta com consistência
+                Aumenta com consistência (streak)
+              </p>
+              <p className="text-paragraph text-orange-600 dark:text-orange-400">
+                ✨ +1 a cada 7 dias de streak 🔥
               </p>
             </div>
           </div>

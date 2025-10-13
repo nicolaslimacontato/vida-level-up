@@ -1,48 +1,28 @@
 "use client";
-
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-  CardDescription,
-} from "@/components/ui/card";
-import { X } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { X, Check, AlertCircle } from "lucide-react";
+
+export interface QuestFormData {
+  id?: string;
+  title: string;
+  description: string;
+  xpReward: number;
+  coinReward: number;
+  category: string;
+  icon: string;
+}
 
 interface QuestModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onSave: (quest: QuestFormData) => void;
+  onSave: (quest: QuestFormData) => Promise<boolean>;
   initialData?: QuestFormData;
   mode: "create" | "edit";
+  existingQuests?: QuestFormData[]; // Para validação de título único
 }
-
-export interface QuestFormData {
-  title: string;
-  description: string;
-  category: string;
-  xpReward: number;
-  coinReward: number;
-  icon: string;
-  type: "daily" | "weekly" | "one-time";
-}
-
-const CATEGORIES = [
-  "Saúde",
-  "Estudo",
-  "Social",
-  "Produtividade",
-  "Bem-estar",
-  "Exercício",
-  "Leitura",
-  "Trabalho",
-  "Criatividade",
-  "Outro",
-];
-
-const ICONS = ["💪", "📚", "🧘", "💧", "🤝", "🎯", "🏃", "🧠", "🎨", "⚡"];
 
 export function QuestModal({
   isOpen,
@@ -50,288 +30,432 @@ export function QuestModal({
   onSave,
   initialData,
   mode,
+  existingQuests = [],
 }: QuestModalProps) {
-  const [formData, setFormData] = useState<QuestFormData>(
-    initialData || {
-      title: "",
-      description: "",
-      category: "Saúde",
-      xpReward: 50,
-      coinReward: 10,
-      icon: "🎯",
-      type: "daily",
-    },
-  );
+  const [formData, setFormData] = useState<QuestFormData>({
+    title: "",
+    description: "",
+    xpReward: 25,
+    coinReward: 10,
+    category: "daily",
+    icon: "🎯",
+  });
 
   const [errors, setErrors] = useState<Record<string, string>>({});
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const validateForm = () => {
-    const newErrors: Record<string, string> = {};
+  // Categorias disponíveis
+  const CATEGORIES = [
+    { value: "daily", label: "Diária", icon: "📅" },
+    { value: "weekly", label: "Semanal", icon: "📊" },
+    { value: "main", label: "Principal", icon: "🎯" },
+    { value: "special", label: "Especial", icon: "⭐" },
+  ];
 
-    if (!formData.title.trim()) {
-      newErrors.title = "Título é obrigatório";
+  // Ícones disponíveis
+  const ICONS = [
+    "🎯",
+    "💪",
+    "🧠",
+    "📚",
+    "🏃",
+    "🍎",
+    "💧",
+    "🌱",
+    "🎨",
+    "🎵",
+    "🏠",
+    "💼",
+    "💰",
+    "🎮",
+    "📱",
+    "☕",
+    "🍳",
+    "🧘",
+    "🎭",
+    "🌟",
+  ];
+
+  // Inicializar form com dados existentes
+  useEffect(() => {
+    if (initialData) {
+      setFormData(initialData);
+    } else {
+      setFormData({
+        title: "",
+        description: "",
+        xpReward: 25,
+        coinReward: 10,
+        category: "daily",
+        icon: "🎯",
+      });
     }
-    if (!formData.description.trim()) {
-      newErrors.description = "Descrição é obrigatória";
-    }
-    if (formData.xpReward < 1) {
-      newErrors.xpReward = "XP deve ser maior que 0";
-    }
-    if (formData.coinReward < 0) {
-      newErrors.coinReward = "Moedas não podem ser negativas";
+    setErrors({});
+  }, [initialData, isOpen]);
+
+  // Validação em tempo real
+  const validateField = (field: string, value: any) => {
+    const newErrors = { ...errors };
+
+    switch (field) {
+      case "title":
+        if (!value.trim()) {
+          newErrors.title = "Título é obrigatório";
+        } else if (value.length > 100) {
+          newErrors.title = "Título deve ter no máximo 100 caracteres";
+        } else if (value.length < 3) {
+          newErrors.title = "Título deve ter pelo menos 3 caracteres";
+        } else {
+          // Verificar se título é único (excluindo a quest atual se estiver editando)
+          const isDuplicate = existingQuests.some(
+            (quest) =>
+              quest.title.toLowerCase() === value.toLowerCase() &&
+              quest.id !== initialData?.id,
+          );
+          if (isDuplicate) {
+            newErrors.title = "Já existe uma quest com este título";
+          } else {
+            delete newErrors.title;
+          }
+        }
+        break;
+
+      case "description":
+        if (!value.trim()) {
+          newErrors.description = "Descrição é obrigatória";
+        } else if (value.length > 500) {
+          newErrors.description = "Descrição deve ter no máximo 500 caracteres";
+        } else if (value.length < 10) {
+          newErrors.description = "Descrição deve ter pelo menos 10 caracteres";
+        } else {
+          delete newErrors.description;
+        }
+        break;
+
+      case "xpReward":
+        if (isNaN(value) || value <= 0) {
+          newErrors.xpReward = "XP deve ser um número maior que 0";
+        } else if (value > 9999) {
+          newErrors.xpReward = "XP deve ser no máximo 9999";
+        } else {
+          delete newErrors.xpReward;
+        }
+        break;
+
+      case "coinReward":
+        if (isNaN(value) || value <= 0) {
+          newErrors.coinReward = "Moedas devem ser um número maior que 0";
+        } else if (value > 9999) {
+          newErrors.coinReward = "Moedas devem ser no máximo 9999";
+        } else {
+          delete newErrors.coinReward;
+        }
+        break;
+
+      case "category":
+        if (!value) {
+          newErrors.category = "Categoria é obrigatória";
+        } else {
+          delete newErrors.category;
+        }
+        break;
+
+      case "icon":
+        if (!value) {
+          newErrors.icon = "Ícone é obrigatório";
+        } else {
+          delete newErrors.icon;
+        }
+        break;
     }
 
     setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleInputChange = (field: keyof QuestFormData, value: any) => {
+    setFormData((prev) => ({ ...prev, [field]: value }));
+    validateField(field, value);
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (validateForm()) {
-      onSave(formData);
-      onClose();
+
+    // Validar todos os campos
+    Object.keys(formData).forEach((field) => {
+      validateField(field, formData[field as keyof QuestFormData]);
+    });
+
+    // Verificar se há erros
+    if (Object.keys(errors).length > 0) {
+      return;
+    }
+
+    setIsSubmitting(true);
+
+    try {
+      const success = await onSave(formData);
+      if (success) {
+        onClose();
+      }
+      // Se falhou, o toast já foi mostrado na página pai
+    } catch (error) {
+      // Erro ao salvar quest
+    } finally {
+      setIsSubmitting(false);
     }
   };
+
+  const isFormValid =
+    Object.keys(errors).length === 0 &&
+    formData.title.trim() &&
+    formData.description.trim() &&
+    formData.xpReward > 0 &&
+    formData.coinReward > 0 &&
+    formData.category &&
+    formData.icon;
 
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-      {/* Overlay */}
-      <div className="absolute inset-0 bg-black/50" onClick={onClose} />
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
+      <Card className="max-h-[90vh] w-full max-w-2xl overflow-y-auto">
+        <CardHeader className="pb-4">
+          <div className="flex items-center justify-between">
+            <CardTitle className="text-title1 font-bold">
+              {mode === "create" ? "🎯 Criar Nova Quest" : "✏️ Editar Quest"}
+            </CardTitle>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={onClose}
+              className="h-8 w-8 p-0"
+            >
+              <X className="h-4 w-4" />
+            </Button>
+          </div>
+        </CardHeader>
 
-      {/* Modal */}
-      <div className="relative z-10 max-h-[90vh] w-full max-w-2xl overflow-y-auto">
-        <Card>
-          <CardHeader>
-            <div className="flex items-start justify-between">
-              <div>
-                <CardTitle className="text-title2">
-                  {mode === "create" ? "Criar Nova Quest" : "Editar Quest"}
-                </CardTitle>
-                <CardDescription className="text-paragraph mt-1">
-                  {mode === "create"
-                    ? "Crie uma quest personalizada para suas metas"
-                    : "Atualize as informações da quest"}
-                </CardDescription>
-              </div>
-              <Button variant="ghost" size="sm" onClick={onClose}>
-                <X className="h-4 w-4" />
-              </Button>
-            </div>
-          </CardHeader>
-
-          <CardContent>
-            <form onSubmit={handleSubmit} className="space-y-4">
-              {/* Título */}
-              <div>
-                <label className="text-title3 mb-2 block font-medium">
-                  Título *
-                </label>
-                <input
-                  type="text"
-                  value={formData.title}
-                  onChange={(e) =>
-                    setFormData({ ...formData, title: e.target.value })
-                  }
-                  className="text-title3 border-border bg-background focus:ring-primary w-full rounded-lg border px-3 py-2 focus:ring-2 focus:outline-none"
-                  placeholder="Ex: Exercitar-se por 30 minutos"
-                />
-                {errors.title && (
-                  <p className="text-paragraph text-destructive mt-1">
-                    {errors.title}
-                  </p>
-                )}
-              </div>
-
-              {/* Descrição */}
-              <div>
-                <label className="text-title3 mb-2 block font-medium">
-                  Descrição *
-                </label>
-                <textarea
-                  value={formData.description}
-                  onChange={(e) =>
-                    setFormData({ ...formData, description: e.target.value })
-                  }
-                  rows={3}
-                  className="text-paragraph border-border bg-background focus:ring-primary w-full rounded-lg border px-3 py-2 focus:ring-2 focus:outline-none"
-                  placeholder="Descreva o que precisa ser feito..."
-                />
-                {errors.description && (
-                  <p className="text-paragraph text-destructive mt-1">
-                    {errors.description}
-                  </p>
-                )}
-              </div>
-
-              {/* Categoria e Ícone */}
-              <div className="grid gap-4 sm:grid-cols-2">
-                <div>
-                  <label className="text-title3 mb-2 block font-medium">
-                    Categoria
-                  </label>
-                  <select
-                    value={formData.category}
-                    onChange={(e) =>
-                      setFormData({ ...formData, category: e.target.value })
-                    }
-                    className="text-title3 border-border bg-background focus:ring-primary w-full rounded-lg border px-3 py-2 focus:ring-2 focus:outline-none"
-                  >
-                    {CATEGORIES.map((cat) => (
-                      <option key={cat} value={cat}>
-                        {cat}
-                      </option>
-                    ))}
-                  </select>
+        <CardContent className="space-y-6">
+          <form onSubmit={handleSubmit} className="space-y-6">
+            {/* Título */}
+            <div className="space-y-2">
+              <label className="text-title3 font-semibold">
+                Título da Quest
+              </label>
+              <Input
+                value={formData.title}
+                onChange={(e) => handleInputChange("title", e.target.value)}
+                placeholder="Ex: Exercitar-se por 30 minutos"
+                className={errors.title ? "border-red-500" : ""}
+                maxLength={100}
+              />
+              {errors.title && (
+                <div className="flex items-center gap-2 text-red-500">
+                  <AlertCircle className="h-4 w-4" />
+                  <span className="text-paragraph">{errors.title}</span>
                 </div>
+              )}
+              <div className="text-paragraph text-muted-foreground">
+                {formData.title.length}/100 caracteres
+              </div>
+            </div>
 
-                <div>
-                  <label className="text-title3 mb-2 block font-medium">
-                    Ícone
-                  </label>
-                  <div className="flex gap-2">
-                    {ICONS.map((icon) => (
-                      <button
-                        key={icon}
-                        type="button"
-                        onClick={() => setFormData({ ...formData, icon })}
-                        className={`flex h-10 w-10 items-center justify-center rounded-lg border-2 transition-colors ${
-                          formData.icon === icon
-                            ? "border-primary bg-primary/10"
-                            : "border-border hover:border-primary/50"
-                        }`}
-                      >
-                        {icon}
-                      </button>
-                    ))}
+            {/* Descrição */}
+            <div className="space-y-2">
+              <label className="text-title3 font-semibold">Descrição</label>
+              <textarea
+                value={formData.description}
+                onChange={(e) =>
+                  handleInputChange("description", e.target.value)
+                }
+                placeholder="Descreva o que precisa ser feito para completar esta quest..."
+                className={`placeholder:text-muted-foreground focus:ring-ring min-h-[80px] w-full rounded-lg border px-3 py-2 text-sm focus:ring-2 focus:outline-none ${
+                  errors.description
+                    ? "border-red-500"
+                    : "border-input bg-background"
+                }`}
+                maxLength={500}
+              />
+              {errors.description && (
+                <div className="flex items-center gap-2 text-red-500">
+                  <AlertCircle className="h-4 w-4" />
+                  <span className="text-paragraph">{errors.description}</span>
+                </div>
+              )}
+              <div className="text-paragraph text-muted-foreground">
+                {formData.description.length}/500 caracteres
+              </div>
+            </div>
+
+            {/* XP e Moedas */}
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <label className="text-title3 font-semibold">XP Reward</label>
+                <Input
+                  type="number"
+                  value={formData.xpReward}
+                  onChange={(e) =>
+                    handleInputChange("xpReward", parseInt(e.target.value) || 0)
+                  }
+                  placeholder="25"
+                  min="1"
+                  max="9999"
+                  className={errors.xpReward ? "border-red-500" : ""}
+                />
+                {errors.xpReward && (
+                  <div className="flex items-center gap-2 text-red-500">
+                    <AlertCircle className="h-4 w-4" />
+                    <span className="text-paragraph">{errors.xpReward}</span>
+                  </div>
+                )}
+              </div>
+              <div className="space-y-2">
+                <label className="text-title3 font-semibold">Moedas</label>
+                <Input
+                  type="number"
+                  value={formData.coinReward}
+                  onChange={(e) =>
+                    handleInputChange(
+                      "coinReward",
+                      parseInt(e.target.value) || 0,
+                    )
+                  }
+                  placeholder="10"
+                  min="1"
+                  max="9999"
+                  className={errors.coinReward ? "border-red-500" : ""}
+                />
+                {errors.coinReward && (
+                  <div className="flex items-center gap-2 text-red-500">
+                    <AlertCircle className="h-4 w-4" />
+                    <span className="text-paragraph">{errors.coinReward}</span>
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* Categoria */}
+            <div className="space-y-2">
+              <label className="text-title3 font-semibold">Categoria</label>
+              <div className="grid grid-cols-2 gap-2">
+                {CATEGORIES.map((category) => (
+                  <button
+                    key={category.value}
+                    type="button"
+                    onClick={() =>
+                      handleInputChange("category", category.value)
+                    }
+                    className={`flex items-center gap-2 rounded-lg border-2 p-3 text-left transition-colors ${
+                      formData.category === category.value
+                        ? "border-primary bg-primary/10"
+                        : "border-border hover:border-primary/50"
+                    }`}
+                  >
+                    <span className="text-2xl">{category.icon}</span>
+                    <span className="text-title3 font-semibold">
+                      {category.label}
+                    </span>
+                  </button>
+                ))}
+              </div>
+              {errors.category && (
+                <div className="flex items-center gap-2 text-red-500">
+                  <AlertCircle className="h-4 w-4" />
+                  <span className="text-paragraph">{errors.category}</span>
+                </div>
+              )}
+            </div>
+
+            {/* Ícone */}
+            <div className="space-y-2">
+              <label className="text-title3 font-semibold">Ícone</label>
+              <div className="grid grid-cols-10 gap-2">
+                {ICONS.map((icon) => (
+                  <button
+                    key={icon}
+                    type="button"
+                    onClick={() => handleInputChange("icon", icon)}
+                    className={`flex h-12 w-12 items-center justify-center rounded-lg border-2 text-2xl transition-colors ${
+                      formData.icon === icon
+                        ? "border-primary bg-primary/10"
+                        : "border-border hover:border-primary/50"
+                    }`}
+                  >
+                    {icon}
+                  </button>
+                ))}
+              </div>
+              {errors.icon && (
+                <div className="flex items-center gap-2 text-red-500">
+                  <AlertCircle className="h-4 w-4" />
+                  <span className="text-paragraph">{errors.icon}</span>
+                </div>
+              )}
+            </div>
+
+            {/* Preview da Quest */}
+            <div className="space-y-2">
+              <label className="text-title3 font-semibold">Preview</label>
+              <Card className="p-4">
+                <div className="flex items-start gap-3">
+                  <div className="text-3xl">{formData.icon}</div>
+                  <div className="flex-1">
+                    <h3 className="text-title3 font-semibold">
+                      {formData.title || "Título da Quest"}
+                    </h3>
+                    <p className="text-paragraph text-muted-foreground mt-1">
+                      {formData.description || "Descrição da quest..."}
+                    </p>
+                    <div className="mt-3 flex items-center gap-3">
+                      <span className="text-paragraph bg-primary/10 text-primary rounded-full px-2 py-0.5">
+                        {CATEGORIES.find((c) => c.value === formData.category)
+                          ?.label || "Categoria"}
+                      </span>
+                      <span className="text-paragraph text-yellow-600">
+                        +{formData.xpReward} XP
+                      </span>
+                      <span className="text-paragraph coin-text text-amber-600">
+                        <span className="coin-emoji">🪙</span>{" "}
+                        {formData.coinReward}
+                      </span>
+                    </div>
                   </div>
                 </div>
-              </div>
+              </Card>
+            </div>
 
-              {/* XP e Moedas */}
-              <div className="grid gap-4 sm:grid-cols-2">
-                <div>
-                  <label className="text-title3 mb-2 block font-medium">
-                    Recompensa XP
-                  </label>
-                  <input
-                    type="number"
-                    value={formData.xpReward}
-                    onChange={(e) =>
-                      setFormData({
-                        ...formData,
-                        xpReward: parseInt(e.target.value) || 0,
-                      })
-                    }
-                    min="1"
-                    className="text-title3 border-border bg-background focus:ring-primary w-full rounded-lg border px-3 py-2 focus:ring-2 focus:outline-none"
-                  />
-                  {errors.xpReward && (
-                    <p className="text-paragraph text-destructive mt-1">
-                      {errors.xpReward}
-                    </p>
-                  )}
-                </div>
-
-                <div>
-                  <label className="text-title3 mb-2 block font-medium">
-                    Recompensa Moedas
-                  </label>
-                  <input
-                    type="number"
-                    value={formData.coinReward}
-                    onChange={(e) =>
-                      setFormData({
-                        ...formData,
-                        coinReward: parseInt(e.target.value) || 0,
-                      })
-                    }
-                    min="0"
-                    className="text-title3 border-border bg-background focus:ring-primary w-full rounded-lg border px-3 py-2 focus:ring-2 focus:outline-none"
-                  />
-                  {errors.coinReward && (
-                    <p className="text-paragraph text-destructive mt-1">
-                      {errors.coinReward}
-                    </p>
-                  )}
-                </div>
-              </div>
-
-              {/* Tipo */}
-              <div>
-                <label className="text-title3 mb-2 block font-medium">
-                  Tipo de Quest
-                </label>
-                <div className="flex gap-2">
-                  {(["daily", "weekly", "one-time"] as const).map((type) => (
-                    <button
-                      key={type}
-                      type="button"
-                      onClick={() => setFormData({ ...formData, type })}
-                      className={`text-paragraph flex-1 rounded-lg border-2 px-3 py-2 transition-colors ${
-                        formData.type === type
-                          ? "border-primary bg-primary/10 text-primary"
-                          : "border-border hover:border-primary/50"
-                      }`}
-                    >
-                      {type === "daily"
-                        ? "Diária"
-                        : type === "weekly"
-                          ? "Semanal"
-                          : "Única"}
-                    </button>
-                  ))}
-                </div>
-              </div>
-
-              {/* Preview */}
-              <div>
-                <label className="text-title3 mb-2 block font-medium">
-                  Preview
-                </label>
-                <Card className="border-2 border-dashed">
-                  <CardContent className="p-4">
-                    <div className="flex items-start gap-3">
-                      <div className="text-2xl">{formData.icon}</div>
-                      <div className="flex-1">
-                        <h3 className="text-title3 mb-1 font-semibold">
-                          {formData.title || "Título da Quest"}
-                        </h3>
-                        <p className="text-paragraph text-muted-foreground mb-2">
-                          {formData.description || "Descrição da quest..."}
-                        </p>
-                        <div className="flex items-center gap-3">
-                          <span className="text-paragraph text-yellow-600">
-                            +{formData.xpReward} XP
-                          </span>
-                          <span className="text-paragraph coin-text text-amber-600">
-                            <span className="coin-emoji">🪙</span>{" "}
-                            {formData.coinReward}
-                          </span>
-                          <span className="text-paragraph bg-primary/10 text-primary rounded-full px-2 py-0.5">
-                            {formData.category}
-                          </span>
-                        </div>
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-              </div>
-
-              {/* Actions */}
-              <div className="flex justify-end gap-2 pt-4">
-                <Button type="button" variant="outline" onClick={onClose}>
-                  Cancelar
-                </Button>
-                <Button type="submit">
-                  {mode === "create" ? "Criar Quest" : "Salvar Alterações"}
-                </Button>
-              </div>
-            </form>
-          </CardContent>
-        </Card>
-      </div>
+            {/* Botões */}
+            <div className="flex gap-2 pt-4">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={onClose}
+                className="flex-1"
+                disabled={isSubmitting}
+              >
+                Cancelar
+              </Button>
+              <Button
+                type="submit"
+                className="bg-primary hover:bg-primary/90 flex-1"
+                disabled={!isFormValid || isSubmitting}
+              >
+                {isSubmitting ? (
+                  <div className="flex items-center gap-2">
+                    <div className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" />
+                    Salvando...
+                  </div>
+                ) : (
+                  <div className="flex items-center gap-2">
+                    <Check className="h-4 w-4" />
+                    {mode === "create" ? "Criar Quest" : "Salvar Alterações"}
+                  </div>
+                )}
+              </Button>
+            </div>
+          </form>
+        </CardContent>
+      </Card>
     </div>
   );
 }

@@ -6,16 +6,23 @@ import { Coins, ShoppingCart, CheckCircle } from "lucide-react";
 interface RewardShopProps {
   rewards: Reward[];
   userCoins: number;
+  charismaDiscount?: number; // Desconto em % (0-40)
   onPurchaseReward: (rewardId: string) => void;
 }
 
 export function RewardShop({
   rewards,
   userCoins,
+  charismaDiscount = 0,
   onPurchaseReward,
 }: RewardShopProps) {
   const availableRewards = rewards.filter((r) => !r.purchased);
   const purchasedRewards = rewards.filter((r) => r.purchased);
+
+  // Calcular preço com desconto
+  const getDiscountedPrice = (originalPrice: number): number => {
+    return Math.floor(originalPrice * (1 - charismaDiscount / 100));
+  };
 
   return (
     <div className="space-y-6">
@@ -42,6 +49,8 @@ export function RewardShop({
               key={reward.id}
               reward={reward}
               userCoins={userCoins}
+              charismaDiscount={charismaDiscount}
+              discountedPrice={getDiscountedPrice(reward.cost)}
               onPurchase={onPurchaseReward}
               isAvailable={true}
             />
@@ -62,6 +71,8 @@ export function RewardShop({
                 key={reward.id}
                 reward={reward}
                 userCoins={userCoins}
+                charismaDiscount={charismaDiscount}
+                discountedPrice={getDiscountedPrice(reward.cost)}
                 onPurchase={onPurchaseReward}
                 isAvailable={false}
               />
@@ -76,6 +87,8 @@ export function RewardShop({
 interface RewardCardProps {
   reward: Reward;
   userCoins: number;
+  charismaDiscount?: number;
+  discountedPrice?: number;
   onPurchase: (rewardId: string) => void;
   isAvailable: boolean;
 }
@@ -83,10 +96,15 @@ interface RewardCardProps {
 function RewardCard({
   reward,
   userCoins,
+  charismaDiscount = 0,
+  discountedPrice,
   onPurchase,
   isAvailable,
 }: RewardCardProps) {
-  const canAfford = userCoins >= reward.cost;
+  const finalPrice =
+    discountedPrice !== undefined ? discountedPrice : reward.cost;
+  const canAfford = userCoins >= finalPrice;
+  const hasDiscount = charismaDiscount > 0 && discountedPrice !== undefined;
 
   const getCategoryIcon = (category: Reward["category"]) => {
     switch (category) {
@@ -165,10 +183,22 @@ function RewardCard({
       <CardContent className="pt-2">
         <div className="space-y-2">
           {/* Preço */}
-          <div className="mx-auto flex w-fit items-center justify-center gap-1 rounded-full bg-amber-100 px-2 py-1 font-medium text-amber-800 dark:bg-amber-900/30 dark:text-amber-200">
-            <span className="coin-text font-bold">
-              <span className="coin-emoji">🪙</span> {reward.cost}
-            </span>
+          <div className="mx-auto flex w-fit flex-col items-center justify-center gap-1">
+            {hasDiscount && (
+              <div className="flex items-center gap-2">
+                <span className="text-paragraph text-muted-foreground line-through">
+                  <span className="coin-emoji">🪙</span> {reward.cost}
+                </span>
+                <span className="text-paragraph rounded-full bg-green-100 px-2 py-0.5 font-bold text-green-700 dark:bg-green-900/30 dark:text-green-300">
+                  -{charismaDiscount}% 😎
+                </span>
+              </div>
+            )}
+            <div className="rounded-full bg-amber-100 px-2 py-1 font-medium text-amber-800 dark:bg-amber-900/30 dark:text-amber-200">
+              <span className="coin-text font-bold">
+                <span className="coin-emoji">🪙</span> {finalPrice}
+              </span>
+            </div>
           </div>
 
           {/* Status/Ação */}
@@ -191,7 +221,7 @@ function RewardCard({
                   <div className="text-paragraph inline-flex items-center gap-1 rounded-full bg-red-50 px-2 py-1 text-red-500 dark:bg-red-950/50 dark:text-red-400">
                     <span>Faltam</span>
                     <span className="coin-text">
-                      <span>{reward.cost - userCoins}</span>
+                      <span>{finalPrice - userCoins}</span>
                       <span className="coin-emoji">🪙</span>
                     </span>
                   </div>

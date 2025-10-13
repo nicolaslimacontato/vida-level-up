@@ -7,6 +7,7 @@ interface UserHeaderProps {
   user: User;
   getXPForNextLevel: (level: number) => number;
   getLevelProgress: () => number;
+  getStreakMultiplier?: (streak: number) => number;
   xpBarRef?: React.RefObject<HTMLDivElement | null>;
 }
 
@@ -14,10 +15,14 @@ export function UserHeader({
   user,
   getXPForNextLevel,
   getLevelProgress,
+  getStreakMultiplier,
   xpBarRef,
 }: UserHeaderProps) {
   const xpForNextLevel = getXPForNextLevel(user.level);
   const progress = getLevelProgress();
+  const streakMultiplier = getStreakMultiplier
+    ? getStreakMultiplier(user.currentStreak)
+    : 1;
 
   // Estado para animação quando ganha XP
   const [xpGained, setXpGained] = useState(false);
@@ -58,7 +63,7 @@ export function UserHeader({
 
       <CardContent className="space-y-4">
         <div className="space-y-2">
-          <div className="flex justify-between text-title3">
+          <div className="text-title3 flex justify-between">
             <span className="font-medium text-amber-700 dark:text-amber-300">
               Progresso para o próximo nível
             </span>
@@ -181,7 +186,7 @@ export function UserHeader({
             {/* Efeito visual quando ganha XP */}
             {xpGained && (
               <div className="absolute -top-4 left-1/2 -translate-x-1/2 transform">
-                <div className="flex animate-bounce items-center gap-1 text-title3 font-bold text-green-400">
+                <div className="text-title3 flex animate-bounce items-center gap-1 font-bold text-green-400">
                   <span className="text-yellow-300">+XP</span>
                   <div className="h-2 w-2 animate-pulse rounded-full bg-green-400"></div>
                 </div>
@@ -190,8 +195,8 @@ export function UserHeader({
           </div>
         </div>
 
-        {/* Cards de XP e moedas */}
-        <div className="grid grid-cols-1 gap-4 text-center sm:grid-cols-3">
+        {/* Cards de XP, moedas e streak */}
+        <div className="grid grid-cols-1 gap-4 text-center sm:grid-cols-2 lg:grid-cols-4">
           <div className="bg-muted dark:bg-muted border-ring dark:border-ring rounded-lg border bg-gradient-to-b p-3 shadow-sm">
             <div className="text-title2 font-bold text-amber-700 dark:text-amber-300">
               {user.totalXP}
@@ -215,6 +220,28 @@ export function UserHeader({
             </div>
             <div className="text-paragraph font-medium text-amber-600 dark:text-amber-400">
               Moedas
+            </div>
+          </div>
+          <div
+            className={`bg-muted dark:bg-muted border-ring dark:border-ring rounded-lg border bg-gradient-to-b p-3 shadow-sm ${
+              user.currentStreak > 0
+                ? "ring-2 ring-orange-500 ring-offset-2"
+                : ""
+            }`}
+          >
+            <div className="text-title2 flex items-center justify-center gap-1 font-bold text-orange-600 dark:text-orange-400">
+              <span className="text-2xl">🔥</span>
+              <span>{user.currentStreak}</span>
+            </div>
+            <div className="text-paragraph font-medium text-orange-600 dark:text-orange-400">
+              {user.currentStreak > 0 ? (
+                <span>
+                  Streak{" "}
+                  {streakMultiplier > 1 && `(x${streakMultiplier.toFixed(1)})`}
+                </span>
+              ) : (
+                "Sem Streak"
+              )}
             </div>
           </div>
         </div>
