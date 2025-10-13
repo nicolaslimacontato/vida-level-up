@@ -7,22 +7,20 @@ import {
   Package,
   Clock,
   Zap,
-  Shield,
-  TrendingUp,
-  Gift,
+  // Shield, TrendingUp, Gift - não usados atualmente
   Sparkles,
   History,
-  Filter,
+  // Filter - não usado atualmente
 } from "lucide-react";
 import { useRPGContext } from "@/contexts/RPGContext";
-import { Item, ItemType, ItemCategory } from "@/types/rpg";
+import { Item, ItemCategory } from "@/types/rpg"; // ItemType não usado
 import { UseItemModal } from "@/components/UseItemModal";
 
 type InventoryTab = "consumable" | "permanent" | "history";
 
 export default function InventoryPage() {
   const [activeTab, setActiveTab] = useState<InventoryTab>("consumable");
-  const [showFilters, setShowFilters] = useState(false);
+  // const [showFilters, setShowFilters] = useState(false); // Não usado atualmente
   const [selectedItem, setSelectedItem] = useState<Item | null>(null);
   const [isUseModalOpen, setIsUseModalOpen] = useState(false);
 
@@ -183,22 +181,9 @@ interface InventoryItemCardProps {
 }
 
 function InventoryItemCard({ item, onUse, tab }: InventoryItemCardProps) {
-  const getCategoryIcon = (category: ItemCategory) => {
-    switch (category) {
-      case "protection":
-        return Shield;
-      case "boost":
-        return Zap;
-      case "attribute":
-        return TrendingUp;
-      case "reward":
-        return Gift;
-      case "special":
-        return Sparkles;
-      default:
-        return Package;
-    }
-  };
+  // const getCategoryIcon = (category: ItemCategory) => {
+  //   // Função não usada atualmente - removida para limpar warnings
+  // };
 
   const getCategoryColor = (category: ItemCategory) => {
     switch (category) {
@@ -238,7 +223,7 @@ function InventoryItemCard({ item, onUse, tab }: InventoryItemCardProps) {
     });
   };
 
-  const CategoryIcon = getCategoryIcon(item.category);
+  // const CategoryIcon = getCategoryIcon(item.category); // Não usado atualmente
   const canUse =
     item.type === "consumable" && !item.usedAt && tab !== "history";
 

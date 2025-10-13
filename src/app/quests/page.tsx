@@ -35,6 +35,8 @@ export default function QuestsPage() {
   const [questToDelete, setQuestToDelete] = useState<Quest | null>(null);
   const [isConfirmModalOpen, setIsConfirmModalOpen] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
+  const [viewMode, setViewMode] = useState<"list" | "grid">("grid");
+  const [showFilters, setShowFilters] = useState(false);
 
   // Hooks
   const { success, error, info } = useToast();
@@ -61,7 +63,9 @@ export default function QuestsPage() {
   const filteredTemplates =
     searchQuery.length > 0
       ? searchTemplates(searchQuery)
-      : getTemplatesByCategory(selectedCategory);
+      : selectedCategory === "all"
+        ? QUEST_TEMPLATES
+        : getTemplatesByCategory(selectedCategory);
 
   const handleSaveQuest = (questData: QuestFormData): Promise<boolean> => {
     return new Promise((resolve) => {
@@ -132,6 +136,7 @@ export default function QuestsPage() {
           error("Erro ao deletar quest", "Não foi possível deletar a quest.");
         }
       } catch (err) {
+        console.error("Erro ao deletar quest:", err);
         error("Erro ao deletar quest", "Ocorreu um erro inesperado.");
       } finally {
         setIsDeleting(false);
@@ -146,13 +151,19 @@ export default function QuestsPage() {
     xpReward: number;
     coinReward: number;
     icon: string;
-    type: string;
+    type: "daily" | "weekly";
   }) => {
-    const templateAdded = addQuestFromTemplate(template);
+    // Usar templateToQuest para conversão adequada
+    const questData = templateToQuest(template);
+    const templateAdded = addQuestFromTemplate(questData);
     if (templateAdded) {
       success(
         "Template adicionado!",
         `"${template.title}" foi adicionada às suas quests.`,
+      );
+      info(
+        "Dica: Templates",
+        `Você tem ${filteredTemplates.length} templates disponíveis.`,
       );
     } else {
       error(
@@ -182,11 +193,96 @@ export default function QuestsPage() {
             Crie, edite e organize suas quests personalizadas
           </p>
         </div>
-        <Button className="gap-2" onClick={handleCreateQuest}>
-          <Plus className="h-4 w-4" />
-          <span className="hidden sm:inline">Nova Quest</span>
-        </Button>
+        <div className="flex items-center gap-2">
+          {/* Toggle View Mode */}
+          <div className="bg-background flex items-center rounded-lg border">
+            <Button
+              variant={viewMode === "grid" ? "default" : "ghost"}
+              size="sm"
+              onClick={() => setViewMode("grid")}
+              className="rounded-r-none"
+            >
+              <ToggleRight className="h-4 w-4" />
+            </Button>
+            <Button
+              variant={viewMode === "list" ? "default" : "ghost"}
+              size="sm"
+              onClick={() => setViewMode("list")}
+              className="rounded-l-none"
+            >
+              <ToggleLeft className="h-4 w-4" />
+            </Button>
+          </div>
+
+          {/* Filter Button */}
+          <Button
+            variant={showFilters ? "default" : "outline"}
+            size="sm"
+            onClick={() => setShowFilters(!showFilters)}
+          >
+            <Filter className="h-4 w-4" />
+          </Button>
+
+          <Button className="gap-2" onClick={handleCreateQuest}>
+            <Plus className="h-4 w-4" />
+            <span className="hidden sm:inline">Nova Quest</span>
+          </Button>
+        </div>
       </div>
+
+      {/* Filtros Avançados */}
+      {showFilters && (
+        <div className="bg-card mb-4 rounded-lg border p-4">
+          <div className="mb-3 flex items-center gap-2">
+            <Filter className="h-4 w-4" />
+            <h3 className="text-title3 font-semibold">Filtros Avançados</h3>
+          </div>
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+            <div>
+              <label className="text-paragraph mb-1 block font-medium">
+                Status
+              </label>
+              <select className="border-input bg-background w-full rounded-lg border px-3 py-2 text-sm">
+                <option value="all">Todas</option>
+                <option value="pending">Pendentes</option>
+                <option value="completed">Completadas</option>
+              </select>
+            </div>
+            <div>
+              <label className="text-paragraph mb-1 block font-medium">
+                XP Mínimo
+              </label>
+              <input
+                type="number"
+                placeholder="0"
+                className="border-input bg-background w-full rounded-lg border px-3 py-2 text-sm"
+              />
+            </div>
+            <div>
+              <label className="text-paragraph mb-1 block font-medium">
+                Moedas Mínimas
+              </label>
+              <input
+                type="number"
+                placeholder="0"
+                className="border-input bg-background w-full rounded-lg border px-3 py-2 text-sm"
+              />
+            </div>
+            <div>
+              <label className="text-paragraph mb-1 block font-medium">
+                Categoria
+              </label>
+              <select className="border-input bg-background w-full rounded-lg border px-3 py-2 text-sm">
+                <option value="all">Todas</option>
+                <option value="daily">Diárias</option>
+                <option value="weekly">Semanais</option>
+                <option value="main">Principais</option>
+                <option value="special">Especiais</option>
+              </select>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Busca */}
       <div className="mb-4 flex gap-4">
@@ -267,24 +363,39 @@ export default function QuestsPage() {
               )}
             </Card>
           ) : (
-            filteredQuests.map((quest) => (
-              <QuestItem
-                key={quest.id}
-                quest={quest}
-                onEdit={() =>
-                  handleEditQuest({
-                    id: quest.id,
-                    title: quest.title,
-                    description: quest.description,
-                    xpReward: quest.xpReward,
-                    coinReward: quest.coinReward,
-                    category: quest.category,
-                  })
-                }
-                onDelete={() => handleDeleteQuest(quest)}
-                onDuplicate={() => duplicateQuest(quest.id)}
-              />
-            ))
+            <div
+              className={
+                viewMode === "grid"
+                  ? "grid gap-4 sm:grid-cols-2 lg:grid-cols-3"
+                  : "space-y-2"
+              }
+            >
+              {filteredQuests.map((quest) => (
+                <QuestItem
+                  key={quest.id}
+                  quest={quest}
+                  viewMode={viewMode}
+                  onEdit={() =>
+                    handleEditQuest({
+                      id: quest.id,
+                      title: quest.title,
+                      description: quest.description,
+                      xpReward: quest.xpReward,
+                      coinReward: quest.coinReward,
+                      category: quest.category,
+                    })
+                  }
+                  onDelete={() => handleDeleteQuest(quest)}
+                  onDuplicate={() => {
+                    duplicateQuest(quest.id);
+                    info(
+                      "Quest duplicada!",
+                      "Uma cópia da quest foi criada com sucesso.",
+                    );
+                  }}
+                />
+              ))}
+            </div>
           )}
         </div>
       )}
@@ -357,15 +468,64 @@ export default function QuestsPage() {
 
 function QuestItem({
   quest,
+  viewMode,
   onEdit,
   onDelete,
   onDuplicate,
 }: {
   quest: Quest;
+  viewMode: "list" | "grid";
   onEdit: () => void;
   onDelete: () => void;
   onDuplicate: () => void;
 }) {
+  if (viewMode === "list") {
+    return (
+      <Card className="p-3 transition-all hover:shadow-md">
+        <div className="flex items-center justify-between gap-4">
+          <div className="flex items-center gap-4">
+            <div className="text-2xl">{quest.icon || "🎯"}</div>
+            <div className="flex-1">
+              <div className="flex items-center gap-2">
+                <h3 className="text-title3 font-semibold">{quest.title}</h3>
+                <span className="text-paragraph bg-primary/10 text-primary rounded-full px-2 py-0.5">
+                  {quest.category}
+                </span>
+                {quest.completed && (
+                  <span className="text-paragraph rounded-full bg-green-100 px-2 py-0.5 text-green-700">
+                    ✅ Concluída
+                  </span>
+                )}
+              </div>
+              <p className="text-paragraph text-muted-foreground line-clamp-1">
+                {quest.description}
+              </p>
+            </div>
+          </div>
+          <div className="flex items-center gap-3">
+            <span className="text-paragraph text-yellow-600">
+              +{quest.xpReward} XP
+            </span>
+            <span className="text-paragraph coin-text text-amber-600">
+              <span className="coin-emoji">🪙</span> {quest.coinReward}
+            </span>
+            <div className="flex items-center gap-1">
+              <Button variant="ghost" size="sm" onClick={onEdit}>
+                <Pencil className="h-4 w-4" />
+              </Button>
+              <Button variant="ghost" size="sm" onClick={onDuplicate}>
+                <Plus className="h-4 w-4" />
+              </Button>
+              <Button variant="ghost" size="sm" onClick={onDelete}>
+                <Trash2 className="text-destructive h-4 w-4" />
+              </Button>
+            </div>
+          </div>
+        </div>
+      </Card>
+    );
+  }
+
   return (
     <Card className="p-4 transition-all hover:shadow-md">
       <div className="flex items-start justify-between gap-4">
@@ -421,7 +581,7 @@ function TemplateCard({
     xpReward: number;
     coinReward: number;
     icon: string;
-    type: string;
+    type: "daily" | "weekly";
   };
   onUse: () => void;
 }) {

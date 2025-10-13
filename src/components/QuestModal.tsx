@@ -209,6 +209,7 @@ export function QuestModal({
       }
       // Se falhou, o toast já foi mostrado na página pai
     } catch (error) {
+      console.error("Erro ao salvar quest:", error);
       // Erro ao salvar quest
     } finally {
       setIsSubmitting(false);

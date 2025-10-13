@@ -2,8 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { UserHeader } from "@/components/UserHeader";
-import { QuestList } from "@/components/QuestList";
-import { MainQuestList } from "@/components/MainQuestList";
+// QuestList e MainQuestList não são mais usados - funcionalidade movida para /quests
 import { CharacterStatus } from "@/components/CharacterStatus";
 import { RewardShop } from "@/components/RewardShop";
 import { LevelUpNotification } from "@/components/LevelUpNotification";
