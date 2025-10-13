@@ -11,8 +11,8 @@ export interface QuestFormData {
   description: string;
   xpReward: number;
   coinReward: number;
-  category: string;
-  icon: string;
+  category: "daily" | "weekly" | "main" | "special";
+  icon?: string;
 }
 
 interface QuestModalProps {
@@ -94,22 +94,23 @@ export function QuestModal({
   }, [initialData, isOpen]);
 
   // Validação em tempo real
-  const validateField = (field: string, value: any) => {
+  const validateField = (field: string, value: string | number) => {
     const newErrors = { ...errors };
 
     switch (field) {
       case "title":
-        if (!value.trim()) {
+        const titleValue = String(value);
+        if (!titleValue.trim()) {
           newErrors.title = "Título é obrigatório";
-        } else if (value.length > 100) {
+        } else if (titleValue.length > 100) {
           newErrors.title = "Título deve ter no máximo 100 caracteres";
-        } else if (value.length < 3) {
+        } else if (titleValue.length < 3) {
           newErrors.title = "Título deve ter pelo menos 3 caracteres";
         } else {
           // Verificar se título é único (excluindo a quest atual se estiver editando)
           const isDuplicate = existingQuests.some(
             (quest) =>
-              quest.title.toLowerCase() === value.toLowerCase() &&
+              quest.title.toLowerCase() === titleValue.toLowerCase() &&
               quest.id !== initialData?.id,
           );
           if (isDuplicate) {
@@ -121,11 +122,12 @@ export function QuestModal({
         break;
 
       case "description":
-        if (!value.trim()) {
+        const descValue = String(value);
+        if (!descValue.trim()) {
           newErrors.description = "Descrição é obrigatória";
-        } else if (value.length > 500) {
+        } else if (descValue.length > 500) {
           newErrors.description = "Descrição deve ter no máximo 500 caracteres";
-        } else if (value.length < 10) {
+        } else if (descValue.length < 10) {
           newErrors.description = "Descrição deve ter pelo menos 10 caracteres";
         } else {
           delete newErrors.description;
@@ -133,9 +135,10 @@ export function QuestModal({
         break;
 
       case "xpReward":
-        if (isNaN(value) || value <= 0) {
+        const xpValue = Number(value);
+        if (isNaN(xpValue) || xpValue <= 0) {
           newErrors.xpReward = "XP deve ser um número maior que 0";
-        } else if (value > 9999) {
+        } else if (xpValue > 9999) {
           newErrors.xpReward = "XP deve ser no máximo 9999";
         } else {
           delete newErrors.xpReward;
@@ -143,9 +146,10 @@ export function QuestModal({
         break;
 
       case "coinReward":
-        if (isNaN(value) || value <= 0) {
+        const coinValue = Number(value);
+        if (isNaN(coinValue) || coinValue <= 0) {
           newErrors.coinReward = "Moedas devem ser um número maior que 0";
-        } else if (value > 9999) {
+        } else if (coinValue > 9999) {
           newErrors.coinReward = "Moedas devem ser no máximo 9999";
         } else {
           delete newErrors.coinReward;
@@ -172,7 +176,10 @@ export function QuestModal({
     setErrors(newErrors);
   };
 
-  const handleInputChange = (field: keyof QuestFormData, value: any) => {
+  const handleInputChange = (
+    field: keyof QuestFormData,
+    value: string | number,
+  ) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
     validateField(field, value);
   };
@@ -182,7 +189,10 @@ export function QuestModal({
 
     // Validar todos os campos
     Object.keys(formData).forEach((field) => {
-      validateField(field, formData[field as keyof QuestFormData]);
+      const value = formData[field as keyof QuestFormData];
+      if (value !== undefined) {
+        validateField(field, value);
+      }
     });
 
     // Verificar se há erros

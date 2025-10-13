@@ -739,7 +739,7 @@ export function useRPG() {
 
     // Aplicar efeito do item
     let updatedUser = { ...user };
-    let updatedInventory = [...user.inventory];
+    const updatedInventory = [...user.inventory];
 
     switch (item.effect) {
       case "streak_protection":
@@ -928,7 +928,7 @@ export function useRPG() {
   };
 
   // Adicionar quest a partir de template
-  const addQuestFromTemplate = (templateData: any) => {
+  const addQuestFromTemplate = (templateData: { title: string; description: string; category: "daily" | "weekly" | "main" | "special"; xpReward: number; coinReward: number }) => {
     const questData = {
       title: templateData.title,
       description: templateData.description,

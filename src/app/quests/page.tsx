@@ -139,7 +139,15 @@ export default function QuestsPage() {
     }
   };
 
-  const handleUseTemplate = (template: any) => {
+  const handleUseTemplate = (template: {
+    title: string;
+    description: string;
+    category: "daily" | "weekly" | "main" | "special";
+    xpReward: number;
+    coinReward: number;
+    icon: string;
+    type: string;
+  }) => {
     const templateAdded = addQuestFromTemplate(template);
     if (templateAdded) {
       success(
@@ -406,7 +414,15 @@ function TemplateCard({
   template,
   onUse,
 }: {
-  template: any;
+  template: {
+    title: string;
+    description: string;
+    category: "daily" | "weekly" | "main" | "special";
+    xpReward: number;
+    coinReward: number;
+    icon: string;
+    type: string;
+  };
   onUse: () => void;
 }) {
   return (

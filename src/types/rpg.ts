@@ -6,6 +6,7 @@ export interface Quest {
   coinReward: number;
   completed: boolean;
   category: "daily" | "weekly" | "main" | "special";
+  icon?: string;
   progress?: number;
   maxProgress?: number;
   deadline?: Date;

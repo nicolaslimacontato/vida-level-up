@@ -27,7 +27,7 @@ export default function InventoryPage() {
   const [isUseModalOpen, setIsUseModalOpen] = useState(false);
 
   // Hook do RPG
-  const { user, useItem } = useRPGContext();
+  const { user, useItem: consumeItem } = useRPGContext();
 
   // Filtrar itens por tab
   const getItemsByTab = (tab: InventoryTab): Item[] => {
@@ -76,7 +76,8 @@ export default function InventoryPage() {
   };
 
   const handleConfirmUse = (item: Item, attribute?: string) => {
-    useItem(item.id, attribute);
+    // Chamar a função useItem do contexto
+    consumeItem(item.id, attribute);
     setIsUseModalOpen(false);
     setSelectedItem(null);
   };
