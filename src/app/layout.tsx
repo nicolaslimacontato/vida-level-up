@@ -4,10 +4,10 @@ import "./globals.css";
 import { ThemeProvider } from "@/components/ThemeProvider";
 import { RPGProvider } from "@/contexts/RPGContext";
 import { ToastContainer, ToastProvider } from "@/components/Toast";
-import ThemeToggle from "@/components/ThemeToggle";
 import { Sidebar } from "@/components/Sidebar";
 import { Bell, User } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { LogoMobile } from "@/components/LogoMobile";
 
 export const metadata: Metadata = {
   title: "Vida Level Up - RPG da Vida Real",
@@ -36,11 +36,7 @@ export default function RootLayout({
                   <header className="bg-background border-border sticky top-0 z-30 flex h-16 items-center justify-between border-b px-4 lg:px-6">
                     {/* Logo (visible on mobile when sidebar is closed) */}
                     <div className="flex items-center gap-3 lg:hidden">
-                      <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-to-br from-yellow-400 to-orange-500">
-                        <span className="text-paragraph flex items-center justify-center font-bold text-slate-900">
-                          VL
-                        </span>
-                      </div>
+                      <LogoMobile />
                       <h1 className="text-title3 font-bold">Vida Level Up</h1>
                     </div>
 
@@ -59,9 +55,6 @@ export default function RootLayout({
                       <Button variant="ghost" size="sm">
                         <User className="h-5 w-5" />
                       </Button>
-
-                      {/* Theme Toggle */}
-                      <ThemeToggle />
                     </div>
                   </header>
 

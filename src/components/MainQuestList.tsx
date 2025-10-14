@@ -12,6 +12,14 @@ export function MainQuestList({
   mainQuests,
   onCompleteStep,
 }: MainQuestListProps) {
+  if (!mainQuests || mainQuests.length === 0) {
+    return (
+      <div className="text-muted-foreground py-8 text-center">
+        Nenhuma missão principal cadastrada.
+      </div>
+    );
+  }
+
   const activeQuests = mainQuests.filter((q) => !q.completed);
   const completedQuests = mainQuests.filter((q) => q.completed);
 

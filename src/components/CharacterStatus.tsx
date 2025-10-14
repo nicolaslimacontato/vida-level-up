@@ -1,7 +1,7 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { User } from "@/types/rpg";
-import { Heart, Zap, Target, TrendingUp, Crown, Coins } from "lucide-react";
+import { Target, TrendingUp, Crown, Coins } from "lucide-react";
 
 interface CharacterStatusProps {
   user: User;
@@ -20,9 +20,6 @@ export function CharacterStatus({
   getIntelligenceBonus,
   getCharismaDiscount,
 }: CharacterStatusProps) {
-  const healthProgress = (user.health / user.maxHealth) * 100;
-  const manaProgress = (user.mana / user.maxMana) * 100;
-
   return (
     <div className="space-y-6">
       {/* Cabeçalho do Personagem */}
@@ -48,49 +45,6 @@ export function CharacterStatus({
       </div>
 
       {/* Status Básico */}
-      <div className="grid gap-4 md:grid-cols-2">
-        {/* Barra de Vida */}
-        <Card>
-          <CardHeader className="pb-3">
-            <CardTitle className="text-title3 flex items-center gap-2">
-              <Heart className="h-5 w-5 text-red-500" />
-              Vida
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-2">
-              <div className="text-muted-foreground text-title3 flex justify-between">
-                <span>
-                  {user.health}/{user.maxHealth}
-                </span>
-                <span>{Math.round(healthProgress)}%</span>
-              </div>
-              <Progress value={healthProgress} className="h-3" />
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Barra de Mana */}
-        <Card>
-          <CardHeader className="pb-3">
-            <CardTitle className="text-title3 flex items-center gap-2">
-              <Zap className="h-5 w-5 text-blue-500" />
-              Energia Mental
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-2">
-              <div className="text-muted-foreground text-title3 flex justify-between">
-                <span>
-                  {user.mana}/{user.maxMana}
-                </span>
-                <span>{Math.round(manaProgress)}%</span>
-              </div>
-              <Progress value={manaProgress} className="h-3" />
-            </div>
-          </CardContent>
-        </Card>
-      </div>
 
       {/* Atributos */}
       <Card>

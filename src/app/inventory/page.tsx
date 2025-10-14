@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import {
@@ -13,6 +13,7 @@ import {
   // Filter - não usado atualmente
 } from "lucide-react";
 import { useRPGContext } from "@/contexts/RPGContext";
+import { useToast } from "@/components/Toast";
 import { Item, ItemCategory } from "@/types/rpg"; // ItemType não usado
 import { UseItemModal } from "@/components/UseItemModal";
 
@@ -26,6 +27,21 @@ export default function InventoryPage() {
 
   // Hook do RPG
   const { user, useItem: consumeItem } = useRPGContext();
+
+  // Hook de notificações
+  const { success, error, info } = useToast();
+
+  // Estado para forçar re-render do countdown
+  const [, setCountdownTick] = useState(0);
+
+  // Atualizar countdown a cada segundo
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setCountdownTick((prev) => prev + 1);
+    }, 1000);
+
+    return () => clearInterval(interval);
+  }, []);
 
   // Filtrar itens por tab
   const getItemsByTab = (tab: InventoryTab): Item[] => {
@@ -75,14 +91,143 @@ export default function InventoryPage() {
 
   const handleConfirmUse = (item: Item, attribute?: string) => {
     // Chamar a função useItem do contexto
-    consumeItem(item.id, attribute);
+    try {
+      consumeItem(item.id, attribute);
+      success("Item Usado!", `${item.name} foi ativado com sucesso.`);
+
+      // Mostrar efeito específico do item
+      switch (item.effect) {
+        case "xp_boost":
+          info("Buff Ativo!", "Próxima quest terá XP dobrado!");
+          break;
+        case "coin_multiplier":
+          info("Buff Ativo!", "Moedas dobradas por 24 horas!");
+          break;
+        case "attribute_point":
+          info("Atributo Aumentado!", `+1 ponto em ${attribute}!`);
+          break;
+        case "streak_protection":
+          info("Proteção Ativa!", "Seu streak está protegido por 1 dia!");
+          break;
+        case "rest_day":
+          info("Dia de Descanso!", "Você pode descansar sem perder progresso!");
+          break;
+        default:
+          info("Efeito Ativo!", "Item usado com sucesso!");
+      }
+    } catch {
+      error("Erro", "Não foi possível usar este item.");
+    }
+
     setIsUseModalOpen(false);
     setSelectedItem(null);
   };
 
+  // Função para calcular tempo restante dos buffs
+  const getTimeRemaining = (untilDate?: string): string => {
+    if (!untilDate) return "0s";
+
+    const now = new Date().getTime();
+    const until = new Date(untilDate).getTime();
+    const diff = until - now;
+
+    if (diff <= 0) return "Expirado";
+
+    const hours = Math.floor(diff / (1000 * 60 * 60));
+    const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+    const seconds = Math.floor((diff % (1000 * 60)) / 1000);
+
+    if (hours > 0) {
+      return `${hours}h ${minutes}m`;
+    } else if (minutes > 0) {
+      return `${minutes}m ${seconds}s`;
+    } else {
+      return `${seconds}s`;
+    }
+  };
+
+  // Função para obter buffs ativos
+  const getActiveBuffs = () => {
+    const buffs = [];
+
+    if (user.activeEffects.xpBoostActive && user.activeEffects.xpBoostUntil) {
+      buffs.push({
+        id: "xp_boost",
+        name: "Poção de XP Duplo",
+        icon: "🧪",
+        timeRemaining: getTimeRemaining(user.activeEffects.xpBoostUntil),
+        description: "Próxima quest terá XP dobrado",
+      });
+    }
+
+    if (
+      user.activeEffects.coinMultiplierActive &&
+      user.activeEffects.coinMultiplierUntil
+    ) {
+      buffs.push({
+        id: "coin_multiplier",
+        name: "Multiplicador de Moedas",
+        icon: "💰",
+        timeRemaining: getTimeRemaining(user.activeEffects.coinMultiplierUntil),
+        description: "Moedas dobradas por 24 horas",
+      });
+    }
+
+    if (user.activeEffects.hasStreakProtection) {
+      buffs.push({
+        id: "streak_protection",
+        name: "Barreira de Streak",
+        icon: "🛡️",
+        timeRemaining: "Ativo",
+        description: "Protege seu streak contra quebra",
+      });
+    }
+
+    return buffs;
+  };
+
+  const activeBuffs = getActiveBuffs();
+
   return (
     <div className="bg-background min-h-full">
       <div className="container mx-auto max-w-7xl px-4 py-8">
+        {/* Buffs Ativos */}
+        {activeBuffs.length > 0 && (
+          <Card className="mb-6 border-yellow-500 bg-yellow-50 dark:bg-yellow-900/10">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2 text-yellow-700 dark:text-yellow-300">
+                <Sparkles className="h-5 w-5" />
+                Buffs Ativos
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                {activeBuffs.map((buff) => (
+                  <div
+                    key={buff.id}
+                    className="flex items-center gap-3 rounded-lg bg-white/50 p-3 dark:bg-gray-800/50"
+                  >
+                    <span className="text-2xl">{buff.icon}</span>
+                    <div className="min-w-0 flex-1">
+                      <p className="font-semibold text-yellow-800 dark:text-yellow-200">
+                        {buff.name}
+                      </p>
+                      <p className="text-sm text-yellow-700 dark:text-yellow-300">
+                        {buff.description}
+                      </p>
+                      <p className="text-xs text-yellow-600 dark:text-yellow-400">
+                        {buff.id === "streak_protection"
+                          ? "Proteção ativa"
+                          : `Expira em: ${buff.timeRemaining}`}
+                      </p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
         {/* Header */}
         <div className="mb-8">
           <div className="mb-4 flex items-center justify-between">

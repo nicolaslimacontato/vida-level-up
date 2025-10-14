@@ -17,6 +17,7 @@ import {
   X,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { LogoDesktop } from "@/components/LogoDesktop";
 
 const menuItems = [
   {
@@ -31,7 +32,7 @@ const menuItems = [
   },
   {
     name: "Missões Principais",
-    href: "/dashboard#main-quests",
+    href: "/missoes-principais",
     icon: Trophy,
   },
   {
@@ -47,19 +48,18 @@ const menuItems = [
   },
   {
     name: "Recompensas",
-    href: "/dashboard#shop",
+    href: "/recompensas",
     icon: Gift,
   },
   {
     name: "Estatísticas",
-    href: "/dashboard#stats",
+    href: "/estatisticas",
     icon: BarChart3,
   },
   {
     name: "Configurações",
     href: "/settings",
     icon: Settings,
-    disabled: true,
   },
 ];
 
@@ -78,6 +78,7 @@ export function Sidebar() {
         size="sm"
         className="fixed top-4 left-4 z-50 lg:hidden"
         onClick={toggleSidebar}
+        style={{ marginTop: "8px" }}
       >
         {isOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
       </Button>
@@ -99,11 +100,7 @@ export function Sidebar() {
         <div className="flex h-full flex-col">
           {/* Logo/Brand */}
           <div className="border-border flex h-16 items-center gap-3 border-b px-6">
-            <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-gradient-to-br from-yellow-400 to-orange-500">
-              <span className="text-paragraph flex items-center justify-center font-bold text-slate-900">
-                VL
-              </span>
-            </div>
+            <LogoDesktop />
             <h1 className="text-title3 font-bold">Vida Level Up</h1>
           </div>
 

@@ -17,15 +17,12 @@ export interface User {
   currentXP: number;
   totalXP: number;
   coins: number;
-  health: number;
-  maxHealth: number;
-  mana: number;
-  maxMana: number;
   currentStreak: number; // Dias consecutivos
   bestStreak: number; // Melhor streak já alcançado
   lastAccessDate: string; // ISO string da última vez que acessou
   completedQuestsToday: boolean; // Se completou pelo menos 1 quest hoje
   inventory: Item[]; // Inventário de itens
+  purchasedUpgrades: string[]; // IDs dos upgrades comprados
   activeEffects: {
     // Efeitos ativos no momento
     hasStreakProtection: boolean; // Tem barreira de streak ativa
@@ -73,6 +70,33 @@ export interface QuestStep {
   completed: boolean;
   xpReward: number;
   coinReward: number;
+}
+
+// ========== SISTEMA DE UPGRADES ==========
+
+export type UpgradeCategory =
+  | "streak" // Modificadores de streak
+  | "xp" // Modificadores de XP
+  | "coins" // Modificadores de moedas
+  | "protection" // Proteções e mecânicas
+  | "multiplier"; // Multiplicadores gerais
+
+export interface Upgrade {
+  id: string;
+  name: string;
+  description: string;
+  category: UpgradeCategory;
+  attributeCost: {
+    strength?: number;
+    intelligence?: number;
+    charisma?: number;
+    discipline?: number;
+  };
+  isPermanent: boolean; // true = permanente, false = pode desativar
+  isActive: boolean; // Se está ativo no momento
+  purchased: boolean; // Se já foi comprado
+  effect: string; // Descrição do efeito (ex: "streak_start_1.5x")
+  icon: string; // Emoji
 }
 
 // ========== SISTEMA DE ITENS ==========

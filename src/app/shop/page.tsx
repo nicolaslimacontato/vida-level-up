@@ -18,6 +18,7 @@ import {
 import { SHOP_ITEMS, getItemsByCategory, searchItems } from "@/data/shopItems";
 import { ItemCategory } from "@/types/rpg";
 import { useRPGContext } from "@/contexts/RPGContext";
+import { useToast } from "@/components/Toast";
 
 export default function ShopPage() {
   const [selectedCategory, setSelectedCategory] = useState<string>("all");
@@ -26,6 +27,40 @@ export default function ShopPage() {
 
   // Hook do RPG (via contexto compartilhado)
   const { user, purchaseItem, getCharismaDiscount } = useRPGContext();
+
+  // Hook de notificações
+  const { success, error, info } = useToast();
+
+  // Função wrapper para compra com notificações
+  const handlePurchase = (itemId: string) => {
+    const item = SHOP_ITEMS.find((i) => i.id === itemId);
+    if (!item) {
+      error("Erro", "Item não encontrado.");
+      return;
+    }
+
+    const discount = getCharismaDiscount(user.attributes.charisma);
+    const finalPrice = Math.floor(item.price * (1 - discount / 100));
+
+    if (user.coins < finalPrice) {
+      error(
+        "Moedas Insuficientes",
+        "Você não tem moedas suficientes para comprar este item.",
+      );
+      return;
+    }
+
+    try {
+      purchaseItem(itemId);
+      success("Item Comprado!", `${item.name} foi adicionado ao inventário.`);
+
+      if (discount > 0) {
+        info("Desconto Aplicado!", `${discount}% de desconto por Carisma!`);
+      }
+    } catch {
+      error("Erro", "Não foi possível comprar o item.");
+    }
+  };
 
   // Filtrar itens
   const filteredItems =
@@ -156,7 +191,7 @@ export default function ShopPage() {
                 item={item}
                 userCoins={user.coins}
                 charismaDiscount={getCharismaDiscount(user.attributes.charisma)}
-                onPurchase={purchaseItem}
+                onPurchase={handlePurchase}
               />
             ))}
           </div>

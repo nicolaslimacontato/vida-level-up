@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
-import { User, Quest, MainQuest, Reward } from "@/types/rpg";
+import { User, Quest, MainQuest, Reward, Upgrade } from "@/types/rpg";
+import { UPGRADE_TEMPLATES } from "@/data/upgradeTemplates";
 import { useGameAudio } from "./useGameAudio";
 import { checkDailyReset, resetDailyQuests as resetDailyQuestsUtil, updateUserStreak } from "./useDailyReset";
 
@@ -213,15 +214,12 @@ const INITIAL_USER: User = {
   currentXP: 0,
   totalXP: 0,
   coins: 50,
-  health: 100,
-  maxHealth: 100,
-  mana: 100,
-  maxMana: 100,
   currentStreak: 0,
   bestStreak: 0,
   lastAccessDate: new Date().toISOString(),
   completedQuestsToday: false,
   inventory: [],
+  purchasedUpgrades: [],
   activeEffects: {
     hasStreakProtection: false,
     xpBoostActive: false,
@@ -241,6 +239,7 @@ export function useRPG() {
   const [mainQuests, setMainQuests] =
     useState<MainQuest[]>(INITIAL_MAIN_QUESTS);
   const [rewards, setRewards] = useState<Reward[]>(INITIAL_REWARDS);
+  const [upgrades, setUpgrades] = useState<Upgrade[]>(UPGRADE_TEMPLATES);
   const [showLevelUp, setShowLevelUp] = useState(false);
   const [newLevel, setNewLevel] = useState(1);
 
@@ -257,6 +256,7 @@ export function useRPG() {
     const savedQuests = localStorage.getItem("rpg-quests");
     const savedMainQuests = localStorage.getItem("rpg-main-quests");
     const savedRewards = localStorage.getItem("rpg-rewards");
+    const savedUpgrades = localStorage.getItem("rpg-upgrades");
 
     if (savedUser) {
       const userData = JSON.parse(savedUser);
@@ -368,6 +368,22 @@ export function useRPG() {
         setRewards(INITIAL_REWARDS);
       }
     }
+
+    // Carregar upgrades com validação
+    if (savedUpgrades && savedUpgrades !== "undefined") {
+      try {
+        const loadedUpgrades = JSON.parse(savedUpgrades);
+        // Sincronizar com templates para garantir que novos upgrades apareçam
+        const syncedUpgrades = UPGRADE_TEMPLATES.map(template => {
+          const loaded = loadedUpgrades.find((u: Upgrade) => u.id === template.id);
+          return loaded ? { ...template, ...loaded } : template;
+        });
+        setUpgrades(syncedUpgrades);
+      } catch (e) {
+        console.error("Erro ao carregar upgrades, usando padrão:", e);
+        setUpgrades(UPGRADE_TEMPLATES);
+      }
+    }
   }, [preloadGameSounds]);
 
   // Salvar dados no localStorage sempre que houver mudanças
@@ -395,9 +411,32 @@ export function useRPG() {
     }
   }, [rewards]);
 
+  useEffect(() => {
+    if (upgrades && upgrades.length > 0) {
+      localStorage.setItem("rpg-upgrades", JSON.stringify(upgrades));
+    }
+  }, [upgrades]);
+
   // Calcular multiplicador de streak (10% por dia)
   const getStreakMultiplier = (streak: number): number => {
-    return 1 + streak * 0.1;
+    let baseMultiplier = 1 + streak * 0.1;
+
+    // Aplicar efeitos dos upgrades ativos
+    const activeUpgrades = upgrades.filter(upgrade => upgrade.purchased && upgrade.isActive);
+
+    // Streak Turbinado - começa em 1.5x ao invés de 1.1x
+    const streakTurbinado = activeUpgrades.find(u => u.effect === "streak_start_1.5x");
+    if (streakTurbinado && streak >= 1) {
+      baseMultiplier = Math.max(baseMultiplier, 1.5);
+    }
+
+    // Streak Duplo - multiplicador é dobrado
+    const streakDuplo = activeUpgrades.find(u => u.effect === "streak_double_multiplier");
+    if (streakDuplo) {
+      baseMultiplier = baseMultiplier * 2;
+    }
+
+    return Math.min(baseMultiplier, 5.0); // Máximo de 5x
   };
 
   // ========== EFEITOS DOS ATRIBUTOS ==========
@@ -487,6 +526,26 @@ export function useRPG() {
     const streakMultiplier = getStreakMultiplier(user.currentStreak);
     let xpWithStreak = Math.floor(quest.xpReward * streakMultiplier);
 
+    // Aplicar efeitos dos upgrades ativos
+    const activeUpgrades = upgrades.filter(upgrade => upgrade.purchased && upgrade.isActive);
+
+    // Bônus de XP permanente
+    const menteAfiada = activeUpgrades.find(u => u.effect === "xp_bonus_10_percent");
+    const genio = activeUpgrades.find(u => u.effect === "xp_bonus_25_percent");
+    const sabedoriaAncestral = activeUpgrades.find(u => u.effect === "daily_quest_xp_1.5x");
+
+    if (menteAfiada) {
+      xpWithStreak = Math.floor(xpWithStreak * 1.1);
+    }
+    if (genio) {
+      xpWithStreak = Math.floor(xpWithStreak * 1.25);
+    }
+
+    // Sabedoria Ancestral - XP de quests diárias vale 1.5x
+    if (sabedoriaAncestral && quest.category === "daily") {
+      xpWithStreak = Math.floor(xpWithStreak * 1.5);
+    }
+
     // Aplicar bônus de Inteligência em quests de estudo
     const isStudyQuest =
       quest.title.toLowerCase().includes("ler") ||
@@ -498,9 +557,24 @@ export function useRPG() {
       xpWithStreak = Math.floor(xpWithStreak * (1 + intelligenceBonus / 100));
     }
 
+    // Aplicar efeitos dos upgrades de moedas
+    let coinsWithBonus = quest.coinReward;
+    const magnetismo = activeUpgrades.find(u => u.effect === "coins_bonus_15_percent");
+
+    if (magnetismo) {
+      coinsWithBonus = Math.floor(coinsWithBonus * 1.15);
+    }
+
+    // Lendário - todas as recompensas +20%
+    const lendario = activeUpgrades.find(u => u.effect === "all_rewards_20_percent_bonus");
+    if (lendario) {
+      xpWithStreak = Math.floor(xpWithStreak * 1.2);
+      coinsWithBonus = Math.floor(coinsWithBonus * 1.2);
+    }
+
     // Adicionar XP e moedas ao usuário
     const newTotalXP = user.totalXP + xpWithStreak;
-    const newCoins = user.coins + quest.coinReward;
+    const newCoins = user.coins + coinsWithBonus;
     const { level: newLevel, currentXP: newCurrentXP } = processLevelUp(
       newTotalXP,
       user.level,
@@ -581,10 +655,39 @@ export function useRPG() {
     if (step) {
       // Aplicar multiplicador de streak ao XP
       const streakMultiplier = getStreakMultiplier(user.currentStreak);
-      const xpWithStreak = Math.floor(step.xpReward * streakMultiplier);
+      let xpWithStreak = Math.floor(step.xpReward * streakMultiplier);
+
+      // Aplicar efeitos dos upgrades ativos
+      const activeUpgrades = upgrades.filter(upgrade => upgrade.purchased && upgrade.isActive);
+
+      // Bônus de XP permanente
+      const menteAfiada = activeUpgrades.find(u => u.effect === "xp_bonus_10_percent");
+      const genio = activeUpgrades.find(u => u.effect === "xp_bonus_25_percent");
+
+      if (menteAfiada) {
+        xpWithStreak = Math.floor(xpWithStreak * 1.1);
+      }
+      if (genio) {
+        xpWithStreak = Math.floor(xpWithStreak * 1.25);
+      }
+
+      // Aplicar efeitos dos upgrades de moedas
+      let coinsWithBonus = step.coinReward;
+      const magnetismo = activeUpgrades.find(u => u.effect === "coins_bonus_15_percent");
+
+      if (magnetismo) {
+        coinsWithBonus = Math.floor(coinsWithBonus * 1.15);
+      }
+
+      // Lendário - todas as recompensas +20%
+      const lendario = activeUpgrades.find(u => u.effect === "all_rewards_20_percent_bonus");
+      if (lendario) {
+        xpWithStreak = Math.floor(xpWithStreak * 1.2);
+        coinsWithBonus = Math.floor(coinsWithBonus * 1.2);
+      }
 
       const newTotalXP = user.totalXP + xpWithStreak;
-      const newCoins = user.coins + step.coinReward;
+      const newCoins = user.coins + coinsWithBonus;
       const { level: newLevel, currentXP: newCurrentXP } = processLevelUp(
         newTotalXP,
         user.level,
@@ -681,7 +784,15 @@ export function useRPG() {
 
       // Calcular preço final com desconto de carisma
       const discount = getCharismaDiscount(user.attributes.charisma);
-      const finalPrice = Math.floor(item.price * (1 - discount / 100));
+      let finalPrice = Math.floor(item.price * (1 - discount / 100));
+
+      // Aplicar upgrade "Negociador Nato" - desconto extra de 10%
+      const activeUpgrades = upgrades.filter(upgrade => upgrade.purchased && upgrade.isActive);
+      const negociadorNato = activeUpgrades.find(u => u.effect === "shop_discount_extra_10_percent");
+
+      if (negociadorNato) {
+        finalPrice = Math.floor(finalPrice * 0.9); // 10% de desconto adicional
+      }
 
       // Verificar se tem moedas suficientes
       if (user.coins < finalPrice) {
@@ -949,11 +1060,135 @@ export function useRPG() {
     setRewards(INITIAL_REWARDS);
   };
 
+  // Função para resetar tudo - APAGA TODOS OS DADOS
+  const resetAll = () => {
+    // Resetar todos os estados para valores iniciais
+    setUser(INITIAL_USER);
+    setQuests(INITIAL_QUESTS);
+    setMainQuests(INITIAL_MAIN_QUESTS);
+    setRewards(INITIAL_REWARDS);
+    setUpgrades(UPGRADE_TEMPLATES);
+    setShowLevelUp(false);
+    setNewLevel(1);
+
+    // Limpar localStorage completamente
+    localStorage.removeItem("rpg-user");
+    localStorage.removeItem("rpg-quests");
+    localStorage.removeItem("rpg-main-quests");
+    localStorage.removeItem("rpg-rewards");
+    localStorage.removeItem("rpg-upgrades");
+
+    // Recarregar a página para garantir que tudo seja resetado
+    window.location.reload();
+  };
+
+  // CRUD de MainQuests
+  const addMainQuest = (questData: Omit<MainQuest, "id" | "completed">) => {
+    const newQuest: MainQuest = {
+      ...questData,
+      id: `main-${Date.now()}`,
+      completed: false,
+      steps: questData.steps.map(step => ({
+        ...step,
+        id: `step-${Date.now()}-${Math.random()}`,
+        completed: false
+      }))
+    };
+    setMainQuests([...mainQuests, newQuest]);
+    return true;
+  };
+
+  const updateMainQuest = (id: string, updates: Partial<MainQuest>) => {
+    setMainQuests(mainQuests.map(q => q.id === id ? { ...q, ...updates } : q));
+    return true;
+  };
+
+  const deleteMainQuest = (id: string) => {
+    setMainQuests(mainQuests.filter(q => q.id !== id));
+    return true;
+  };
+
+  const duplicateMainQuest = (id: string) => {
+    const quest = mainQuests.find(q => q.id === id);
+    if (!quest) return false;
+    const newQuest = {
+      ...quest,
+      id: `main-${Date.now()}`,
+      title: `${quest.title} (cópia)`,
+      completed: false,
+      steps: quest.steps.map(step => ({
+        ...step,
+        id: `step-${Date.now()}-${Math.random()}`,
+        completed: false
+      }))
+    };
+    setMainQuests([...mainQuests, newQuest]);
+    return true;
+  };
+
+  // CRUD de Rewards
+  const addReward = (rewardData: Omit<Reward, "id" | "purchased">) => {
+    const newReward: Reward = {
+      ...rewardData,
+      id: `reward-${Date.now()}`,
+      purchased: false
+    };
+    setRewards([...rewards, newReward]);
+    return true;
+  };
+
+  const updateReward = (id: string, updates: Partial<Reward>) => {
+    setRewards(rewards.map(r => r.id === id ? { ...r, ...updates } : r));
+    return true;
+  };
+
+  const deleteReward = (id: string) => {
+    setRewards(rewards.filter(r => r.id !== id));
+    return true;
+  };
+
+  // ========== SISTEMA DE UPGRADES ==========
+
+  const purchaseUpgrade = (upgradeId: string): boolean => {
+    const upgrade = upgrades.find(u => u.id === upgradeId);
+    if (!upgrade || upgrade.purchased) return false;
+
+    // Verificar se tem atributos suficientes (requisito mínimo)
+    const hasAttributes =
+      (!upgrade.attributeCost.strength || user.attributes.strength >= upgrade.attributeCost.strength) &&
+      (!upgrade.attributeCost.intelligence || user.attributes.intelligence >= upgrade.attributeCost.intelligence) &&
+      (!upgrade.attributeCost.charisma || user.attributes.charisma >= upgrade.attributeCost.charisma) &&
+      (!upgrade.attributeCost.discipline || user.attributes.discipline >= upgrade.attributeCost.discipline);
+
+    if (!hasAttributes) return false;
+
+    // Marcar como comprado e ativo
+    setUpgrades(upgrades.map(u =>
+      u.id === upgradeId
+        ? { ...u, purchased: true, isActive: true }
+        : u
+    ));
+
+    setUser({ ...user, purchasedUpgrades: [...user.purchasedUpgrades, upgradeId] });
+    return true;
+  };
+
+  const toggleUpgrade = (upgradeId: string): boolean => {
+    const upgrade = upgrades.find(u => u.id === upgradeId);
+    if (!upgrade || !upgrade.purchased || upgrade.isPermanent) return false;
+
+    setUpgrades(upgrades.map(u =>
+      u.id === upgradeId ? { ...u, isActive: !u.isActive } : u
+    ));
+    return true;
+  };
+
   return {
     user,
     quests,
     mainQuests,
     rewards,
+    upgrades,
     showLevelUp,
     newLevel,
     completeQuest,
@@ -978,5 +1213,18 @@ export function useRPG() {
     getIntelligenceBonus,
     getCharismaDiscount,
     setShowLevelUp,
+    resetAll,
+    // CRUD de MainQuests
+    addMainQuest,
+    updateMainQuest,
+    deleteMainQuest,
+    duplicateMainQuest,
+    // CRUD de Rewards
+    addReward,
+    updateReward,
+    deleteReward,
+    // Sistema de Upgrades
+    purchaseUpgrade,
+    toggleUpgrade,
   };
 }
