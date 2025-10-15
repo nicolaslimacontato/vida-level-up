@@ -33,7 +33,7 @@ export function CollapsibleMainQuestCard({
   return (
     <div
       onClick={handleCardClick}
-      className={`group relative flex h-full min-h-[200px] w-full cursor-pointer flex-col overflow-hidden rounded-lg border-2 p-4 transition-all duration-300 hover:shadow-lg sm:p-6 ${
+      className={`group relative flex min-h-[200px] w-full cursor-pointer flex-col overflow-hidden rounded-lg border-2 p-4 transition-all duration-300 hover:shadow-lg sm:p-6 ${
         isCompleted
           ? "border-green-500 bg-green-50 dark:bg-green-900/20"
           : "bg-card border-border hover:border-primary/50"

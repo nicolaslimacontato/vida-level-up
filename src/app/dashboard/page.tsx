@@ -28,7 +28,7 @@ export default function DashboardPage() {
     mainQuests,
     showLevelUp,
     newLevel,
-    completeQuest,
+    completeQuestWithNotification,
     completeMainQuestStep,
     getXPForNextLevel,
     getLevelProgress,
@@ -43,7 +43,7 @@ export default function DashboardPage() {
   ) => {
     const rect = event.currentTarget.getBoundingClientRect();
     triggerParticleEffect(rect);
-    completeQuest(questId);
+    completeQuestWithNotification(questId);
   };
 
   const handleCompleteMainQuestStep = (
@@ -115,7 +115,7 @@ export default function DashboardPage() {
               <div className="flex items-center gap-2">
                 <Target className="text-primary h-6 w-6" />
                 <h2 className="text-title1 font-bold">Quests Diárias</h2>
-                <span className="text-title3 text-muted-foreground bg-secondary rounded px-2 py-1">
+                <span className="text-title3 text-muted-foreground bg-secondary hidden rounded px-2 py-1 md:block">
                   {quests ? quests.filter((q) => !q.completed).length : 0}{" "}
                   pendentes
                 </span>
@@ -160,10 +160,10 @@ export default function DashboardPage() {
                 {visibleQuests.map((quest) => (
                   <div
                     key={quest.id}
-                    className={`group relative flex h-full min-h-[240px] w-full cursor-pointer flex-col overflow-hidden rounded-lg border-2 bg-gradient-to-br from-slate-800 via-purple-900 to-blue-900 p-4 transition-all duration-300 hover:scale-105 hover:shadow-xl hover:shadow-cyan-500/25 sm:p-6 ${
+                    className={`group relative flex h-full min-h-[240px] w-full cursor-pointer flex-col overflow-hidden rounded-lg border-2 p-4 transition-all duration-300 hover:scale-105 hover:shadow-xl sm:p-6 ${
                       quest.completed
                         ? "border-green-400 bg-gradient-to-br from-green-800 via-green-700 to-emerald-800 shadow-lg shadow-green-400/20"
-                        : "border-cyan-400 hover:border-cyan-300"
+                        : "border-[#373962] bg-[#2d2f52] hover:border-[#4a4c7a]"
                     }`}
                   >
                     {/* Efeito de brilho animado */}
@@ -177,9 +177,12 @@ export default function DashboardPage() {
                     )}
 
                     <div className="mb-3 flex items-start justify-between">
-                      <h3 className="text-title2 font-bold text-white">
-                        {quest.title}
-                      </h3>
+                      <div className="flex items-center gap-2">
+                        <div className="text-2xl">{quest.icon || "🎯"}</div>
+                        <h3 className="text-title2 font-bold text-white">
+                          {quest.title}
+                        </h3>
+                      </div>
                       <div className="flex items-center gap-1">
                         <span className="text-title3 font-semibold text-yellow-300">
                           +{quest.xpReward} XP
@@ -253,7 +256,7 @@ export default function DashboardPage() {
             </div>
 
             <div className="relative">
-              <div className="grid grid-cols-1 items-stretch gap-4 lg:grid-cols-2">
+              <div className="grid grid-cols-1 items-start gap-4 lg:grid-cols-2">
                 {mainQuests?.map((quest) => (
                   <CollapsibleMainQuestCard
                     key={quest.id}

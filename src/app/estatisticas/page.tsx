@@ -1,5 +1,7 @@
 "use client";
 
+import { StatGrid } from "@/components/ui/stat-card";
+import { FadeIn } from "@/components/ui/animations";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   BarChart3,
@@ -88,71 +90,40 @@ export default function EstatisticasPage() {
         </div>
 
         {/* Estatísticas Gerais */}
-        <div className="mb-8 grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-4">
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Nível Atual</CardTitle>
-              <TrendingUp className="text-muted-foreground h-4 w-4" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{currentLevel}</div>
-              <p className="text-muted-foreground text-xs">
-                {user.currentXP} / {xpForNextLevel} XP
-              </p>
-              <div className="bg-secondary mt-2 h-2 w-full rounded-full">
-                <div
-                  className="bg-primary h-2 rounded-full transition-all duration-300"
-                  style={{ width: `${levelProgress}%` }}
-                />
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">XP Total</CardTitle>
-              <Star className="text-muted-foreground h-4 w-4" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">
-                {totalXP.toLocaleString()}
-              </div>
-              <p className="text-muted-foreground text-xs">
-                {remainingXP.toLocaleString()} XP para o próximo nível
-              </p>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Moedas</CardTitle>
-              <Coins className="text-muted-foreground h-4 w-4" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold text-amber-600">
-                🪙 {totalCoins.toLocaleString()}
-              </div>
-              <p className="text-muted-foreground text-xs">Acumuladas</p>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">
-                Streak Atual
-              </CardTitle>
-              <Zap className="text-muted-foreground h-4 w-4" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold text-orange-600">
-                🔥 {currentStreak} dias
-              </div>
-              <p className="text-muted-foreground text-xs">
-                Melhor: {bestStreak} dias (x{streakMultiplier.toFixed(1)})
-              </p>
-            </CardContent>
-          </Card>
-        </div>
+        <FadeIn delay={0.1}>
+          <StatGrid
+            stats={[
+              {
+                title: "Nível Atual",
+                value: currentLevel,
+                icon: <TrendingUp className="h-6 w-6" />,
+                changeLabel: `${user.currentXP} / ${xpForNextLevel} XP`,
+                trend: "up",
+              },
+              {
+                title: "XP Total",
+                value: totalXP.toLocaleString(),
+                icon: <Star className="h-6 w-6" />,
+                changeLabel: `${remainingXP.toLocaleString()} XP restante`,
+                trend: "up",
+              },
+              {
+                title: "Moedas",
+                value: `🪙 ${totalCoins.toLocaleString()}`,
+                icon: <Coins className="h-6 w-6" />,
+                changeLabel: "Acumuladas",
+                trend: "up",
+              },
+              {
+                title: "Streak Atual",
+                value: `🔥 ${currentStreak} dias`,
+                icon: <Zap className="h-6 w-6" />,
+                changeLabel: `Melhor: ${bestStreak} dias (x${streakMultiplier.toFixed(1)})`,
+                trend: currentStreak > 0 ? "up" : "neutral",
+              },
+            ]}
+          />
+        </FadeIn>
 
         {/* Progresso das Quests */}
         <div className="mb-8 grid grid-cols-1 gap-6 lg:grid-cols-2">

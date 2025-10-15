@@ -1,9 +1,9 @@
 "use client";
 
-import { useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useRPGContext } from "@/contexts/RPGContext";
+import { useSidebarContext } from "@/contexts/SidebarContext";
 import {
   Home,
   Target,
@@ -13,10 +13,7 @@ import {
   Package,
   BarChart3,
   Settings,
-  Menu,
-  X,
 } from "lucide-react";
-import { Button } from "@/components/ui/button";
 import { LogoDesktop } from "@/components/LogoDesktop";
 
 const menuItems = [
@@ -64,30 +61,17 @@ const menuItems = [
 ];
 
 export function Sidebar() {
-  const [isOpen, setIsOpen] = useState(false);
   const pathname = usePathname();
   const { user } = useRPGContext();
-
-  const toggleSidebar = () => setIsOpen(!isOpen);
+  const { isOpen, closeSidebar } = useSidebarContext();
 
   return (
     <>
-      {/* Mobile Menu Button */}
-      <Button
-        variant="ghost"
-        size="sm"
-        className="fixed top-4 left-4 z-50 lg:hidden"
-        onClick={toggleSidebar}
-        style={{ marginTop: "8px" }}
-      >
-        {isOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
-      </Button>
-
       {/* Overlay for mobile */}
       {isOpen && (
         <div
           className="fixed inset-0 z-40 bg-black/50 lg:hidden"
-          onClick={toggleSidebar}
+          onClick={closeSidebar}
         />
       )}
 
@@ -121,7 +105,7 @@ export function Sidebar() {
                 <Link
                   key={item.name}
                   href={item.disabled ? "#" : item.href}
-                  onClick={() => !item.disabled && setIsOpen(false)}
+                  onClick={() => !item.disabled && closeSidebar()}
                   className={`text-title3 flex items-center gap-3 rounded-lg px-3 py-2 transition-colors ${
                     isActive
                       ? "bg-primary text-primary-foreground"

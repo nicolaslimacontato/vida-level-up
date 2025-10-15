@@ -13,6 +13,7 @@ export interface QuestFormData {
   coinReward: number;
   category: "daily" | "weekly" | "main" | "special";
   icon?: string;
+  attributeBonus?: "strength" | "intelligence" | "charisma" | "discipline";
 }
 
 interface QuestModalProps {
@@ -39,6 +40,7 @@ export function QuestModal({
     coinReward: 10,
     category: "daily",
     icon: "🎯",
+    attributeBonus: "strength",
   });
 
   const [errors, setErrors] = useState<Record<string, string>>({});
@@ -48,8 +50,34 @@ export function QuestModal({
   const CATEGORIES = [
     { value: "daily", label: "Diária", icon: "📅" },
     { value: "weekly", label: "Semanal", icon: "📊" },
-    { value: "main", label: "Principal", icon: "🎯" },
-    { value: "special", label: "Especial", icon: "⭐" },
+  ];
+
+  // Atributos disponíveis
+  const ATTRIBUTES = [
+    {
+      value: "strength",
+      label: "Força",
+      icon: "💪",
+      description: "Reduz XP necessário para level up",
+    },
+    {
+      value: "intelligence",
+      label: "Inteligência",
+      icon: "🧠",
+      description: "Bônus de XP em quests de estudo",
+    },
+    {
+      value: "charisma",
+      label: "Carisma",
+      icon: "😎",
+      description: "Desconto na loja",
+    },
+    {
+      value: "discipline",
+      label: "Disciplina",
+      icon: "⚡",
+      description: "Aumenta com manutenção de streak",
+    },
   ];
 
   // Ícones disponíveis
@@ -88,6 +116,7 @@ export function QuestModal({
         coinReward: 10,
         category: "daily",
         icon: "🎯",
+        attributeBonus: "strength",
       });
     }
     setErrors({});
@@ -223,7 +252,8 @@ export function QuestModal({
     formData.xpReward > 0 &&
     formData.coinReward > 0 &&
     formData.category &&
-    formData.icon;
+    formData.icon &&
+    formData.attributeBonus;
 
   if (!isOpen) return null;
 
@@ -377,6 +407,39 @@ export function QuestModal({
               )}
             </div>
 
+            {/* Atributo */}
+            <div className="space-y-2">
+              <label className="text-title3 font-semibold">
+                Atributo Bonus
+              </label>
+              <div className="grid grid-cols-2 gap-2">
+                {ATTRIBUTES.map((attribute) => (
+                  <button
+                    key={attribute.value}
+                    type="button"
+                    onClick={() =>
+                      handleInputChange("attributeBonus", attribute.value)
+                    }
+                    className={`flex flex-col items-center gap-2 rounded-lg border-2 p-3 text-left transition-colors ${
+                      formData.attributeBonus === attribute.value
+                        ? "border-primary bg-primary/10"
+                        : "border-border hover:border-primary/50"
+                    }`}
+                  >
+                    <span className="text-2xl">{attribute.icon}</span>
+                    <div className="text-center">
+                      <span className="text-title3 font-semibold">
+                        {attribute.label}
+                      </span>
+                      <p className="text-paragraph text-muted-foreground text-xs">
+                        {attribute.description}
+                      </p>
+                    </div>
+                  </button>
+                ))}
+              </div>
+            </div>
+
             {/* Ícone */}
             <div className="space-y-2">
               <label className="text-title3 font-semibold">Ícone</label>
@@ -429,6 +492,20 @@ export function QuestModal({
                         <span className="coin-emoji">🪙</span>{" "}
                         {formData.coinReward}
                       </span>
+                      {formData.attributeBonus && (
+                        <span className="text-paragraph rounded-full bg-purple-100 px-2 py-0.5 text-purple-800 dark:bg-purple-900 dark:text-purple-200">
+                          {
+                            ATTRIBUTES.find(
+                              (a) => a.value === formData.attributeBonus,
+                            )?.icon
+                          }{" "}
+                          {
+                            ATTRIBUTES.find(
+                              (a) => a.value === formData.attributeBonus,
+                            )?.label
+                          }
+                        </span>
+                      )}
                     </div>
                   </div>
                 </div>

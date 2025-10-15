@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { User, Quest, MainQuest, Reward, Upgrade } from "@/types/rpg";
 import { UPGRADE_TEMPLATES } from "@/data/upgradeTemplates";
 import { useGameAudio } from "./useGameAudio";
+import { useToast } from "@/components/Toast";
 import { checkDailyReset, resetDailyQuests as resetDailyQuestsUtil, updateUserStreak } from "./useDailyReset";
 
 const INITIAL_QUESTS: Quest[] = [
@@ -14,6 +15,8 @@ const INITIAL_QUESTS: Quest[] = [
     coinReward: 10,
     completed: false,
     category: "daily",
+    attributeBonus: "strength",
+    icon: "💪",
   },
   {
     id: "2",
@@ -23,6 +26,8 @@ const INITIAL_QUESTS: Quest[] = [
     coinReward: 8,
     completed: false,
     category: "daily",
+    attributeBonus: "intelligence",
+    icon: "📚",
   },
   {
     id: "3",
@@ -32,6 +37,8 @@ const INITIAL_QUESTS: Quest[] = [
     coinReward: 5,
     completed: false,
     category: "daily",
+    attributeBonus: "discipline",
+    icon: "💧",
   },
   {
     id: "4",
@@ -41,6 +48,8 @@ const INITIAL_QUESTS: Quest[] = [
     coinReward: 12,
     completed: false,
     category: "daily",
+    attributeBonus: "discipline",
+    icon: "🧘",
   },
   {
     id: "5",
@@ -50,6 +59,8 @@ const INITIAL_QUESTS: Quest[] = [
     coinReward: 7,
     completed: false,
     category: "daily",
+    attributeBonus: "discipline",
+    icon: "🧹",
   },
   {
     id: "6",
@@ -59,6 +70,8 @@ const INITIAL_QUESTS: Quest[] = [
     coinReward: 20,
     completed: false,
     category: "daily",
+    attributeBonus: "intelligence",
+    icon: "📖",
   },
   {
     id: "7",
@@ -68,6 +81,8 @@ const INITIAL_QUESTS: Quest[] = [
     coinReward: 15,
     completed: false,
     category: "daily",
+    attributeBonus: "charisma",
+    icon: "👥",
   },
 ];
 
@@ -234,6 +249,7 @@ const INITIAL_USER: User = {
 };
 
 export function useRPG() {
+  const { success } = useToast();
   const [user, setUser] = useState<User>(INITIAL_USER);
   const [quests, setQuests] = useState<Quest[]>(INITIAL_QUESTS);
   const [mainQuests, setMainQuests] =
@@ -580,24 +596,10 @@ export function useRPG() {
       user.level,
     );
 
-    // Atualizar atributos baseado na categoria da quest
+    // Atualizar atributos baseado no attributeBonus da quest
     const newAttributes = { ...user.attributes };
-    if (quest.category === "daily") {
-      if (
-        quest.title.toLowerCase().includes("exercitar") ||
-        quest.title.toLowerCase().includes("treino")
-      ) {
-        newAttributes.strength += 1;
-      } else if (
-        quest.title.toLowerCase().includes("ler") ||
-        quest.title.toLowerCase().includes("estudar")
-      ) {
-        newAttributes.intelligence += 1;
-      } else if (quest.title.toLowerCase().includes("socializar")) {
-        newAttributes.charisma += 1;
-      } else {
-        newAttributes.discipline += 1;
-      }
+    if (quest.category === "daily" && quest.attributeBonus) {
+      newAttributes[quest.attributeBonus] += 1;
     }
 
     // Tocar som de ganhar XP (orb)
@@ -620,6 +622,24 @@ export function useRPG() {
       completedQuestsToday: true, // Marcar que completou quest hoje
       attributes: newAttributes,
     });
+
+    // Retornar dados para notificação
+    return {
+      xpWithStreak,
+      coinsWithBonus,
+      attributeBonus: quest.attributeBonus,
+    };
+  };
+
+  // Função wrapper para completar quest com notificação
+  const completeQuestWithNotification = (questId: string) => {
+    const result = completeQuest(questId);
+    if (result) {
+      success(
+        `Quest Concluída!`,
+        `+${result.xpWithStreak} XP • +${result.coinsWithBonus} moedas • +1 ${result.attributeBonus || 'atributo'}`
+      );
+    }
   };
 
   // Completar um passo de quest principal
@@ -1191,7 +1211,7 @@ export function useRPG() {
     upgrades,
     showLevelUp,
     newLevel,
-    completeQuest,
+    completeQuestWithNotification,
     completeMainQuestStep,
     purchaseReward,
     purchaseItem,

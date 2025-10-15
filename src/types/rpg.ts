@@ -10,6 +10,7 @@ export interface Quest {
   progress?: number;
   maxProgress?: number;
   deadline?: Date;
+  attributeBonus?: "strength" | "intelligence" | "charisma" | "discipline";
 }
 
 export interface User {

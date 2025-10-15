@@ -11,11 +11,10 @@ import {
   ToggleRight,
   Target,
   BookTemplate,
-  Search,
-  Filter,
 } from "lucide-react";
 import { QuestModal, QuestFormData } from "@/components/QuestModal";
 import { ConfirmModal } from "@/components/ConfirmModal";
+import { AdvancedFilters } from "@/components/AdvancedFilters";
 import { useToast } from "@/components/Toast";
 import { useRPGContext } from "@/contexts/RPGContext";
 import {
@@ -36,7 +35,6 @@ export default function QuestsPage() {
   const [isConfirmModalOpen, setIsConfirmModalOpen] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
   const [viewMode, setViewMode] = useState<"list" | "grid">("grid");
-  const [showFilters, setShowFilters] = useState(false);
 
   // Hooks
   const { success, error, info } = useToast();
@@ -77,6 +75,7 @@ export default function QuestsPage() {
           xpReward: questData.xpReward,
           coinReward: questData.coinReward,
           category: questData.category,
+          attributeBonus: questData.attributeBonus,
         });
         if (questUpdated) {
           setIsModalOpen(false);
@@ -100,6 +99,7 @@ export default function QuestsPage() {
           category: questData.category,
           progress: 0,
           maxProgress: 1,
+          attributeBonus: questData.attributeBonus,
         };
         const questCreated = addQuest(questToAdd);
         if (questCreated) {
@@ -214,15 +214,6 @@ export default function QuestsPage() {
             </Button>
           </div>
 
-          {/* Filter Button */}
-          <Button
-            variant={showFilters ? "default" : "outline"}
-            size="sm"
-            onClick={() => setShowFilters(!showFilters)}
-          >
-            <Filter className="h-4 w-4" />
-          </Button>
-
           <Button className="gap-2" onClick={handleCreateQuest}>
             <Plus className="h-4 w-4" />
             <span className="hidden sm:inline">Nova Quest</span>
@@ -231,83 +222,29 @@ export default function QuestsPage() {
       </div>
 
       {/* Filtros Avançados */}
-      {showFilters && (
-        <div className="bg-card mb-4 rounded-lg border p-4">
-          <div className="mb-3 flex items-center gap-2">
-            <Filter className="h-4 w-4" />
-            <h3 className="text-title3 font-semibold">Filtros Avançados</h3>
-          </div>
-          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-            <div>
-              <label className="text-paragraph mb-1 block font-medium">
-                Status
-              </label>
-              <select className="border-input bg-background w-full rounded-lg border px-3 py-2 text-sm">
-                <option value="all">Todas</option>
-                <option value="pending">Pendentes</option>
-                <option value="completed">Completadas</option>
-              </select>
-            </div>
-            <div>
-              <label className="text-paragraph mb-1 block font-medium">
-                XP Mínimo
-              </label>
-              <input
-                type="number"
-                placeholder="0"
-                className="border-input bg-background w-full rounded-lg border px-3 py-2 text-sm"
-              />
-            </div>
-            <div>
-              <label className="text-paragraph mb-1 block font-medium">
-                Moedas Mínimas
-              </label>
-              <input
-                type="number"
-                placeholder="0"
-                className="border-input bg-background w-full rounded-lg border px-3 py-2 text-sm"
-              />
-            </div>
-            <div>
-              <label className="text-paragraph mb-1 block font-medium">
-                Categoria
-              </label>
-              <select className="border-input bg-background w-full rounded-lg border px-3 py-2 text-sm">
-                <option value="all">Todas</option>
-                <option value="daily">Diárias</option>
-                <option value="weekly">Semanais</option>
-                <option value="main">Principais</option>
-                <option value="special">Especiais</option>
-              </select>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Busca */}
-      <div className="mb-4 flex gap-4">
-        <div className="relative flex-1">
-          <Search className="text-muted-foreground absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2" />
-          <input
-            type="text"
-            placeholder="Buscar quests..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="border-input bg-background placeholder:text-muted-foreground focus:ring-ring w-full rounded-lg border px-10 py-2 text-sm focus:ring-2 focus:outline-none"
-          />
-        </div>
-        <select
-          value={selectedCategory}
-          onChange={(e) => setSelectedCategory(e.target.value)}
-          className="border-input bg-background focus:ring-ring rounded-lg border px-3 py-2 text-sm focus:ring-2 focus:outline-none"
-        >
-          <option value="all">Todas as categorias</option>
-          <option value="daily">Diárias</option>
-          <option value="weekly">Semanais</option>
-          <option value="main">Principais</option>
-          <option value="special">Especiais</option>
-        </select>
-      </div>
+      <AdvancedFilters
+        searchValue={searchQuery}
+        onSearchChange={setSearchQuery}
+        categoryValue={selectedCategory}
+        onCategoryChange={setSelectedCategory}
+        statusValue="all"
+        onStatusChange={() => {}}
+        categoryOptions={[
+          { value: "all", label: "Todas as categorias", icon: "🎯" },
+          { value: "daily", label: "Diárias", icon: "📅" },
+          { value: "weekly", label: "Semanais", icon: "📊" },
+          { value: "health", label: "Saúde", icon: "💪" },
+          { value: "study", label: "Estudo", icon: "📚" },
+          { value: "work", label: "Trabalho", icon: "💼" },
+          { value: "social", label: "Social", icon: "👥" },
+          { value: "hobby", label: "Hobby", icon: "🎨" },
+        ]}
+        statusOptions={[
+          { value: "all", label: "Todos os status", icon: "🎯" },
+          { value: "pending", label: "Pendentes", icon: "⏳" },
+          { value: "completed", label: "Completadas", icon: "✅" },
+        ]}
+      />
 
       {/* Tabs */}
       <div className="border-border mb-6 flex gap-2 border-b">
@@ -383,6 +320,7 @@ export default function QuestsPage() {
                       xpReward: quest.xpReward,
                       coinReward: quest.coinReward,
                       category: quest.category,
+                      attributeBonus: quest.attributeBonus,
                     })
                   }
                   onDelete={() => handleDeleteQuest(quest)}
@@ -444,6 +382,7 @@ export default function QuestsPage() {
           coinReward: q.coinReward,
           category: q.category,
           icon: q.icon,
+          attributeBonus: q.attributeBonus,
         }))}
       />
 
@@ -531,6 +470,7 @@ function QuestItem({
       <div className="flex items-start justify-between gap-4">
         <div className="flex-1">
           <div className="mb-2 flex items-center gap-2">
+            <div className="text-2xl">{quest.icon || "🎯"}</div>
             <h3 className="text-title3 font-semibold">{quest.title}</h3>
             <span className="text-paragraph bg-primary/10 text-primary rounded-full px-2 py-0.5">
               {quest.category}
@@ -547,8 +487,9 @@ function QuestItem({
               <span className="coin-emoji">🪙</span> {quest.coinReward}
             </span>
             {quest.completed && (
-              <span className="text-paragraph rounded-full bg-green-100 px-2 py-0.5 text-green-700">
-                ✅ Concluída
+              <span className="text-paragraph flex items-center gap-1 rounded-full bg-green-100 px-2 py-0.5 whitespace-nowrap text-green-700 dark:bg-green-900 dark:text-green-200">
+                <span>✅</span>
+                <span>Concluída</span>
               </span>
             )}
           </div>

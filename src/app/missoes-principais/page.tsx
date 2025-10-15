@@ -383,7 +383,7 @@ export default function MissoesPrincipaisPage() {
               <div
                 className={
                   viewMode === "grid"
-                    ? "grid grid-cols-1 gap-6 lg:grid-cols-2"
+                    ? "grid grid-cols-1 items-start gap-6 lg:grid-cols-2"
                     : "space-y-4"
                 }
               >
@@ -521,7 +521,7 @@ export default function MissoesPrincipaisPage() {
             {filteredTemplates.map((template, index) => (
               <Card
                 key={index}
-                className="group transition-shadow hover:shadow-lg"
+                className="group flex min-h-[400px] flex-col transition-shadow hover:shadow-lg"
               >
                 <CardHeader>
                   <CardTitle className="mb-2 text-lg">
@@ -531,7 +531,7 @@ export default function MissoesPrincipaisPage() {
                     {template.description}
                   </p>
                 </CardHeader>
-                <CardContent className="space-y-4">
+                <CardContent className="flex flex-1 flex-col space-y-4">
                   <div className="flex items-center gap-2">
                     <span
                       className={`rounded-full px-2 py-1 text-xs font-medium ${getCategoryColor(template.category)}`}
@@ -554,7 +554,7 @@ export default function MissoesPrincipaisPage() {
                   </div>
 
                   <Button
-                    className="w-full"
+                    className="mt-auto w-full"
                     onClick={() => handleUseTemplate(template)}
                   >
                     <Plus className="mr-2 h-4 w-4" />

@@ -310,7 +310,7 @@ export default function RecompensasPage() {
                 return (
                   <Card
                     key={upgrade.id}
-                    className={`group transition-all ${
+                    className={`group flex min-h-[400px] flex-col transition-all ${
                       isBlocked
                         ? "opacity-60"
                         : isActive
@@ -358,7 +358,7 @@ export default function RecompensasPage() {
                         </div>
                       </div>
                     </CardHeader>
-                    <CardContent className="space-y-4">
+                    <CardContent className="flex flex-1 flex-col space-y-4">
                       <p className="text-muted-foreground line-clamp-3 text-sm">
                         {upgrade.description}
                       </p>
@@ -374,7 +374,7 @@ export default function RecompensasPage() {
                       </div>
 
                       {/* Botões de ação */}
-                      <div className="flex items-center justify-between">
+                      <div className="mt-auto flex items-center justify-between">
                         {isBlocked && (
                           <div className="text-muted-foreground flex w-full items-center justify-center gap-2">
                             <Lock className="h-4 w-4" />

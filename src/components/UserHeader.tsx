@@ -1,6 +1,5 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { User } from "@/types/rpg";
-import { Coins } from "lucide-react";
 import { useState, useEffect } from "react";
 
 interface UserHeaderProps {
@@ -43,11 +42,8 @@ export function UserHeader({
       <CardHeader className="pb-3">
         <CardTitle className="text-title2 flex items-center gap-3">
           <div className="relative">
-            <div className="text-title3 flex h-14 w-14 items-center justify-center rounded-full border-2 border-amber-700 bg-gradient-to-br from-yellow-400 to-orange-500 font-bold text-slate-900 shadow-inner">
+            <div className="text-title3 flex h-14 w-14 items-center justify-center rounded-full border-2 border-amber-700 bg-gradient-to-br from-yellow-400 to-orange-500 pl-1 font-bold text-slate-900 shadow-inner">
               {user.level}
-            </div>
-            <div className="absolute -right-1 -bottom-1 flex h-6 w-6 items-center justify-center rounded-full border-2 border-amber-800 bg-green-500">
-              <span className="pl-0.5 text-[8px] font-bold text-white">XP</span>
             </div>
           </div>
           <div>
@@ -198,16 +194,18 @@ export function UserHeader({
         {/* Cards de XP, moedas e streak */}
         <div className="grid grid-cols-1 gap-4 text-center sm:grid-cols-2 lg:grid-cols-4">
           <div className="bg-muted dark:bg-muted border-ring dark:border-ring rounded-lg border bg-gradient-to-b p-3 shadow-sm">
-            <div className="text-title2 font-bold text-amber-700 dark:text-amber-300">
-              {user.totalXP}
+            <div className="text-title2 flex items-center justify-center gap-1 font-bold text-amber-700 dark:text-amber-300">
+              <span className="text-2xl">🏆</span>
+              <span>{user.totalXP}</span>
             </div>
             <div className="text-paragraph font-medium text-amber-600 dark:text-amber-400">
               XP Total
             </div>
           </div>
           <div className="bg-muted dark:bg-muted border-ring dark:border-ring rounded-lg border bg-gradient-to-b p-3 shadow-sm">
-            <div className="text-title2 font-bold text-green-600 dark:text-green-400">
-              {xpForNextLevel - user.currentXP}
+            <div className="text-title2 flex items-center justify-center gap-1 font-bold text-green-600 dark:text-green-400">
+              <span className="text-2xl">🎯</span>
+              <span>{xpForNextLevel - user.currentXP}</span>
             </div>
             <div className="text-paragraph font-medium text-amber-600 dark:text-amber-400">
               XP Restante
@@ -215,7 +213,7 @@ export function UserHeader({
           </div>
           <div className="bg-muted dark:bg-muted border-ring dark:border-ring rounded-lg border bg-gradient-to-b p-3 shadow-sm">
             <div className="text-title2 flex items-center justify-center gap-1 font-bold text-amber-600 dark:text-amber-400">
-              <Coins className="h-5 w-5" />
+              <span className="text-2xl">🪙</span>
               <span className="coin-text">{user.coins}</span>
             </div>
             <div className="text-paragraph font-medium text-amber-600 dark:text-amber-400">
