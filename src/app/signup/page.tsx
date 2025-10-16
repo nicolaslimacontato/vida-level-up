@@ -49,7 +49,11 @@ export default function SignupPage() {
         // Criar profile automaticamente
         if (data.user) {
           console.log("User created, creating profile...");
+          console.log("User ID:", data.user.id);
+          console.log("User email:", data.user.email);
           await createUserProfile(data.user.id, email, name);
+        } else {
+          console.warn("No user data returned from signup");
         }
       }
     } catch (err) {
@@ -66,14 +70,20 @@ export default function SignupPage() {
     name: string,
   ) => {
     try {
+      console.log("=== createUserProfile START ===");
       console.log("Creating user profile for:", userId);
+      console.log("Email:", email);
+      console.log("Name:", name);
       
       // Verificar se o perfil já existe (criado pelo trigger automático)
+      console.log("Checking if profile already exists...");
       const { data: existingProfile, error: checkError } = await supabase
         .from("profiles")
         .select("id")
         .eq("id", userId)
         .single();
+
+      console.log("Profile check result:", { existingProfile, checkError });
 
       if (checkError && checkError.code !== 'PGRST116') {
         console.error("Error checking existing profile:", checkError);
@@ -82,8 +92,8 @@ export default function SignupPage() {
 
       // Se não existe, criar manualmente (fallback)
       if (!existingProfile) {
-        console.log("Profile doesn't exist, creating new one");
-        const { error } = await supabase.from("profiles").insert({
+        console.log("Profile doesn't exist, creating new one...");
+        const profileData = {
           id: userId,
           email,
           name,
@@ -97,16 +107,22 @@ export default function SignupPage() {
           intelligence: 0,
           charisma: 0,
           discipline: 0,
-        });
+        };
+        
+        console.log("Profile data to insert:", profileData);
+        
+        const { error } = await supabase.from("profiles").insert(profileData);
 
         if (error) {
           console.error("Erro ao criar perfil:", error);
         } else {
-          console.log("Profile created successfully");
+          console.log("Profile created successfully!");
         }
       } else {
-        console.log("Profile already exists");
+        console.log("Profile already exists, skipping creation");
       }
+      
+      console.log("=== createUserProfile END ===");
     } catch (err) {
       console.error("Erro inesperado ao criar perfil:", err);
     }
