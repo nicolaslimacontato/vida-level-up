@@ -1,5 +1,6 @@
 import { createServerClient } from '@supabase/ssr'
 import { cookies } from 'next/headers'
+import type { Session } from '@supabase/supabase-js'
 
 let supabaseClient: ReturnType<typeof createServerClient> | null = null;
 
@@ -18,6 +19,9 @@ export const createClient = async () => {
             auth: {
                 getSession: () => Promise.resolve({ data: { session: null }, error: null }),
                 getUser: () => Promise.resolve({ data: { user: null }, error: null }),
+                onAuthStateChange: (_callback: (event: string, session: Session | null) => void) => ({
+                    data: { subscription: { unsubscribe: () => {} } }
+                }),
             },
             from: () => ({
                 select: () => ({ data: [], error: null }),

@@ -1,6 +1,7 @@
 "use client";
 
 import { createBrowserClient } from '@supabase/ssr'
+import type { Session } from '@supabase/supabase-js'
 
 let supabaseClient: ReturnType<typeof createBrowserClient> | null = null;
 
@@ -21,6 +22,9 @@ export const createClient = () => {
                 getUser: () => Promise.resolve({ data: { user: null }, error: null }),
                 signInWithOAuth: () => Promise.resolve({ data: null, error: null }),
                 signOut: () => Promise.resolve({ error: null }),
+                onAuthStateChange: (_callback: (event: string, session: Session | null) => void) => ({
+                    data: { subscription: { unsubscribe: () => {} } }
+                }),
             },
             from: () => ({
                 select: () => ({ data: [], error: null }),
