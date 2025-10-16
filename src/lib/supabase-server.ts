@@ -18,6 +18,10 @@ export const createClient = async () => {
             auth: {
                 getSession: () => Promise.resolve({ data: { session: null }, error: null }),
                 getUser: () => Promise.resolve({ data: { user: null }, error: null }),
+                signUp: () => Promise.resolve({ data: { user: null, session: null }, error: null }),
+                signInWithPassword: () => Promise.resolve({ data: { user: null, session: null }, error: null }),
+                signInWithOAuth: () => Promise.resolve({ data: null, error: null }),
+                signOut: () => Promise.resolve({ error: null }),
                 onAuthStateChange: () => ({
                     data: { subscription: { unsubscribe: () => { } } }
                 }),
