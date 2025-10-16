@@ -3,6 +3,21 @@ import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
 
 export async function middleware(req: NextRequest) {
+    // Skip middleware for static files and _not-found page
+    if (req.nextUrl.pathname.startsWith('/_not-found') || 
+        req.nextUrl.pathname.startsWith('/_next') ||
+        req.nextUrl.pathname.startsWith('/api')) {
+        return NextResponse.next()
+    }
+
+    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+    const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+    
+    if (!supabaseUrl || !supabaseAnonKey) {
+        console.warn('Missing Supabase environment variables in middleware');
+        return NextResponse.next()
+    }
+
     let response = NextResponse.next({
         request: {
             headers: req.headers,
@@ -10,8 +25,8 @@ export async function middleware(req: NextRequest) {
     })
 
     const supabase = createServerClient(
-        process.env.NEXT_PUBLIC_SUPABASE_URL!,
-        process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+        supabaseUrl,
+        supabaseAnonKey,
         {
             cookies: {
                 getAll() {
@@ -50,6 +65,6 @@ export async function middleware(req: NextRequest) {
 
 export const config = {
     matcher: [
-        '/((?!api|_next/static|_next/image|favicon.ico).*)',
+        '/((?!api|_next/static|_next/image|favicon.ico|_not-found).*)',
     ]
 }
