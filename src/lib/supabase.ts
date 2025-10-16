@@ -12,8 +12,12 @@ export const createClient = () => {
 
     const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
     const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
-
+    
+    console.log("Supabase URL:", supabaseUrl ? "Present" : "Missing");
+    console.log("Supabase Anon Key:", supabaseAnonKey ? "Present" : "Missing");
+    
     if (!supabaseUrl || !supabaseAnonKey) {
+        console.warn("Using mock Supabase client - environment variables not available");
         // Return a mock client during build/prerender
         return {
             auth: {
@@ -36,6 +40,7 @@ export const createClient = () => {
         } as ReturnType<typeof createBrowserClient>;
     }
 
+    console.log("Creating real Supabase client");
     supabaseClient = createBrowserClient(supabaseUrl, supabaseAnonKey);
     return supabaseClient;
 }
