@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import React, { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import {
@@ -92,7 +92,7 @@ export default function InventoryPage() {
   const handleConfirmUse = (item: Item, attribute?: string) => {
     // Chamar a função useItem do contexto
     try {
-      consumeItem(item.id, attribute);
+      consumeItem(item.id);
       success("Item Usado!", `${item.name} foi ativado com sucesso.`);
 
       // Mostrar efeito específico do item

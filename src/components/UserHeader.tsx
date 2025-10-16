@@ -5,7 +5,7 @@ import { useState, useEffect } from "react";
 interface UserHeaderProps {
   user: User;
   getXPForNextLevel: (level: number) => number;
-  getLevelProgress: () => number;
+  getLevelProgress: (currentXP: number, level: number) => number;
   getStreakMultiplier?: (streak: number) => number;
   xpBarRef?: React.RefObject<HTMLDivElement | null>;
 }
@@ -18,7 +18,7 @@ export function UserHeader({
   xpBarRef,
 }: UserHeaderProps) {
   const xpForNextLevel = getXPForNextLevel(user.level);
-  const progress = getLevelProgress();
+  const progress = getLevelProgress(user.currentXP, user.level);
   const streakMultiplier = getStreakMultiplier
     ? getStreakMultiplier(user.currentStreak)
     : 1;

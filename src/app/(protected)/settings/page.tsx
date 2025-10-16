@@ -1,5 +1,6 @@
 "use client";
 
+import React from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import {
@@ -17,8 +18,8 @@ import { useToast } from "@/components/Toast";
 
 export default function SettingsPage() {
   const { theme, setTheme, resolvedTheme } = useTheme();
-  const { user, resetAll } = useRPGContext();
-  const { success, error } = useToast();
+  const { user } = useRPGContext();
+  const { error } = useToast();
 
   // Função para resetar tudo com confirmação
   const handleResetAll = () => {
@@ -40,10 +41,10 @@ export default function SettingsPage() {
         )
       ) {
         try {
-          resetAll();
-          success(
-            "Reset Completo!",
-            "Todos os dados foram apagados com sucesso.",
+          // Função de reset não implementada ainda
+          error(
+            "Funcionalidade em desenvolvimento",
+            "O reset completo será implementado em breve.",
           );
         } catch {
           error("Erro no Reset", "Não foi possível resetar os dados.");

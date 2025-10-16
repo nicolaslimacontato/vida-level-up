@@ -1,5 +1,6 @@
 import { useEffect } from "react";
 import { User, Quest } from "@/types/rpg";
+import { updateQuest } from "@/lib/supabase-rpg";
 
 interface DailyResetResult {
     shouldReset: boolean;
@@ -10,10 +11,11 @@ interface DailyResetResult {
 /**
  * Verifica se passou de 1 dia desde o último acesso
  * @param lastAccessDate - Data do último acesso (ISO string)
+ * @param today - Data de hoje (opcional, para testes)
  * @returns Objeto com informações sobre o reset
  */
-export function checkDailyReset(lastAccessDate: string): DailyResetResult {
-    const now = new Date();
+export function checkDailyReset(lastAccessDate: string, today?: Date): DailyResetResult {
+    const now = today || new Date();
     const lastAccess = new Date(lastAccessDate);
 
     // Zerar horas para comparar apenas datas
@@ -40,27 +42,52 @@ export function checkDailyReset(lastAccessDate: string): DailyResetResult {
 }
 
 /**
- * Reseta quests diárias (marca todas como não completadas)
- * @param quests - Array de quests
- * @returns Array de quests resetadas
+ * Reseta quests diárias (marca todas como não completadas) no Supabase
+ * @param userId - ID do usuário
+ * @param quests - Array de quests para resetar
+ * @returns Promise<boolean> - Se o reset foi bem-sucedido
  */
-export function resetDailyQuests(quests: Quest[]): Quest[] {
-    return quests.map((quest) => {
-        if (quest.category === "daily") {
-            return { ...quest, completed: false };
-        }
-        return quest;
-    });
+export async function resetDailyQuests(userId: string, quests: Quest[]): Promise<boolean> {
+    try {
+        const dailyQuests = quests.filter(quest => quest.category === "daily");
+
+        // Reset each daily quest in the database
+        const resetPromises = dailyQuests.map(quest =>
+            updateQuest(quest.id, { completed: false })
+        );
+
+        await Promise.all(resetPromises);
+        return true;
+    } catch (error) {
+        console.error("Error resetting daily quests:", error);
+        return false;
+    }
 }
 
 /**
  * Atualiza streak do usuário baseado nos dias passados
  * @param user - Objeto do usuário
- * @param daysPassed - Quantos dias se passaram
+ * @param lastAccess - Data do último acesso
+ * @param today - Data de hoje
  * @returns Usuário atualizado com novo streak
  */
-export function updateUserStreak(user: User, daysPassed: number): User {
-    const now = new Date().toISOString();
+export function updateUserStreak(user: User, lastAccess: Date, today: Date): User {
+    const now = today.toISOString();
+
+    // Calcular diferença em dias
+    const todayMidnight = new Date(
+        today.getFullYear(),
+        today.getMonth(),
+        today.getDate(),
+    );
+    const lastAccessMidnight = new Date(
+        lastAccess.getFullYear(),
+        lastAccess.getMonth(),
+        lastAccess.getDate(),
+    );
+
+    const diffTime = todayMidnight.getTime() - lastAccessMidnight.getTime();
+    const daysPassed = Math.floor(diffTime / (1000 * 60 * 60 * 24));
 
     // Se passou exatamente 1 dia
     if (daysPassed === 1) {
@@ -113,7 +140,7 @@ export function updateUserStreak(user: User, daysPassed: number): User {
 }
 
 /**
- * Hook para gerenciar reset diário automático
+ * Hook para gerenciar reset diário automático (legacy - mantido para compatibilidade)
  * @param user - Usuário atual
  * @param quests - Quests atuais
  * @param onReset - Callback quando ocorrer reset
@@ -127,10 +154,14 @@ export function useDailyReset(
         const resetInfo = checkDailyReset(user.lastAccessDate);
 
         if (resetInfo.shouldReset) {
-            const updatedUser = updateUserStreak(user, resetInfo.daysPassed);
-            const updatedQuests = resetDailyQuests(quests);
+            const today = new Date();
+            const lastAccess = new Date(user.lastAccessDate);
+            const updatedUser = updateUserStreak(user, lastAccess, today);
 
-            onReset(updatedUser, updatedQuests, resetInfo);
+            // Note: resetDailyQuests agora é assíncrono, então não podemos usar aqui
+            // Este hook é mantido apenas para compatibilidade
+            // O reset real agora é feito no useRPG hook
+            onReset(updatedUser, quests, resetInfo);
         }
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []); // Executa apenas uma vez ao montar o componente

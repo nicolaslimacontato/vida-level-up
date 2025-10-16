@@ -1,228 +1,38 @@
-import { useState, useEffect } from "react";
-import { User, Quest, MainQuest, Reward, Upgrade } from "@/types/rpg";
+import { useState, useEffect, useCallback } from "react";
+import { User, Quest, MainQuest, Reward, Upgrade, Item } from "@/types/rpg";
 import { UPGRADE_TEMPLATES } from "@/data/upgradeTemplates";
 import { useGameAudio } from "./useGameAudio";
 import { useToast } from "@/components/Toast";
+import { useAuth } from "@/hooks/useAuth";
 import { checkDailyReset, resetDailyQuests as resetDailyQuestsUtil, updateUserStreak } from "./useDailyReset";
-
-const INITIAL_QUESTS: Quest[] = [
-  {
-    id: "1",
-    title: "Exercitar-se por 30 minutos",
-    description:
-      "Faça qualquer tipo de exercício físico por pelo menos 30 minutos",
-    xpReward: 50,
-    coinReward: 10,
-    completed: false,
-    category: "daily",
-    attributeBonus: "strength",
-    icon: "💪",
-  },
-  {
-    id: "2",
-    title: "Ler por 20 minutos",
-    description: "Leia um livro, artigo ou qualquer material educativo",
-    xpReward: 30,
-    coinReward: 8,
-    completed: false,
-    category: "daily",
-    attributeBonus: "intelligence",
-    icon: "📚",
-  },
-  {
-    id: "3",
-    title: "Beber 2L de água",
-    description: "Mantenha-se hidratado durante o dia",
-    xpReward: 25,
-    coinReward: 5,
-    completed: false,
-    category: "daily",
-    attributeBonus: "discipline",
-    icon: "💧",
-  },
-  {
-    id: "4",
-    title: "Meditar por 10 minutos",
-    description: "Pratique mindfulness ou meditação",
-    xpReward: 40,
-    coinReward: 12,
-    completed: false,
-    category: "daily",
-    attributeBonus: "discipline",
-    icon: "🧘",
-  },
-  {
-    id: "5",
-    title: "Organizar o ambiente",
-    description: "Mantenha seu espaço de trabalho ou casa organizado",
-    xpReward: 35,
-    coinReward: 7,
-    completed: false,
-    category: "daily",
-    attributeBonus: "discipline",
-    icon: "🧹",
-  },
-  {
-    id: "6",
-    title: "Estudar por 2 horas",
-    description: "Dedique tempo para aprender algo novo",
-    xpReward: 80,
-    coinReward: 20,
-    completed: false,
-    category: "daily",
-    attributeBonus: "intelligence",
-    icon: "📖",
-  },
-  {
-    id: "7",
-    title: "Socializar com amigos",
-    description: "Conecte-se com pessoas importantes para você",
-    xpReward: 45,
-    coinReward: 15,
-    completed: false,
-    category: "daily",
-    attributeBonus: "charisma",
-    icon: "👥",
-  },
-];
-
-const INITIAL_MAIN_QUESTS: MainQuest[] = [
-  {
-    id: "main1",
-    title: "Completar um Curso Online",
-    description: "Termine um curso completo de sua área de interesse",
-    steps: [
-      {
-        id: "step1",
-        title: "Escolher o curso",
-        description: "Defina qual curso você quer fazer",
-        completed: false,
-        xpReward: 100,
-        coinReward: 50,
-      },
-      {
-        id: "step2",
-        title: "Completar 25% do curso",
-        description: "Assista e complete um quarto do curso",
-        completed: false,
-        xpReward: 150,
-        coinReward: 75,
-      },
-      {
-        id: "step3",
-        title: "Completar 50% do curso",
-        description: "Chegue na metade do curso",
-        completed: false,
-        xpReward: 200,
-        coinReward: 100,
-      },
-      {
-        id: "step4",
-        title: "Completar 75% do curso",
-        description: "Quase lá! Complete três quartos",
-        completed: false,
-        xpReward: 250,
-        coinReward: 125,
-      },
-      {
-        id: "step5",
-        title: "Finalizar o curso",
-        description: "Complete 100% do curso e receba o certificado",
-        completed: false,
-        xpReward: 500,
-        coinReward: 300,
-      },
-    ],
-    completed: false,
-    xpReward: 1200,
-    coinReward: 650,
-  },
-  {
-    id: "main2",
-    title: "Economizar R$ 1000",
-    description: "Acumule uma reserva financeira de mil reais",
-    steps: [
-      {
-        id: "step1",
-        title: "Economizar R$ 100",
-        description: "Primeira meta: R$ 100",
-        completed: false,
-        xpReward: 80,
-        coinReward: 40,
-      },
-      {
-        id: "step2",
-        title: "Economizar R$ 300",
-        description: "Segunda meta: R$ 300",
-        completed: false,
-        xpReward: 120,
-        coinReward: 60,
-      },
-      {
-        id: "step3",
-        title: "Economizar R$ 600",
-        description: "Terceira meta: R$ 600",
-        completed: false,
-        xpReward: 200,
-        coinReward: 100,
-      },
-      {
-        id: "step4",
-        title: "Economizar R$ 1000",
-        description: "Meta final: R$ 1000",
-        completed: false,
-        xpReward: 400,
-        coinReward: 200,
-      },
-    ],
-    completed: false,
-    xpReward: 800,
-    coinReward: 400,
-  },
-];
-
-const INITIAL_REWARDS: Reward[] = [
-  {
-    id: "reward1",
-    name: "Lanchinho Especial",
-    description: "Permissão para comer algo que você gosta sem culpa",
-    cost: 100,
-    category: "treat",
-    purchased: false,
-  },
-  {
-    id: "reward2",
-    name: "Dia de Descanso",
-    description: "Um dia inteiro para relaxar sem se sentir culpado",
-    cost: 500,
-    category: "break",
-    purchased: false,
-  },
-  {
-    id: "reward3",
-    name: "Sessão de Cinema",
-    description: "Assista um filme que você queria ver há tempo",
-    cost: 200,
-    category: "experience",
-    purchased: false,
-  },
-  {
-    id: "reward4",
-    name: "Jantar Especial",
-    description: "Permissão para jantar em um restaurante que você gosta",
-    cost: 300,
-    category: "treat",
-    purchased: false,
-  },
-  {
-    id: "reward5",
-    name: "Fim de Semana Livre",
-    description: "Um fim de semana inteiro sem obrigações",
-    cost: 1000,
-    category: "break",
-    purchased: false,
-  },
-];
+import {
+  getUserProfile,
+  updateUserProfile,
+  getQuests,
+  createQuest,
+  updateQuest,
+  deleteQuest,
+  getMainQuests,
+  createMainQuest,
+  updateMainQuest,
+  deleteMainQuest,
+  getRewards,
+  createReward,
+  updateReward,
+  deleteReward,
+  getUpgrades,
+  updateUpgrade,
+  getInventory,
+  addToInventory,
+  removeFromInventory,
+  seedUserData,
+  subscribeToProfile,
+  subscribeToQuests,
+  subscribeToMainQuests,
+  subscribeToInventory,
+  testSupabaseConnection,
+  checkSupabaseConfig,
+} from "@/lib/supabase-rpg";
 
 const INITIAL_USER: User = {
   level: 1,
@@ -250,960 +60,731 @@ const INITIAL_USER: User = {
 
 export function useRPG() {
   const { success } = useToast();
+  const { user: authUser } = useAuth();
+
+  // State
   const [user, setUser] = useState<User>(INITIAL_USER);
-  const [quests, setQuests] = useState<Quest[]>(INITIAL_QUESTS);
-  const [mainQuests, setMainQuests] =
-    useState<MainQuest[]>(INITIAL_MAIN_QUESTS);
-  const [rewards, setRewards] = useState<Reward[]>(INITIAL_REWARDS);
+  const [quests, setQuests] = useState<Quest[]>([]);
+  const [mainQuests, setMainQuests] = useState<MainQuest[]>([]);
+  const [rewards, setRewards] = useState<Reward[]>([]);
   const [upgrades, setUpgrades] = useState<Upgrade[]>(UPGRADE_TEMPLATES);
   const [showLevelUp, setShowLevelUp] = useState(false);
   const [newLevel, setNewLevel] = useState(1);
+  const [loading, setLoading] = useState(true);
+  const [syncing, setSyncing] = useState(false);
 
   // Sistema de áudio do jogo
-  const { playLevelUpSound, playOrbSoundWithVariation, preloadGameSounds } =
-    useGameAudio();
+  const { playLevelUpSound, playOrbSoundWithVariation, preloadGameSounds } = useGameAudio();
 
-  // Carregar dados do localStorage ao inicializar e preload dos sons
+  // Load user data from Supabase
+  const loadUserData = useCallback(async (userId: string) => {
+    try {
+      setLoading(true);
+
+      // Check Supabase configuration first
+      console.log("Checking Supabase configuration...");
+      if (!checkSupabaseConfig()) {
+        console.error("Supabase not configured, falling back to local state");
+        setLoading(false);
+        return;
+      }
+
+      // Test Supabase connection
+      console.log("Testing Supabase connection...");
+      const connectionOk = await testSupabaseConnection();
+      if (!connectionOk) {
+        console.error("Supabase connection failed, falling back to local state");
+        setLoading(false);
+        return;
+      }
+
+      // Load profile
+      const profile = await getUserProfile(userId);
+      if (profile) {
+        setUser(profile);
+      }
+
+      // Load quests
+      const userQuests = await getQuests(userId);
+      console.log("Loaded quests from Supabase:", userQuests);
+      setQuests(userQuests);
+
+      // Load main quests
+      const userMainQuests = await getMainQuests(userId);
+      console.log("Loaded main quests from Supabase:", userMainQuests);
+      setMainQuests(userMainQuests);
+
+      // Load rewards
+      const userRewards = await getRewards(userId);
+      setRewards(userRewards);
+
+      // Load upgrades
+      const userUpgrades = await getUpgrades(userId);
+      setUpgrades(userUpgrades);
+
+      // Load inventory
+      const userInventory = await getInventory(userId);
+      setUser(prev => ({ ...prev, inventory: userInventory }));
+
+      // Seed initial data if user has no quests
+      if (userQuests.length === 0) {
+        await seedUserData(userId);
+        // Reload quests and rewards after seeding
+        const seededQuests = await getQuests(userId);
+        const seededMainQuests = await getMainQuests(userId);
+        const seededRewards = await getRewards(userId);
+        setQuests(seededQuests);
+        setMainQuests(seededMainQuests);
+        setRewards(seededRewards);
+      }
+
+    } catch (error) {
+      console.error("Error loading user data:", error);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  // Setup real-time subscriptions
+  const setupSubscriptions = useCallback((userId: string) => {
+    const subscriptions: Array<{ unsubscribe: () => void } | null> = [];
+
+    // Subscribe to profile changes
+    const profileSub = subscribeToProfile(userId, (updatedProfile) => {
+      setUser(updatedProfile);
+    });
+    subscriptions.push(profileSub);
+
+    // Subscribe to quests changes
+    const questsSub = subscribeToQuests(userId, (updatedQuests) => {
+      setQuests(updatedQuests);
+    });
+    subscriptions.push(questsSub);
+
+    // Subscribe to main quests changes
+    const mainQuestsSub = subscribeToMainQuests(userId, (updatedMainQuests) => {
+      setMainQuests(updatedMainQuests);
+    });
+    subscriptions.push(mainQuestsSub);
+
+    // Subscribe to inventory changes
+    const inventorySub = subscribeToInventory(userId, (updatedInventory) => {
+      setUser(prev => ({ ...prev, inventory: updatedInventory }));
+    });
+    subscriptions.push(inventorySub);
+
+    return subscriptions;
+  }, []);
+
+  // Initialize data and subscriptions
   useEffect(() => {
-    // Preload dos sons do jogo
+    if (!authUser?.id) return;
+
+    // Preload sounds
     preloadGameSounds();
 
-    const savedUser = localStorage.getItem("rpg-user");
-    const savedQuests = localStorage.getItem("rpg-quests");
-    const savedMainQuests = localStorage.getItem("rpg-main-quests");
-    const savedRewards = localStorage.getItem("rpg-rewards");
-    const savedUpgrades = localStorage.getItem("rpg-upgrades");
+    // Load user data
+    loadUserData(authUser.id);
 
-    if (savedUser) {
-      const userData = JSON.parse(savedUser);
-      // Validar e corrigir dados se necessário
-      if (userData.currentXP < 0 || isNaN(userData.currentXP)) {
-        // Recalcular baseado no totalXP
-        let tempLevel = 1;
-        let tempCurrentXP = userData.totalXP;
+    // Setup real-time subscriptions
+    const subscriptions = setupSubscriptions(authUser.id);
 
-        // Calcular nível correto
-        while (true) {
-          let totalXPForNextLevel = 0;
-          for (let i = 1; i <= tempLevel; i++) {
-            totalXPForNextLevel += Math.floor(100 * Math.pow(i, 1.5));
-          }
-          if (userData.totalXP >= totalXPForNextLevel) {
-            tempLevel++;
-          } else {
-            break;
-          }
+    // Cleanup subscriptions on unmount
+    return () => {
+      subscriptions.forEach(sub => {
+        if (sub && sub.unsubscribe) {
+          sub.unsubscribe();
         }
-
-        // Calcular currentXP
-        let totalXPForCurrentLevel = 0;
-        for (let i = 1; i < tempLevel; i++) {
-          totalXPForCurrentLevel += Math.floor(100 * Math.pow(i, 1.5));
-        }
-        tempCurrentXP = userData.totalXP - totalXPForCurrentLevel;
-
-        userData.level = tempLevel;
-        userData.currentXP = Math.max(0, tempCurrentXP);
-      }
-
-      // Garantir que campos de streak existem (migração de dados antigos)
-      if (userData.currentStreak === undefined) {
-        userData.currentStreak = 0;
-      }
-      if (userData.bestStreak === undefined) {
-        userData.bestStreak = 0;
-      }
-      if (!userData.lastAccessDate) {
-        userData.lastAccessDate = new Date().toISOString();
-      }
-      if (userData.completedQuestsToday === undefined) {
-        userData.completedQuestsToday = false;
-      }
-      if (!userData.inventory) {
-        userData.inventory = [];
-      }
-      if (!userData.activeEffects) {
-        userData.activeEffects = {
-          hasStreakProtection: false,
-          xpBoostActive: false,
-          coinMultiplierActive: false,
-        };
-      }
-
-      // Verificar reset diário APÓS carregar dados
-      const resetInfo = checkDailyReset(userData.lastAccessDate);
-      if (resetInfo.shouldReset) {
-        const updatedUser = updateUserStreak(userData, resetInfo.daysPassed);
-        setUser(updatedUser);
-
-        // Streak atualizado
-      } else {
-        setUser(userData);
-      }
-    }
-
-    // Carregar quests com validação
-    let loadedQuests = INITIAL_QUESTS;
-    if (savedQuests && savedQuests !== "undefined") {
-      try {
-        loadedQuests = JSON.parse(savedQuests);
-      } catch (e) {
-        console.error("Erro ao carregar quests, usando padrão:", e);
-        loadedQuests = INITIAL_QUESTS;
-      }
-    }
-
-    // Resetar quests diárias se necessário
-    if (savedUser) {
-      const userData = JSON.parse(savedUser);
-      const resetInfo = checkDailyReset(userData.lastAccessDate);
-      if (resetInfo.shouldReset) {
-        loadedQuests = resetDailyQuestsUtil(loadedQuests);
-        // Quests diárias resetadas
-      }
-    }
-
-    setQuests(loadedQuests);
-
-    // Carregar main quests com validação
-    if (savedMainQuests && savedMainQuests !== "undefined") {
-      try {
-        setMainQuests(JSON.parse(savedMainQuests));
-      } catch (e) {
-        console.error("Erro ao carregar main quests, usando padrão:", e);
-        setMainQuests(INITIAL_MAIN_QUESTS);
-      }
-    }
-
-    // Carregar rewards com validação
-    if (savedRewards && savedRewards !== "undefined") {
-      try {
-        setRewards(JSON.parse(savedRewards));
-      } catch (e) {
-        console.error("Erro ao carregar rewards, usando padrão:", e);
-        setRewards(INITIAL_REWARDS);
-      }
-    }
-
-    // Carregar upgrades com validação
-    if (savedUpgrades && savedUpgrades !== "undefined") {
-      try {
-        const loadedUpgrades = JSON.parse(savedUpgrades);
-        // Sincronizar com templates para garantir que novos upgrades apareçam
-        const syncedUpgrades = UPGRADE_TEMPLATES.map(template => {
-          const loaded = loadedUpgrades.find((u: Upgrade) => u.id === template.id);
-          return loaded ? { ...template, ...loaded } : template;
-        });
-        setUpgrades(syncedUpgrades);
-      } catch (e) {
-        console.error("Erro ao carregar upgrades, usando padrão:", e);
-        setUpgrades(UPGRADE_TEMPLATES);
-      }
-    }
-  }, [preloadGameSounds]);
-
-  // Salvar dados no localStorage sempre que houver mudanças
-  useEffect(() => {
-    if (user) {
-      localStorage.setItem("rpg-user", JSON.stringify(user));
-    }
-  }, [user]);
-
-  useEffect(() => {
-    if (quests && quests.length > 0) {
-      localStorage.setItem("rpg-quests", JSON.stringify(quests));
-    }
-  }, [quests]);
-
-  useEffect(() => {
-    if (mainQuests && mainQuests.length > 0) {
-      localStorage.setItem("rpg-main-quests", JSON.stringify(mainQuests));
-    }
-  }, [mainQuests]);
-
-  useEffect(() => {
-    if (rewards && rewards.length > 0) {
-      localStorage.setItem("rpg-rewards", JSON.stringify(rewards));
-    }
-  }, [rewards]);
-
-  useEffect(() => {
-    if (upgrades && upgrades.length > 0) {
-      localStorage.setItem("rpg-upgrades", JSON.stringify(upgrades));
-    }
-  }, [upgrades]);
-
-  // Calcular multiplicador de streak (10% por dia)
-  const getStreakMultiplier = (streak: number): number => {
-    let baseMultiplier = 1 + streak * 0.1;
-
-    // Aplicar efeitos dos upgrades ativos
-    const activeUpgrades = upgrades.filter(upgrade => upgrade.purchased && upgrade.isActive);
-
-    // Streak Turbinado - começa em 1.5x ao invés de 1.1x
-    const streakTurbinado = activeUpgrades.find(u => u.effect === "streak_start_1.5x");
-    if (streakTurbinado && streak >= 1) {
-      baseMultiplier = Math.max(baseMultiplier, 1.5);
-    }
-
-    // Streak Duplo - multiplicador é dobrado
-    const streakDuplo = activeUpgrades.find(u => u.effect === "streak_double_multiplier");
-    if (streakDuplo) {
-      baseMultiplier = baseMultiplier * 2;
-    }
-
-    return Math.min(baseMultiplier, 5.0); // Máximo de 5x
-  };
-
-  // ========== EFEITOS DOS ATRIBUTOS ==========
-
-  // Força: Reduz XP necessário para level up (máx 30%)
-  const getStrengthXPReduction = (strength: number): number => {
-    const reduction = Math.floor(strength * 0.5); // 0.5% por ponto
-    return Math.min(reduction, 30); // Máximo 30%
-  };
-
-  // Inteligência: Bônus de XP em quests de estudo (máx 50%)
-  const getIntelligenceBonus = (intelligence: number): number => {
-    const bonus = Math.floor(intelligence * 2); // 2% por ponto
-    return Math.min(bonus, 50); // Máximo 50%
-  };
-
-  // Carisma: Desconto na loja (máx 40%)
-  const getCharismaDiscount = (charisma: number): number => {
-    const discount = Math.floor(charisma * 1); // 1% por ponto
-    return Math.min(discount, 40); // Máximo 40%
-  };
-
-  // Calcular XP necessário para o próximo nível (progressão exponencial)
-  const getXPForNextLevel = (level: number): number => {
-    // Fórmula: baseXP * (level^1.5) para progressão equilibrada
-    const baseXP = 100;
-    const xpNeeded = Math.floor(baseXP * Math.pow(level, 1.5));
-
-    // Aplicar redução de Força
-    const reduction = getStrengthXPReduction(user.attributes.strength);
-    const reducedXP = Math.floor(xpNeeded * (1 - reduction / 100));
-
-    return reducedXP;
-  };
-
-  // Calcular XP total necessário para alcançar um nível específico
-  const getTotalXPForLevel = (level: number): number => {
-    let totalXP = 0;
-    for (let i = 1; i < level; i++) {
-      totalXP += getXPForNextLevel(i);
-    }
-    return totalXP;
-  };
-
-  // Verificar se o usuário subiu de nível e calcular novo currentXP
-  const processLevelUp = (
-    newTotalXP: number,
-    currentLevel: number,
-  ): { level: number; currentXP: number } => {
-    let level = currentLevel;
-    let currentXP = user.currentXP;
-
-    // Calcular o nível baseado no XP total
-    while (true) {
-      const totalXPNeeded = getTotalXPForLevel(level + 1);
-      if (newTotalXP >= totalXPNeeded) {
-        level++;
-      } else {
-        break;
-      }
-    }
-
-    // Calcular currentXP baseado no excesso para o nível atual
-    if (level > currentLevel) {
-      const totalXPForCurrentLevel = getTotalXPForLevel(level);
-      currentXP = newTotalXP - totalXPForCurrentLevel;
-    } else {
-      // Se não subiu de nível, apenas adiciona o XP ganho
-      const xpGained = newTotalXP - user.totalXP;
-      currentXP = user.currentXP + xpGained;
-    }
-
-    return { level, currentXP };
-  };
-
-  // Completar uma quest
-  const completeQuest = (questId: string) => {
-    const quest = quests.find((q) => q.id === questId);
-    if (!quest || quest.completed) return;
-
-    const newQuests = quests.map((q) =>
-      q.id === questId ? { ...q, completed: true } : q,
-    );
-    setQuests(newQuests);
-
-    // Aplicar multiplicador de streak ao XP
-    const streakMultiplier = getStreakMultiplier(user.currentStreak);
-    let xpWithStreak = Math.floor(quest.xpReward * streakMultiplier);
-
-    // Aplicar efeitos dos upgrades ativos
-    const activeUpgrades = upgrades.filter(upgrade => upgrade.purchased && upgrade.isActive);
-
-    // Bônus de XP permanente
-    const menteAfiada = activeUpgrades.find(u => u.effect === "xp_bonus_10_percent");
-    const genio = activeUpgrades.find(u => u.effect === "xp_bonus_25_percent");
-    const sabedoriaAncestral = activeUpgrades.find(u => u.effect === "daily_quest_xp_1.5x");
-
-    if (menteAfiada) {
-      xpWithStreak = Math.floor(xpWithStreak * 1.1);
-    }
-    if (genio) {
-      xpWithStreak = Math.floor(xpWithStreak * 1.25);
-    }
-
-    // Sabedoria Ancestral - XP de quests diárias vale 1.5x
-    if (sabedoriaAncestral && quest.category === "daily") {
-      xpWithStreak = Math.floor(xpWithStreak * 1.5);
-    }
-
-    // Aplicar bônus de Inteligência em quests de estudo
-    const isStudyQuest =
-      quest.title.toLowerCase().includes("ler") ||
-      quest.title.toLowerCase().includes("estudar") ||
-      quest.title.toLowerCase().includes("aprender");
-
-    if (isStudyQuest) {
-      const intelligenceBonus = getIntelligenceBonus(user.attributes.intelligence);
-      xpWithStreak = Math.floor(xpWithStreak * (1 + intelligenceBonus / 100));
-    }
-
-    // Aplicar efeitos dos upgrades de moedas
-    let coinsWithBonus = quest.coinReward;
-    const magnetismo = activeUpgrades.find(u => u.effect === "coins_bonus_15_percent");
-
-    if (magnetismo) {
-      coinsWithBonus = Math.floor(coinsWithBonus * 1.15);
-    }
-
-    // Lendário - todas as recompensas +20%
-    const lendario = activeUpgrades.find(u => u.effect === "all_rewards_20_percent_bonus");
-    if (lendario) {
-      xpWithStreak = Math.floor(xpWithStreak * 1.2);
-      coinsWithBonus = Math.floor(coinsWithBonus * 1.2);
-    }
-
-    // Adicionar XP e moedas ao usuário
-    const newTotalXP = user.totalXP + xpWithStreak;
-    const newCoins = user.coins + coinsWithBonus;
-    const { level: newLevel, currentXP: newCurrentXP } = processLevelUp(
-      newTotalXP,
-      user.level,
-    );
-
-    // Atualizar atributos baseado no attributeBonus da quest
-    const newAttributes = { ...user.attributes };
-    if (quest.category === "daily" && quest.attributeBonus) {
-      newAttributes[quest.attributeBonus] += 1;
-    }
-
-    // Tocar som de ganhar XP (orb)
-    playOrbSoundWithVariation();
-
-    // Verificar se subiu de nível
-    if (newLevel > user.level) {
-      setNewLevel(newLevel);
-      setShowLevelUp(true);
-      // Tocar som de level up
-      playLevelUpSound();
-    }
-
-    setUser({
-      ...user,
-      level: newLevel,
-      currentXP: newCurrentXP,
-      totalXP: newTotalXP,
-      coins: newCoins,
-      completedQuestsToday: true, // Marcar que completou quest hoje
-      attributes: newAttributes,
-    });
-
-    // Retornar dados para notificação
-    return {
-      xpWithStreak,
-      coinsWithBonus,
-      attributeBonus: quest.attributeBonus,
+      });
     };
-  };
+  }, [authUser?.id, loadUserData, setupSubscriptions, preloadGameSounds]);
 
-  // Função wrapper para completar quest com notificação
-  const completeQuestWithNotification = (questId: string) => {
-    const result = completeQuest(questId);
+  const handleDailyReset = useCallback(async () => {
+    if (!authUser?.id) return;
+
+    try {
+      setSyncing(true);
+
+      // Reset daily quests
+      await resetDailyQuestsUtil(authUser.id, quests);
+
+      // Update user streak
+      const today = new Date();
+      const lastAccess = new Date(user.lastAccessDate);
+      const updatedUser = updateUserStreak(user, lastAccess, today);
+
+      // Update user profile
+      await updateUserProfile(authUser.id, {
+        currentStreak: updatedUser.currentStreak,
+        bestStreak: updatedUser.bestStreak,
+        lastAccessDate: today.toISOString(),
+        completedQuestsToday: false,
+      });
+
+      // Reload quests to get reset state
+      const resetQuests = await getQuests(authUser.id);
+      setQuests(resetQuests);
+
+    } catch (error) {
+      console.error("Error during daily reset:", error);
+    } finally {
+      setSyncing(false);
+    }
+  }, [authUser?.id, quests, user]);
+
+  // Daily reset check
+  useEffect(() => {
+    if (!authUser?.id || loading || syncing) return;
+
+    const resetInfo = checkDailyReset(user.lastAccessDate);
+
+    if (resetInfo.shouldReset && resetInfo.daysPassed >= 1) {
+      console.log("Daily reset needed:", resetInfo);
+      handleDailyReset();
+    }
+  }, [authUser?.id, user.lastAccessDate, loading, syncing, handleDailyReset]);
+
+  // ========== QUEST FUNCTIONS ==========
+
+  // Função para obter multiplicador de streak
+  const getStreakMultiplier = useCallback(() => {
+    if (user.currentStreak === 0) return 1;
+    return Math.min(1 + user.currentStreak * 0.1, 3); // Max 3x multiplier
+  }, [user.currentStreak]);
+
+  const completeQuest = useCallback(async (questId: string) => {
+    if (!authUser?.id) return null;
+
+    const quest = quests.find((q) => q.id === questId);
+    if (!quest || quest.completed) return null;
+
+    try {
+      setSyncing(true);
+
+      // Update quest as completed
+      console.log("Marking quest as completed:", questId);
+      const questUpdated = await updateQuest(questId, { completed: true });
+      console.log("Quest updated successfully:", questUpdated);
+
+      // Calculate XP and coins with streak multiplier
+      const streakMultiplier = getStreakMultiplier();
+      const xpWithStreak = Math.floor(quest.xpReward * streakMultiplier);
+      const coinsWithBonus = Math.floor(quest.coinReward * streakMultiplier);
+
+      // Update user profile
+      const newTotalXP = user.totalXP + xpWithStreak;
+      const newCoins = user.coins + coinsWithBonus;
+      const newCurrentXP = user.currentXP + xpWithStreak;
+
+      // Calculate new level
+      let newLevel = user.level;
+      let remainingXP = newCurrentXP;
+      let xpForNextLevel = 0;
+
+      // Check for level up
+      while (true) {
+        xpForNextLevel = Math.floor(100 * Math.pow(newLevel, 1.5));
+        if (remainingXP >= xpForNextLevel) {
+          remainingXP -= xpForNextLevel;
+          newLevel++;
+        } else {
+          break;
+        }
+      }
+
+      // Update attributes if quest has attribute bonus
+      const newAttributes = { ...user.attributes };
+      if (quest.category === "daily" && quest.attributeBonus) {
+        newAttributes[quest.attributeBonus] += 1;
+      }
+
+      // Update user in database
+      console.log("Updating user profile:", {
+        level: newLevel,
+        currentXP: remainingXP,
+        totalXP: newTotalXP,
+        coins: newCoins,
+        attributes: newAttributes,
+      });
+      const profileUpdated = await updateUserProfile(authUser.id, {
+        level: newLevel,
+        currentXP: remainingXP,
+        totalXP: newTotalXP,
+        coins: newCoins,
+        attributes: newAttributes,
+        completedQuestsToday: true,
+      });
+      console.log("Profile updated successfully:", profileUpdated);
+
+      // Update local state immediately
+      setUser(prev => ({
+        ...prev,
+        level: newLevel,
+        currentXP: remainingXP,
+        totalXP: newTotalXP,
+        coins: newCoins,
+        attributes: newAttributes,
+        completedQuestsToday: true,
+      }));
+
+      // Update quests state to mark quest as completed
+      setQuests(prev => prev.map(q =>
+        q.id === questId ? { ...q, completed: true } : q
+      ));
+
+      // Show level up notification if leveled up
+      if (newLevel > user.level) {
+        setNewLevel(newLevel);
+        setShowLevelUp(true);
+        playLevelUpSound();
+      } else {
+        playOrbSoundWithVariation();
+      }
+
+      const result = {
+        xpWithStreak,
+        coinsWithBonus,
+        attributeBonus: quest.attributeBonus,
+        leveledUp: newLevel > user.level,
+        newLevel,
+      };
+      console.log("Quest completion result:", result);
+      return result;
+    } catch (error) {
+      console.error("Error completing quest:", error);
+      return null;
+    } finally {
+      setSyncing(false);
+    }
+  }, [authUser?.id, quests, user, getStreakMultiplier, playLevelUpSound, playOrbSoundWithVariation]);
+
+  const completeQuestWithNotification = useCallback(async (questId: string) => {
+    const result = await completeQuest(questId);
     if (result) {
       success(
         `Quest Concluída!`,
         `+${result.xpWithStreak} XP • +${result.coinsWithBonus} moedas • +1 ${result.attributeBonus || 'atributo'}`
       );
     }
-  };
+  }, [completeQuest, success]);
 
-  // Completar um passo de quest principal
-  const completeMainQuestStep = (questId: string, stepId: string) => {
-    const quest = mainQuests.find((q) => q.id === questId);
-    if (!quest) return;
+  const addQuest = useCallback(async (questData: Omit<Quest, "id">) => {
+    if (!authUser?.id) return null;
 
-    const newMainQuests = mainQuests.map((q) => {
-      if (q.id === questId) {
-        const newSteps = q.steps.map((step) => {
-          if (step.id === stepId) {
-            return { ...step, completed: true };
-          }
-          return step;
-        });
-
-        // Verificar se todos os passos foram completados
-        const allCompleted = newSteps.every((step) => step.completed);
-
-        return {
-          ...q,
-          steps: newSteps,
-          completed: allCompleted,
-        };
+    try {
+      setSyncing(true);
+      const newQuest = await createQuest(authUser.id, questData);
+      if (newQuest) {
+        // Update local state immediately
+        setQuests(prev => [...prev, newQuest]);
+        console.log("Quest added to local state:", newQuest);
       }
-      return q;
-    });
+      return newQuest;
+    } catch (error) {
+      console.error("Error adding quest:", error);
+      return null;
+    } finally {
+      setSyncing(false);
+    }
+  }, [authUser?.id]);
 
-    setMainQuests(newMainQuests);
-
-    // Adicionar recompensas do passo
-    const step = quest.steps.find((s) => s.id === stepId);
-    if (step) {
-      // Aplicar multiplicador de streak ao XP
-      const streakMultiplier = getStreakMultiplier(user.currentStreak);
-      let xpWithStreak = Math.floor(step.xpReward * streakMultiplier);
-
-      // Aplicar efeitos dos upgrades ativos
-      const activeUpgrades = upgrades.filter(upgrade => upgrade.purchased && upgrade.isActive);
-
-      // Bônus de XP permanente
-      const menteAfiada = activeUpgrades.find(u => u.effect === "xp_bonus_10_percent");
-      const genio = activeUpgrades.find(u => u.effect === "xp_bonus_25_percent");
-
-      if (menteAfiada) {
-        xpWithStreak = Math.floor(xpWithStreak * 1.1);
+  const editQuest = useCallback(async (questId: string, questData: Partial<Quest>) => {
+    try {
+      setSyncing(true);
+      const success = await updateQuest(questId, questData);
+      if (success) {
+        // Update local state immediately
+        setQuests(prev => prev.map(q =>
+          q.id === questId ? { ...q, ...questData } : q
+        ));
+        console.log("Quest updated in local state:", questId);
       }
-      if (genio) {
-        xpWithStreak = Math.floor(xpWithStreak * 1.25);
+      return success;
+    } catch (error) {
+      console.error("Error editing quest:", error);
+      return false;
+    } finally {
+      setSyncing(false);
+    }
+  }, []);
+
+  const removeQuest = useCallback(async (questId: string) => {
+    try {
+      setSyncing(true);
+      const success = await deleteQuest(questId);
+      if (success) {
+        // Update local state immediately
+        setQuests(prev => prev.filter(q => q.id !== questId));
+        console.log("Quest removed from local state:", questId);
       }
+      return success;
+    } catch (error) {
+      console.error("Error removing quest:", error);
+      return false;
+    } finally {
+      setSyncing(false);
+    }
+  }, []);
 
-      // Aplicar efeitos dos upgrades de moedas
-      let coinsWithBonus = step.coinReward;
-      const magnetismo = activeUpgrades.find(u => u.effect === "coins_bonus_15_percent");
+  const duplicateQuest = useCallback(async (questId: string) => {
+    if (!authUser?.id) return null;
 
-      if (magnetismo) {
-        coinsWithBonus = Math.floor(coinsWithBonus * 1.15);
+    const questToDuplicate = quests.find(q => q.id === questId);
+    if (!questToDuplicate) return null;
+
+    try {
+      setSyncing(true);
+      const duplicatedQuest = {
+        ...questToDuplicate,
+        title: `${questToDuplicate.title} (Cópia)`,
+        completed: false,
+      };
+      delete (duplicatedQuest as Partial<Quest>).id; // Remove ID to create new quest
+
+      const newQuest = await createQuest(authUser.id, duplicatedQuest);
+      if (newQuest) {
+        // Update local state immediately
+        setQuests(prev => [...prev, newQuest]);
+        console.log("Quest duplicated:", newQuest);
       }
+      return newQuest;
+    } catch (error) {
+      console.error("Error duplicating quest:", error);
+      return null;
+    } finally {
+      setSyncing(false);
+    }
+  }, [authUser?.id, quests]);
 
-      // Lendário - todas as recompensas +20%
-      const lendario = activeUpgrades.find(u => u.effect === "all_rewards_20_percent_bonus");
-      if (lendario) {
-        xpWithStreak = Math.floor(xpWithStreak * 1.2);
-        coinsWithBonus = Math.floor(coinsWithBonus * 1.2);
-      }
+  const getCharismaDiscount = useCallback((charisma: number) => {
+    // Desconto baseado no nível de carisma
+    // Cada ponto de carisma = 1% de desconto, máximo 20%
+    return Math.min(charisma, 20);
+  }, []);
 
+  const getStrengthXPReduction = useCallback((strength: number) => {
+    // Redução de XP necessário para level up baseado na força
+    // Cada ponto de força = 1% de redução, máximo 25%
+    return Math.min(strength, 25);
+  }, []);
+
+  const getIntelligenceBonus = useCallback((intelligence: number) => {
+    // Bônus de XP em quests de estudo baseado na inteligência
+    // Cada ponto de inteligência = 2% de bônus, máximo 50%
+    return Math.min(intelligence * 2, 50);
+  }, []);
+
+  // ========== MAIN QUEST FUNCTIONS ==========
+
+  const completeMainQuestStep = useCallback(async (questId: string, stepId: string) => {
+    if (!authUser?.id) return null;
+
+    const mainQuest = mainQuests.find((q) => q.id === questId);
+    if (!mainQuest) return null;
+
+    const stepIndex = mainQuest.steps.findIndex((s) => s.id === stepId);
+    if (stepIndex === -1 || mainQuest.steps[stepIndex].completed) return null;
+
+    try {
+      setSyncing(true);
+
+      // Update step
+      const updatedSteps = [...mainQuest.steps];
+      updatedSteps[stepIndex] = { ...updatedSteps[stepIndex], completed: true };
+
+      // Check if all steps are completed
+      const allStepsCompleted = updatedSteps.every((s) => s.completed);
+      const completedQuest = allStepsCompleted;
+
+      // Update main quest
+      await updateMainQuest(questId, {
+        steps: updatedSteps,
+        completed: completedQuest,
+      });
+
+      // Calculate rewards
+      const step = updatedSteps[stepIndex];
+      const streakMultiplier = getStreakMultiplier();
+      const xpWithStreak = Math.floor(step.xpReward * streakMultiplier);
+      const coinsWithBonus = Math.floor(step.coinReward * streakMultiplier);
+
+      // Update user profile
       const newTotalXP = user.totalXP + xpWithStreak;
       const newCoins = user.coins + coinsWithBonus;
-      const { level: newLevel, currentXP: newCurrentXP } = processLevelUp(
-        newTotalXP,
-        user.level,
-      );
+      const newCurrentXP = user.currentXP + xpWithStreak;
 
-      // Tocar som de ganhar XP (orb)
-      playOrbSoundWithVariation();
+      // Calculate new level
+      let newLevel = user.level;
+      let remainingXP = newCurrentXP;
+      let xpForNextLevel = 0;
 
-      // Verificar se subiu de nível
-      if (newLevel > user.level) {
-        setNewLevel(newLevel);
-        setShowLevelUp(true);
-        // Tocar som de level up
-        playLevelUpSound();
+      // Check for level up
+      while (true) {
+        xpForNextLevel = Math.floor(100 * Math.pow(newLevel, 1.5));
+        if (remainingXP >= xpForNextLevel) {
+          remainingXP -= xpForNextLevel;
+          newLevel++;
+        } else {
+          break;
+        }
       }
 
-      setUser({
-        ...user,
+      // Update user in database
+      await updateUserProfile(authUser.id, {
         level: newLevel,
-        currentXP: newCurrentXP,
+        currentXP: remainingXP,
         totalXP: newTotalXP,
         coins: newCoins,
       });
-    }
-  };
 
-  // Comprar uma recompensa
-  const purchaseReward = (rewardId: string) => {
-    const reward = rewards.find((r) => r.id === rewardId);
-    if (!reward || reward.purchased) return;
-
-    // Calcular preço com desconto de Carisma
-    const discount = getCharismaDiscount(user.attributes.charisma);
-    const finalPrice = Math.floor(reward.cost * (1 - discount / 100));
-
-    // Verificar se tem moedas suficientes
-    if (user.coins < finalPrice) return;
-
-    const newRewards = rewards.map((r) =>
-      r.id === rewardId ? { ...r, purchased: true } : r,
-    );
-    setRewards(newRewards);
-
-    // Deduzir moedas (com desconto aplicado)
-    setUser({
-      ...user,
-      coins: user.coins - finalPrice,
-    });
-
-    // Desconto de Carisma aplicado
-  };
-
-  // Resetar quests diárias (para usar no futuro)
-  const resetDailyQuests = () => {
-    const resetQuests = quests.map((q) => ({
-      ...q,
-      completed: false,
-    }));
-    setQuests(resetQuests);
-  };
-
-  // Calcular XP restante para o próximo nível
-  const getRemainingXP = (): number => {
-    const xpNeeded = getXPForNextLevel(user.level);
-    return Math.max(0, xpNeeded - user.currentXP);
-  };
-
-  // Calcular progresso para o próximo nível (0-100)
-  const getLevelProgress = (): number => {
-    const xpNeeded = getXPForNextLevel(user.level);
-    if (xpNeeded === 0) return 100;
-    const progress = (user.currentXP / xpNeeded) * 100;
-    return Math.min(100, Math.max(0, progress));
-  };
-
-  // Calcular progresso dos atributos (0-100)
-  const getAttributeProgress = (
-    attribute: keyof User["attributes"],
-  ): number => {
-    const current = user.attributes[attribute];
-    const max = 100; // Máximo de 100 para cada atributo
-    return Math.min(100, (current / max) * 100);
-  };
-
-  // Comprar item da loja
-  const purchaseItem = (itemId: string) => {
-    // Importar dinamicamente para evitar dependência circular
-    import("@/data/shopItems").then(({ SHOP_ITEMS }) => {
-      const item = SHOP_ITEMS.find((i) => i.id === itemId);
-      if (!item) {
-        console.error("Item não encontrado:", itemId);
-        return;
-      }
-
-      // Calcular preço final com desconto de carisma
-      const discount = getCharismaDiscount(user.attributes.charisma);
-      let finalPrice = Math.floor(item.price * (1 - discount / 100));
-
-      // Aplicar upgrade "Negociador Nato" - desconto extra de 10%
-      const activeUpgrades = upgrades.filter(upgrade => upgrade.purchased && upgrade.isActive);
-      const negociadorNato = activeUpgrades.find(u => u.effect === "shop_discount_extra_10_percent");
-
-      if (negociadorNato) {
-        finalPrice = Math.floor(finalPrice * 0.9); // 10% de desconto adicional
-      }
-
-      // Verificar se tem moedas suficientes
-      if (user.coins < finalPrice) {
-        return;
-      }
-
-      // Verificar se já tem o item no inventário (para consumíveis)
-      const existingItemIndex = user.inventory.findIndex(
-        (invItem) => invItem.id === itemId,
-      );
-
-      if (existingItemIndex >= 0) {
-        // Se já tem o item, incrementar quantidade
-        const updatedInventory = [...user.inventory];
-        updatedInventory[existingItemIndex] = {
-          ...updatedInventory[existingItemIndex],
-          quantity: (updatedInventory[existingItemIndex].quantity || 1) + 1,
-        };
-        setUser({
-          ...user,
-          coins: user.coins - finalPrice,
-          inventory: updatedInventory,
-        });
+      // Show level up notification if leveled up
+      if (newLevel > user.level) {
+        setNewLevel(newLevel);
+        setShowLevelUp(true);
+        playLevelUpSound();
       } else {
-        // Adicionar novo item ao inventário
-        const newItem = {
-          ...item,
-          quantity: 1,
-          acquiredAt: new Date().toISOString(),
-        };
-        setUser({
-          ...user,
-          coins: user.coins - finalPrice,
-          inventory: [...user.inventory, newItem],
-        });
+        playOrbSoundWithVariation();
       }
 
-      // Compra realizada com sucesso
-    });
-  };
-
-  // Usar item do inventário
-  const useItem = (itemId: string, attribute?: string) => {
-    const itemIndex = user.inventory.findIndex((item) => item.id === itemId);
-    if (itemIndex === -1) {
-      return;
+      return {
+        xpWithStreak,
+        coinsWithBonus,
+        leveledUp: newLevel > user.level,
+        newLevel,
+        questCompleted: completedQuest,
+      };
+    } catch (error) {
+      console.error("Error completing main quest step:", error);
+      return null;
+    } finally {
+      setSyncing(false);
     }
+  }, [authUser?.id, mainQuests, user, getStreakMultiplier, playLevelUpSound, playOrbSoundWithVariation]);
 
-    const item = user.inventory[itemIndex];
+  const addMainQuest = useCallback(async (questData: Omit<MainQuest, "id">) => {
+    if (!authUser?.id) return null;
 
-    // Verificar se é consumível e não foi usado
-    if (item.type !== "consumable" || item.usedAt) {
-      return;
+    try {
+      setSyncing(true);
+      const newQuest = await createMainQuest(authUser.id, questData);
+      return newQuest;
+    } catch (error) {
+      console.error("Error adding main quest:", error);
+      return null;
+    } finally {
+      setSyncing(false);
     }
+  }, [authUser?.id]);
 
-    // Aplicar efeito do item
-    let updatedUser = { ...user };
-    const updatedInventory = [...user.inventory];
-
-    switch (item.effect) {
-      case "streak_protection":
-        updatedUser = {
-          ...updatedUser,
-          activeEffects: {
-            ...updatedUser.activeEffects,
-            hasStreakProtection: true,
-          },
-        };
-        // Barreira de Streak ativada
-        break;
-
-      case "xp_boost":
-        updatedUser = {
-          ...updatedUser,
-          activeEffects: {
-            ...updatedUser.activeEffects,
-            xpBoostActive: true,
-            xpBoostUntil: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(), // 24h
-          },
-        };
-        // Poção de XP ativada
-        break;
-
-      case "coin_multiplier":
-        updatedUser = {
-          ...updatedUser,
-          activeEffects: {
-            ...updatedUser.activeEffects,
-            coinMultiplierActive: true,
-            coinMultiplierUntil: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(), // 24h
-          },
-        };
-        // Multiplicador de moedas ativado
-        break;
-
-      case "attribute_point":
-        if (!attribute) {
-          return;
-        }
-        const validAttributes = ["strength", "intelligence", "charisma", "discipline"];
-        if (!validAttributes.includes(attribute)) {
-          return;
-        }
-
-        updatedUser = {
-          ...updatedUser,
-          attributes: {
-            ...updatedUser.attributes,
-            [attribute]: Math.min(100, updatedUser.attributes[attribute as keyof typeof updatedUser.attributes] + 1),
-          },
-        };
-        // Atributo aumentado
-        break;
-
-      case "rest_day":
-        // Rest day - dia de descanso
-        break;
-
-      default:
-      // Item usado
-    }
-
-    // Marcar item como usado e atualizar inventário
-    updatedInventory[itemIndex] = {
-      ...item,
-      usedAt: new Date().toISOString(),
-      quantity: Math.max(0, (item.quantity || 1) - 1),
-    };
-
-    // Se quantidade chegou a 0, remover do inventário
-    if (updatedInventory[itemIndex].quantity === 0) {
-      updatedInventory.splice(itemIndex, 1);
-    }
-
-    updatedUser = {
-      ...updatedUser,
-      inventory: updatedInventory,
-    };
-
-    setUser(updatedUser);
-    // Item usado com sucesso
-  };
-
-  // ========== CRUD DE QUESTS ==========
-
-  // Adicionar nova quest
-  const addQuest = (questData: Omit<Quest, "id" | "completed">) => {
-    // Validar dados
-    if (!questData.title.trim()) {
+  const editMainQuest = useCallback(async (questId: string, questData: Partial<MainQuest>) => {
+    try {
+      setSyncing(true);
+      const success = await updateMainQuest(questId, questData);
+      return success;
+    } catch (error) {
+      console.error("Error editing main quest:", error);
       return false;
+    } finally {
+      setSyncing(false);
     }
+  }, []);
 
-    if (questData.xpReward <= 0 || questData.coinReward <= 0) {
+  const removeMainQuest = useCallback(async (questId: string) => {
+    try {
+      setSyncing(true);
+      const success = await deleteMainQuest(questId);
+      return success;
+    } catch (error) {
+      console.error("Error removing main quest:", error);
       return false;
+    } finally {
+      setSyncing(false);
     }
+  }, []);
 
-    // Verificar se título já existe
-    const existingQuest = quests.find(q => q.title.toLowerCase() === questData.title.toLowerCase());
-    if (existingQuest) {
+  // ========== REWARD FUNCTIONS ==========
+
+  const purchaseReward = useCallback(async (rewardId: string) => {
+    if (!authUser?.id) return false;
+
+    const reward = rewards.find((r) => r.id === rewardId);
+    if (!reward || reward.purchased || user.coins < reward.cost) return false;
+
+    try {
+      setSyncing(true);
+
+      // Update reward as purchased
+      await updateReward(rewardId, { purchased: true });
+
+      // Update user coins
+      const newCoins = user.coins - reward.cost;
+      await updateUserProfile(authUser.id, { coins: newCoins });
+
+      return true;
+    } catch (error) {
+      console.error("Error purchasing reward:", error);
       return false;
+    } finally {
+      setSyncing(false);
     }
+  }, [authUser?.id, rewards, user.coins]);
 
-    // Criar nova quest
-    const newQuest: Quest = {
-      id: `quest-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
-      title: questData.title.trim(),
-      description: questData.description.trim(),
-      xpReward: questData.xpReward,
-      coinReward: questData.coinReward,
-      category: questData.category,
-      completed: false,
-      progress: questData.progress || 0,
-      maxProgress: questData.maxProgress || 1,
-      deadline: questData.deadline,
-    };
+  const addReward = useCallback(async (rewardData: Omit<Reward, "id">) => {
+    if (!authUser?.id) return null;
 
-    setQuests([...quests, newQuest]);
-    return true;
-  };
+    try {
+      setSyncing(true);
+      const newReward = await createReward(authUser.id, rewardData);
+      return newReward;
+    } catch (error) {
+      console.error("Error adding reward:", error);
+      return null;
+    } finally {
+      setSyncing(false);
+    }
+  }, [authUser?.id]);
 
-  // Atualizar quest existente
-  const updateQuest = (questId: string, updates: Partial<Quest>) => {
-    const questIndex = quests.findIndex(q => q.id === questId);
-    if (questIndex === -1) {
+  const editReward = useCallback(async (rewardId: string, rewardData: Partial<Reward>) => {
+    try {
+      setSyncing(true);
+      const success = await updateReward(rewardId, rewardData);
+      return success;
+    } catch (error) {
+      console.error("Error editing reward:", error);
       return false;
+    } finally {
+      setSyncing(false);
     }
+  }, []);
 
-    const quest = quests[questIndex];
-    const updatedQuest = { ...quest, ...updates };
-
-    // Validar título único (se mudou)
-    if (updates.title && updates.title !== quest.title) {
-      const existingQuest = quests.find(q =>
-        q.id !== questId && q.title.toLowerCase() === updates.title!.toLowerCase()
-      );
-      if (existingQuest) {
-        return false;
-      }
-    }
-
-    // Validar valores (se mudaram)
-    if (updates.xpReward !== undefined && updates.xpReward <= 0) {
+  const removeReward = useCallback(async (rewardId: string) => {
+    try {
+      setSyncing(true);
+      const success = await deleteReward(rewardId);
+      return success;
+    } catch (error) {
+      console.error("Error removing reward:", error);
       return false;
+    } finally {
+      setSyncing(false);
     }
-    if (updates.coinReward !== undefined && updates.coinReward <= 0) {
-      return false;
-    }
+  }, []);
 
-    const updatedQuests = [...quests];
-    updatedQuests[questIndex] = updatedQuest;
-    setQuests(updatedQuests);
-    return true;
-  };
+  // ========== UPGRADE FUNCTIONS ==========
 
-  // Deletar quest
-  const deleteQuest = (questId: string) => {
-    const questIndex = quests.findIndex(q => q.id === questId);
-    if (questIndex === -1) {
-      return false;
-    }
+  const purchaseUpgrade = useCallback(async (upgradeId: string) => {
+    if (!authUser?.id) return false;
 
-    const updatedQuests = quests.filter(q => q.id !== questId);
-    setQuests(updatedQuests);
-    return true;
-  };
-
-  // Duplicar quest
-  const duplicateQuest = (questId: string) => {
-    const quest = quests.find(q => q.id === questId);
-    if (!quest) {
-      return false;
-    }
-
-    const duplicatedQuest: Quest = {
-      ...quest,
-      id: `quest-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
-      title: `${quest.title} (Cópia)`,
-      completed: false,
-      progress: 0,
-    };
-
-    setQuests([...quests, duplicatedQuest]);
-    return true;
-  };
-
-  // Adicionar quest a partir de template
-  const addQuestFromTemplate = (templateData: { title: string; description: string; category: "daily" | "weekly" | "main" | "special"; xpReward: number; coinReward: number }) => {
-    const questData = {
-      title: templateData.title,
-      description: templateData.description,
-      xpReward: templateData.xpReward,
-      coinReward: templateData.coinReward,
-      category: templateData.category,
-      progress: 0,
-      maxProgress: 1,
-    };
-    return addQuest(questData);
-  };
-
-  // Resetar sistema XP (função para debug/reset)
-  const resetXPSystem = () => {
-    setUser(INITIAL_USER);
-    setQuests(INITIAL_QUESTS);
-    setMainQuests(INITIAL_MAIN_QUESTS);
-    setRewards(INITIAL_REWARDS);
-  };
-
-  // Função para resetar tudo - APAGA TODOS OS DADOS
-  const resetAll = () => {
-    // Resetar todos os estados para valores iniciais
-    setUser(INITIAL_USER);
-    setQuests(INITIAL_QUESTS);
-    setMainQuests(INITIAL_MAIN_QUESTS);
-    setRewards(INITIAL_REWARDS);
-    setUpgrades(UPGRADE_TEMPLATES);
-    setShowLevelUp(false);
-    setNewLevel(1);
-
-    // Limpar localStorage completamente
-    localStorage.removeItem("rpg-user");
-    localStorage.removeItem("rpg-quests");
-    localStorage.removeItem("rpg-main-quests");
-    localStorage.removeItem("rpg-rewards");
-    localStorage.removeItem("rpg-upgrades");
-
-    // Recarregar a página para garantir que tudo seja resetado
-    window.location.reload();
-  };
-
-  // CRUD de MainQuests
-  const addMainQuest = (questData: Omit<MainQuest, "id" | "completed">) => {
-    const newQuest: MainQuest = {
-      ...questData,
-      id: `main-${Date.now()}`,
-      completed: false,
-      steps: questData.steps.map(step => ({
-        ...step,
-        id: `step-${Date.now()}-${Math.random()}`,
-        completed: false
-      }))
-    };
-    setMainQuests([...mainQuests, newQuest]);
-    return true;
-  };
-
-  const updateMainQuest = (id: string, updates: Partial<MainQuest>) => {
-    setMainQuests(mainQuests.map(q => q.id === id ? { ...q, ...updates } : q));
-    return true;
-  };
-
-  const deleteMainQuest = (id: string) => {
-    setMainQuests(mainQuests.filter(q => q.id !== id));
-    return true;
-  };
-
-  const duplicateMainQuest = (id: string) => {
-    const quest = mainQuests.find(q => q.id === id);
-    if (!quest) return false;
-    const newQuest = {
-      ...quest,
-      id: `main-${Date.now()}`,
-      title: `${quest.title} (cópia)`,
-      completed: false,
-      steps: quest.steps.map(step => ({
-        ...step,
-        id: `step-${Date.now()}-${Math.random()}`,
-        completed: false
-      }))
-    };
-    setMainQuests([...mainQuests, newQuest]);
-    return true;
-  };
-
-  // CRUD de Rewards
-  const addReward = (rewardData: Omit<Reward, "id" | "purchased">) => {
-    const newReward: Reward = {
-      ...rewardData,
-      id: `reward-${Date.now()}`,
-      purchased: false
-    };
-    setRewards([...rewards, newReward]);
-    return true;
-  };
-
-  const updateReward = (id: string, updates: Partial<Reward>) => {
-    setRewards(rewards.map(r => r.id === id ? { ...r, ...updates } : r));
-    return true;
-  };
-
-  const deleteReward = (id: string) => {
-    setRewards(rewards.filter(r => r.id !== id));
-    return true;
-  };
-
-  // ========== SISTEMA DE UPGRADES ==========
-
-  const purchaseUpgrade = (upgradeId: string): boolean => {
-    const upgrade = upgrades.find(u => u.id === upgradeId);
+    const upgrade = upgrades.find((u) => u.id === upgradeId);
     if (!upgrade || upgrade.purchased) return false;
 
-    // Verificar se tem atributos suficientes (requisito mínimo)
-    const hasAttributes =
-      (!upgrade.attributeCost.strength || user.attributes.strength >= upgrade.attributeCost.strength) &&
-      (!upgrade.attributeCost.intelligence || user.attributes.intelligence >= upgrade.attributeCost.intelligence) &&
-      (!upgrade.attributeCost.charisma || user.attributes.charisma >= upgrade.attributeCost.charisma) &&
-      (!upgrade.attributeCost.discipline || user.attributes.discipline >= upgrade.attributeCost.discipline);
+    // Check if user has enough attributes
+    const hasEnoughAttributes = Object.entries(upgrade.attributeCost).every(
+      ([attribute, cost]) => user.attributes[attribute as keyof typeof user.attributes] >= cost
+    );
 
-    if (!hasAttributes) return false;
+    if (!hasEnoughAttributes) return false;
 
-    // Marcar como comprado e ativo
-    setUpgrades(upgrades.map(u =>
-      u.id === upgradeId
-        ? { ...u, purchased: true, isActive: true }
-        : u
-    ));
+    try {
+      setSyncing(true);
 
-    setUser({ ...user, purchasedUpgrades: [...user.purchasedUpgrades, upgradeId] });
-    return true;
-  };
+      // Update upgrade as purchased
+      await updateUpgrade(upgradeId, { purchased: true, isActive: true });
 
-  const toggleUpgrade = (upgradeId: string): boolean => {
-    const upgrade = upgrades.find(u => u.id === upgradeId);
-    if (!upgrade || !upgrade.purchased || upgrade.isPermanent) return false;
+      // Deduct attribute costs
+      const newAttributes = { ...user.attributes };
+      Object.entries(upgrade.attributeCost).forEach(([attribute, cost]) => {
+        newAttributes[attribute as keyof typeof newAttributes] -= cost;
+      });
 
-    setUpgrades(upgrades.map(u =>
-      u.id === upgradeId ? { ...u, isActive: !u.isActive } : u
-    ));
-    return true;
-  };
+      // Update purchased upgrades list
+      const newPurchasedUpgrades = [...user.purchasedUpgrades, upgradeId];
+
+      // Update user profile
+      await updateUserProfile(authUser.id, {
+        attributes: newAttributes,
+        purchasedUpgrades: newPurchasedUpgrades,
+      });
+
+      return true;
+    } catch (error) {
+      console.error("Error purchasing upgrade:", error);
+      return false;
+    } finally {
+      setSyncing(false);
+    }
+  }, [authUser?.id, upgrades, user]);
+
+  const toggleUpgrade = useCallback(async (upgradeId: string, isActive: boolean) => {
+    try {
+      setSyncing(true);
+      const success = await updateUpgrade(upgradeId, { isActive });
+      return success;
+    } catch (error) {
+      console.error("Error toggling upgrade:", error);
+      return false;
+    } finally {
+      setSyncing(false);
+    }
+  }, []);
+
+  // ========== INVENTORY FUNCTIONS ==========
+
+  const buyItem = useCallback(async (itemData: Omit<Item, "id" | "acquiredAt">) => {
+    if (!authUser?.id) return null;
+
+    if (user.coins < itemData.price) return null;
+
+    try {
+      setSyncing(true);
+
+      // Add to inventory
+      const newItem = await addToInventory(authUser.id, itemData);
+      if (!newItem) return null;
+
+      // Update user coins
+      const newCoins = user.coins - itemData.price;
+      await updateUserProfile(authUser.id, { coins: newCoins });
+
+      return newItem;
+    } catch (error) {
+      console.error("Error buying item:", error);
+      return null;
+    } finally {
+      setSyncing(false);
+    }
+  }, [authUser?.id, user.coins]);
+
+  const useItem = useCallback(async (itemId: string) => {
+    if (!authUser?.id) return false;
+
+    try {
+      setSyncing(true);
+
+      // Remove from inventory
+      const success = await removeFromInventory(itemId);
+      return success;
+    } catch (error) {
+      console.error("Error using item:", error);
+      return false;
+    } finally {
+      setSyncing(false);
+    }
+  }, [authUser?.id]);
+
+  // ========== UTILITY FUNCTIONS ==========
+
+  const getXPForNextLevel = useCallback((level: number) => {
+    return Math.floor(100 * Math.pow(level, 1.5));
+  }, []);
+
+  const getLevelProgress = useCallback((currentXP: number, level: number) => {
+    const xpForNextLevel = getXPForNextLevel(level);
+    return (currentXP / xpForNextLevel) * 100;
+  }, [getXPForNextLevel]);
 
   return {
+    // State
     user,
     quests,
     mainQuests,
@@ -1211,40 +792,46 @@ export function useRPG() {
     upgrades,
     showLevelUp,
     newLevel,
+    loading,
+    syncing,
+
+    // Quest functions
+    completeQuest,
     completeQuestWithNotification,
-    completeMainQuestStep,
-    purchaseReward,
-    purchaseItem,
-    useItem,
-    // CRUD de Quests
     addQuest,
-    updateQuest,
-    deleteQuest,
+    editQuest,
+    removeQuest,
     duplicateQuest,
-    addQuestFromTemplate,
-    resetDailyQuests,
-    resetXPSystem,
-    getXPForNextLevel,
-    getRemainingXP,
-    getLevelProgress,
-    getAttributeProgress,
-    getStreakMultiplier,
-    getStrengthXPReduction,
-    getIntelligenceBonus,
-    getCharismaDiscount,
-    setShowLevelUp,
-    resetAll,
-    // CRUD de MainQuests
+
+    // Main quest functions
+    completeMainQuestStep,
     addMainQuest,
-    updateMainQuest,
-    deleteMainQuest,
-    duplicateMainQuest,
-    // CRUD de Rewards
+    editMainQuest,
+    removeMainQuest,
+
+    // Reward functions
+    purchaseReward,
     addReward,
-    updateReward,
-    deleteReward,
-    // Sistema de Upgrades
+    editReward,
+    removeReward,
+
+    // Upgrade functions
     purchaseUpgrade,
     toggleUpgrade,
+
+    // Inventory functions
+    buyItem,
+    useItem,
+
+    // Utility functions
+    getXPForNextLevel,
+    getLevelProgress,
+    getStreakMultiplier,
+    getCharismaDiscount,
+    getStrengthXPReduction,
+    getIntelligenceBonus,
+
+    // UI functions
+    setShowLevelUp,
   };
 }

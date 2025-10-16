@@ -6,8 +6,9 @@ import {
 } from "@/components/NotificationCenter";
 import { Button } from "@/components/ui/button";
 import { LogoMobile } from "@/components/LogoMobile";
+import { ProfileDropdown } from "@/components/ProfileDropdown";
 import { useSidebarContext } from "@/contexts/SidebarContext";
-import { Menu, User } from "lucide-react";
+import { Menu } from "lucide-react";
 
 export function Navbar() {
   const { toggleSidebar } = useSidebarContext();
@@ -41,9 +42,7 @@ export function Navbar() {
         />
 
         {/* Profile */}
-        <Button variant="ghost" size="sm">
-          <User className="h-5 w-5" />
-        </Button>
+        <ProfileDropdown />
       </div>
     </header>
   );

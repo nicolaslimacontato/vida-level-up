@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import React, { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import {
@@ -38,14 +38,8 @@ export default function QuestsPage() {
 
   // Hooks
   const { success, error, info } = useToast();
-  const {
-    quests,
-    addQuest,
-    updateQuest,
-    deleteQuest,
-    duplicateQuest,
-    addQuestFromTemplate,
-  } = useRPGContext();
+  const { quests, addQuest, editQuest, removeQuest, duplicateQuest } =
+    useRPGContext();
 
   // Filtrar quests
   const filteredQuests = quests.filter((quest) => {
@@ -65,54 +59,52 @@ export default function QuestsPage() {
         ? QUEST_TEMPLATES
         : getTemplatesByCategory(selectedCategory);
 
-  const handleSaveQuest = (questData: QuestFormData): Promise<boolean> => {
-    return new Promise((resolve) => {
-      if (editingQuest && editingQuest.id) {
-        // Atualizar quest existente
-        const questUpdated = updateQuest(editingQuest.id, {
-          title: questData.title,
-          description: questData.description,
-          xpReward: questData.xpReward,
-          coinReward: questData.coinReward,
-          category: questData.category,
-          attributeBonus: questData.attributeBonus,
-        });
-        if (questUpdated) {
-          setIsModalOpen(false);
-          setEditingQuest(undefined);
-          success("Quest atualizada!", "A quest foi atualizada com sucesso.");
-          resolve(true);
-        } else {
-          error(
-            "Erro ao atualizar quest",
-            "Não foi possível atualizar a quest.",
-          );
-          resolve(false);
-        }
+  const handleSaveQuest = async (
+    questData: QuestFormData,
+  ): Promise<boolean> => {
+    if (editingQuest && editingQuest.id) {
+      // Atualizar quest existente
+      const questUpdated = await editQuest(editingQuest.id, {
+        title: questData.title,
+        description: questData.description,
+        xpReward: questData.xpReward,
+        coinReward: questData.coinReward,
+        category: questData.category,
+        attributeBonus: questData.attributeBonus,
+      });
+      if (questUpdated) {
+        setIsModalOpen(false);
+        setEditingQuest(undefined);
+        success("Quest atualizada!", "A quest foi atualizada com sucesso.");
+        return true;
       } else {
-        // Criar nova quest
-        const questToAdd = {
-          title: questData.title,
-          description: questData.description,
-          xpReward: questData.xpReward,
-          coinReward: questData.coinReward,
-          category: questData.category,
-          progress: 0,
-          maxProgress: 1,
-          attributeBonus: questData.attributeBonus,
-        };
-        const questCreated = addQuest(questToAdd);
-        if (questCreated) {
-          setIsModalOpen(false);
-          setEditingQuest(undefined);
-          success("Quest criada!", "A nova quest foi criada com sucesso.");
-          resolve(true);
-        } else {
-          error("Erro ao criar quest", "Já existe uma quest com este título.");
-          resolve(false);
-        }
+        error("Erro ao atualizar quest", "Não foi possível atualizar a quest.");
+        return false;
       }
-    });
+    } else {
+      // Criar nova quest
+      const questToAdd = {
+        title: questData.title,
+        description: questData.description,
+        xpReward: questData.xpReward,
+        coinReward: questData.coinReward,
+        category: questData.category,
+        progress: 0,
+        maxProgress: 1,
+        completed: false,
+        attributeBonus: questData.attributeBonus,
+      };
+      const questCreated = await addQuest(questToAdd);
+      if (questCreated) {
+        setIsModalOpen(false);
+        setEditingQuest(undefined);
+        success("Quest criada!", "A nova quest foi criada com sucesso.");
+        return true;
+      } else {
+        error("Erro ao criar quest", "Já existe uma quest com este título.");
+        return false;
+      }
+    }
   };
 
   const handleDeleteQuest = (quest: Quest) => {
@@ -124,7 +116,7 @@ export default function QuestsPage() {
     if (questToDelete) {
       setIsDeleting(true);
       try {
-        const questDeleted = deleteQuest(questToDelete.id);
+        const questDeleted = await removeQuest(questToDelete.id);
         if (questDeleted) {
           setQuestToDelete(null);
           setIsConfirmModalOpen(false);
@@ -144,7 +136,7 @@ export default function QuestsPage() {
     }
   };
 
-  const handleUseTemplate = (template: {
+  const handleUseTemplate = async (template: {
     title: string;
     description: string;
     category: "daily" | "weekly" | "main" | "special";
@@ -155,7 +147,7 @@ export default function QuestsPage() {
   }) => {
     // Usar templateToQuest para conversão adequada
     const questData = templateToQuest(template);
-    const templateAdded = addQuestFromTemplate(questData);
+    const templateAdded = await addQuest(questData);
     if (templateAdded) {
       success(
         "Template adicionado!",
@@ -324,12 +316,14 @@ export default function QuestsPage() {
                     })
                   }
                   onDelete={() => handleDeleteQuest(quest)}
-                  onDuplicate={() => {
-                    duplicateQuest(quest.id);
-                    info(
-                      "Quest duplicada!",
-                      "Uma cópia da quest foi criada com sucesso.",
-                    );
+                  onDuplicate={async () => {
+                    const duplicated = await duplicateQuest(quest.id);
+                    if (duplicated) {
+                      info(
+                        "Quest duplicada!",
+                        "Uma cópia da quest foi criada com sucesso.",
+                      );
+                    }
                   }}
                 />
               ))}
@@ -448,14 +442,29 @@ function QuestItem({
             <span className="text-paragraph coin-text text-amber-600">
               <span className="coin-emoji">🪙</span> {quest.coinReward}
             </span>
-            <div className="flex items-center gap-1">
-              <Button variant="ghost" size="sm" onClick={onEdit}>
+            <div className="flex flex-shrink-0 items-center gap-1">
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={onEdit}
+                className="h-8 w-8 p-0"
+              >
                 <Pencil className="h-4 w-4" />
               </Button>
-              <Button variant="ghost" size="sm" onClick={onDuplicate}>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={onDuplicate}
+                className="h-8 w-8 p-0"
+              >
                 <Plus className="h-4 w-4" />
               </Button>
-              <Button variant="ghost" size="sm" onClick={onDelete}>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={onDelete}
+                className="h-8 w-8 p-0"
+              >
                 <Trash2 className="text-destructive h-4 w-4" />
               </Button>
             </div>
@@ -495,14 +504,29 @@ function QuestItem({
           </div>
         </div>
 
-        <div className="flex items-center gap-2">
-          <Button variant="ghost" size="sm" onClick={onEdit}>
+        <div className="flex flex-shrink-0 items-center gap-1">
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={onEdit}
+            className="h-8 w-8 p-0"
+          >
             <Pencil className="h-4 w-4" />
           </Button>
-          <Button variant="ghost" size="sm" onClick={onDuplicate}>
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={onDuplicate}
+            className="h-8 w-8 p-0"
+          >
             <Plus className="h-4 w-4" />
           </Button>
-          <Button variant="ghost" size="sm" onClick={onDelete}>
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={onDelete}
+            className="h-8 w-8 p-0"
+          >
             <Trash2 className="text-destructive h-4 w-4" />
           </Button>
         </div>

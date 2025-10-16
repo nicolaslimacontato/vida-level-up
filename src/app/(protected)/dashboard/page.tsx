@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import React, { useState, useEffect } from "react";
 import { UserHeader } from "@/components/UserHeader";
 import { LevelUpNotification } from "@/components/LevelUpNotification";
 import { XPParticles } from "@/components/XPParticles";

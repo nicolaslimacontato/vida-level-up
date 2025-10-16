@@ -510,12 +510,13 @@ export const searchTemplates = (query: string): MainQuestTemplate[] => {
 };
 
 // Converter template para MainQuest
-export const templateToMainQuest = (template: MainQuestTemplate): Omit<MainQuest, "id" | "completed"> => {
+export const templateToMainQuest = (template: MainQuestTemplate): Omit<MainQuest, "id"> => {
     return {
         title: template.title,
         description: template.description,
         xpReward: template.xpReward,
         coinReward: template.coinReward,
+        completed: false,
         steps: template.steps.map(step => ({
             ...step,
             id: `step-${Date.now()}-${Math.random()}`,

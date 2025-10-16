@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import React, { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
@@ -67,7 +67,7 @@ export default function RecompensasPage() {
     return a.category.localeCompare(b.category);
   });
 
-  const handlePurchaseUpgrade = (upgrade: Upgrade) => {
+  const handlePurchaseUpgrade = async (upgrade: Upgrade) => {
     if (!hasEnoughAttributes(upgrade)) {
       error(
         "Atributos insuficientes",
@@ -76,7 +76,7 @@ export default function RecompensasPage() {
       return;
     }
 
-    const success_purchase = purchaseUpgrade(upgrade.id);
+    const success_purchase = await purchaseUpgrade(upgrade.id);
     if (success_purchase) {
       success(
         "Upgrade desbloqueado!",
@@ -87,8 +87,8 @@ export default function RecompensasPage() {
     }
   };
 
-  const handleToggleUpgrade = (upgrade: Upgrade) => {
-    const success_toggle = toggleUpgrade(upgrade.id);
+  const handleToggleUpgrade = async (upgrade: Upgrade) => {
+    const success_toggle = await toggleUpgrade(upgrade.id, !upgrade.isActive);
     if (success_toggle) {
       success(
         upgrade.isActive ? "Upgrade desativado" : "Upgrade ativado",

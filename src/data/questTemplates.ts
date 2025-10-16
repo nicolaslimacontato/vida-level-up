@@ -362,7 +362,7 @@ export function searchTemplates(query: string): QuestTemplate[] {
 /**
  * Converter template em Quest
  */
-export function templateToQuest(template: QuestTemplate): Omit<Quest, "id" | "completed"> {
+export function templateToQuest(template: QuestTemplate): Omit<Quest, "id"> {
     return {
         title: template.title,
         description: template.description,
@@ -371,5 +371,6 @@ export function templateToQuest(template: QuestTemplate): Omit<Quest, "id" | "co
         category: template.category,
         progress: 0,
         maxProgress: 1,
+        completed: false,
     };
 }

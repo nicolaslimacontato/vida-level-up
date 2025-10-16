@@ -2,18 +2,20 @@
 
 import { useEffect } from "react";
 import { useRouter } from "next/navigation";
+import { useAuth } from "@/hooks/useAuth";
 
 export default function HomePage() {
   const router = useRouter();
+  const { user, loading } = useAuth();
 
   useEffect(() => {
-    // Redireciona para o dashboard após um breve delay
-    const timer = setTimeout(() => {
+    // Só redireciona se o usuário estiver autenticado
+    if (!loading && user) {
       router.push("/dashboard");
-    }, 2000);
-
-    return () => clearTimeout(timer);
-  }, [router]);
+    } else if (!loading && !user) {
+      router.push("/login");
+    }
+  }, [user, loading, router]);
 
   return (
     <div className="bg-background flex min-h-screen items-center justify-center">

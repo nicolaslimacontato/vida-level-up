@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import React, { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
@@ -50,9 +50,8 @@ export default function MissoesPrincipaisPage() {
   const {
     mainQuests,
     addMainQuest,
-    updateMainQuest,
-    deleteMainQuest,
-    duplicateMainQuest,
+    editMainQuest,
+    removeMainQuest,
     completeMainQuestStep,
   } = useRPGContext();
 
@@ -72,60 +71,61 @@ export default function MissoesPrincipaisPage() {
         ? MAIN_QUEST_TEMPLATES
         : getTemplatesByCategory(selectedCategory);
 
-  const handleSaveQuest = (questData: MainQuestFormData): Promise<boolean> => {
-    return new Promise((resolve) => {
-      if (editingQuest && editingQuest.id) {
-        // Atualizar missão existente
-        const questUpdated = updateMainQuest(editingQuest.id, {
-          title: questData.title,
-          description: questData.description,
-          xpReward: questData.xpReward,
-          coinReward: questData.coinReward,
-          steps: questData.steps.map((step) => ({
-            ...step,
-            id: step.id || `step-${Date.now()}-${Math.random()}`,
-            completed: false,
-          })),
-        });
-        if (questUpdated) {
-          setIsModalOpen(false);
-          setEditingQuest(undefined);
-          success("Missão atualizada!", "A missão foi atualizada com sucesso.");
-          resolve(true);
-        } else {
-          error(
-            "Erro ao atualizar missão",
-            "Não foi possível atualizar a missão.",
-          );
-          resolve(false);
-        }
+  const handleSaveQuest = async (
+    questData: MainQuestFormData,
+  ): Promise<boolean> => {
+    if (editingQuest && editingQuest.id) {
+      // Atualizar missão existente
+      const questUpdated = await editMainQuest(editingQuest.id, {
+        title: questData.title,
+        description: questData.description,
+        xpReward: questData.xpReward,
+        coinReward: questData.coinReward,
+        steps: questData.steps.map((step) => ({
+          ...step,
+          id: step.id || `step-${Date.now()}-${Math.random()}`,
+          completed: false,
+        })),
+      });
+      if (questUpdated) {
+        setIsModalOpen(false);
+        setEditingQuest(undefined);
+        success("Missão atualizada!", "A missão foi atualizada com sucesso.");
+        return true;
       } else {
-        // Criar nova missão
-        const questToAdd = {
-          title: questData.title,
-          description: questData.description,
-          xpReward: questData.xpReward,
-          coinReward: questData.coinReward,
-          steps: questData.steps.map((step) => ({
-            ...step,
-            id: `step-${Date.now()}-${Math.random()}`,
-            completed: false,
-          })),
-        };
-        const questCreated = addMainQuest(questToAdd);
-        if (questCreated) {
-          setIsModalOpen(false);
-          success(
-            "Missão criada!",
-            "Nova missão principal foi criada com sucesso.",
-          );
-          resolve(true);
-        } else {
-          error("Erro ao criar missão", "Não foi possível criar a missão.");
-          resolve(false);
-        }
+        error(
+          "Erro ao atualizar missão",
+          "Não foi possível atualizar a missão.",
+        );
+        return false;
       }
-    });
+    } else {
+      // Criar nova missão
+      const questToAdd = {
+        title: questData.title,
+        description: questData.description,
+        xpReward: questData.xpReward,
+        coinReward: questData.coinReward,
+        completed: false,
+        steps: questData.steps.map((step) => ({
+          ...step,
+          id: `step-${Date.now()}-${Math.random()}`,
+          completed: false,
+        })),
+      };
+      const questCreated = await addMainQuest(questToAdd);
+      if (questCreated) {
+        setIsModalOpen(false);
+        success(
+          "Missão criada!",
+          "Nova missão principal foi criada com sucesso.",
+        );
+        return true;
+      } else {
+        error("Erro ao criar missão", "Não foi possível criar a missão.");
+        return false;
+      }
+    }
   };
 
   const handleEditQuest = (quest: MainQuest) => {
@@ -147,13 +147,12 @@ export default function MissoesPrincipaisPage() {
     setIsModalOpen(true);
   };
 
-  const handleDuplicateQuest = (quest: MainQuest) => {
-    const questDuplicated = duplicateMainQuest(quest.id);
-    if (questDuplicated) {
-      success("Missão duplicada!", "A missão foi duplicada com sucesso.");
-    } else {
-      error("Erro", "Não foi possível duplicar a missão.");
-    }
+  const handleDuplicateQuest = () => {
+    // Função de duplicar não implementada ainda
+    error(
+      "Funcionalidade em desenvolvimento",
+      "A duplicação de missões principais será implementada em breve.",
+    );
   };
 
   const handleDeleteQuest = (quest: MainQuest) => {
@@ -166,7 +165,7 @@ export default function MissoesPrincipaisPage() {
 
     setIsDeleting(true);
     try {
-      const questDeleted = deleteMainQuest(questToDelete.id);
+      const questDeleted = await removeMainQuest(questToDelete.id);
       if (questDeleted) {
         success("Missão deletada!", "A missão foi removida com sucesso.");
         setIsConfirmModalOpen(false);
@@ -181,9 +180,9 @@ export default function MissoesPrincipaisPage() {
     }
   };
 
-  const handleUseTemplate = (template: MainQuestTemplate) => {
+  const handleUseTemplate = async (template: MainQuestTemplate) => {
     const questData = templateToMainQuest(template);
-    const questCreated = addMainQuest(questData);
+    const questCreated = await addMainQuest(questData);
     if (questCreated) {
       success(
         "Template usado!",
@@ -419,7 +418,7 @@ export default function MissoesPrincipaisPage() {
                             <Button
                               variant="ghost"
                               size="sm"
-                              onClick={() => handleDuplicateQuest(quest)}
+                              onClick={() => handleDuplicateQuest()}
                             >
                               <Copy className="h-4 w-4" />
                             </Button>

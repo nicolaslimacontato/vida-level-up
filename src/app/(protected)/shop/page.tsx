@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import React, { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -26,7 +26,7 @@ export default function ShopPage() {
   const [showFilters, setShowFilters] = useState(false);
 
   // Hook do RPG (via contexto compartilhado)
-  const { user, purchaseItem, getCharismaDiscount } = useRPGContext();
+  const { user, buyItem, getCharismaDiscount } = useRPGContext();
 
   // Hook de notificações
   const { success, error, info } = useToast();
@@ -51,7 +51,7 @@ export default function ShopPage() {
     }
 
     try {
-      purchaseItem(itemId);
+      buyItem(item);
       success("Item Comprado!", `${item.name} foi adicionado ao inventário.`);
 
       if (discount > 0) {
