@@ -1,7 +1,6 @@
 "use client";
 
 import { createBrowserClient } from '@supabase/ssr'
-import type { Session } from '@supabase/supabase-js'
 
 let supabaseClient: ReturnType<typeof createBrowserClient> | null = null;
 
@@ -13,7 +12,7 @@ export const createClient = () => {
 
     const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
     const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
-    
+
     if (!supabaseUrl || !supabaseAnonKey) {
         // Return a mock client during build/prerender
         return {
@@ -22,8 +21,8 @@ export const createClient = () => {
                 getUser: () => Promise.resolve({ data: { user: null }, error: null }),
                 signInWithOAuth: () => Promise.resolve({ data: null, error: null }),
                 signOut: () => Promise.resolve({ error: null }),
-                onAuthStateChange: (_callback: (event: string, session: Session | null) => void) => ({
-                    data: { subscription: { unsubscribe: () => {} } }
+                onAuthStateChange: () => ({
+                    data: { subscription: { unsubscribe: () => { } } }
                 }),
             },
             from: () => ({
@@ -34,7 +33,7 @@ export const createClient = () => {
             }),
         } as ReturnType<typeof createBrowserClient>;
     }
-    
+
     supabaseClient = createBrowserClient(supabaseUrl, supabaseAnonKey);
     return supabaseClient;
 }

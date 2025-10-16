@@ -1,6 +1,5 @@
 import { createServerClient } from '@supabase/ssr'
 import { cookies } from 'next/headers'
-import type { Session } from '@supabase/supabase-js'
 
 let supabaseClient: ReturnType<typeof createServerClient> | null = null;
 
@@ -12,15 +11,15 @@ export const createClient = async () => {
 
     const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
     const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
-    
+
     if (!supabaseUrl || !supabaseAnonKey) {
         // Return a mock client during build/prerender
         return {
             auth: {
                 getSession: () => Promise.resolve({ data: { session: null }, error: null }),
                 getUser: () => Promise.resolve({ data: { user: null }, error: null }),
-                onAuthStateChange: (_callback: (event: string, session: Session | null) => void) => ({
-                    data: { subscription: { unsubscribe: () => {} } }
+                onAuthStateChange: () => ({
+                    data: { subscription: { unsubscribe: () => { } } }
                 }),
             },
             from: () => ({
@@ -31,7 +30,7 @@ export const createClient = async () => {
             }),
         } as ReturnType<typeof createServerClient>;
     }
-    
+
     const cookieStore = await cookies()
 
     supabaseClient = createServerClient(
@@ -56,6 +55,6 @@ export const createClient = async () => {
             },
         }
     );
-    
+
     return supabaseClient;
 }
