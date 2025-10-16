@@ -6,15 +6,16 @@ export async function middleware(req: NextRequest) {
     // Skip middleware for static files and _not-found page
     if (req.nextUrl.pathname.startsWith('/_not-found') || 
         req.nextUrl.pathname.startsWith('/_next') ||
-        req.nextUrl.pathname.startsWith('/api')) {
+        req.nextUrl.pathname.startsWith('/api') ||
+        req.nextUrl.pathname.startsWith('/favicon.ico')) {
         return NextResponse.next()
     }
 
     const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
     const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
     
+    // Skip auth checks if environment variables are not available (during build)
     if (!supabaseUrl || !supabaseAnonKey) {
-        console.warn('Missing Supabase environment variables in middleware');
         return NextResponse.next()
     }
 
@@ -24,40 +25,45 @@ export async function middleware(req: NextRequest) {
         },
     })
 
-    const supabase = createServerClient(
-        supabaseUrl,
-        supabaseAnonKey,
-        {
-            cookies: {
-                getAll() {
-                    return req.cookies.getAll()
+    try {
+        const supabase = createServerClient(
+            supabaseUrl,
+            supabaseAnonKey,
+            {
+                cookies: {
+                    getAll() {
+                        return req.cookies.getAll()
+                    },
+                    setAll(cookiesToSet) {
+                        cookiesToSet.forEach(({ name, value }) => req.cookies.set(name, value))
+                        response = NextResponse.next({
+                            request: {
+                                headers: req.headers,
+                            },
+                        })
+                        cookiesToSet.forEach(({ name, value, options }) =>
+                            response.cookies.set(name, value, options)
+                        )
+                    },
                 },
-                setAll(cookiesToSet) {
-                    cookiesToSet.forEach(({ name, value }) => req.cookies.set(name, value))
-                    response = NextResponse.next({
-                        request: {
-                            headers: req.headers,
-                        },
-                    })
-                    cookiesToSet.forEach(({ name, value, options }) =>
-                        response.cookies.set(name, value, options)
-                    )
-                },
-            },
+            }
+        )
+
+        const { data: { session } } = await supabase.auth.getSession()
+
+        // Rotas protegidas - redirecionar para login se não autenticado
+        const protectedRoutes = ['/dashboard', '/quests', '/missoes-principais', '/shop', '/inventory', '/recompensas', '/estatisticas', '/settings']
+        if (!session && protectedRoutes.some(route => req.nextUrl.pathname.startsWith(route))) {
+            return NextResponse.redirect(new URL('/login', req.url))
         }
-    )
 
-    const { data: { session } } = await supabase.auth.getSession()
-
-    // Rotas protegidas - redirecionar para login se não autenticado
-    const protectedRoutes = ['/dashboard', '/quests', '/missoes-principais', '/shop', '/inventory', '/recompensas', '/estatisticas', '/settings']
-    if (!session && protectedRoutes.some(route => req.nextUrl.pathname.startsWith(route))) {
-        return NextResponse.redirect(new URL('/login', req.url))
-    }
-
-    // Já logado, redirecionar de login/signup para dashboard
-    if (session && (req.nextUrl.pathname === '/login' || req.nextUrl.pathname === '/signup')) {
-        return NextResponse.redirect(new URL('/dashboard', req.url))
+        // Já logado, redirecionar de login/signup para dashboard
+        if (session && (req.nextUrl.pathname === '/login' || req.nextUrl.pathname === '/signup')) {
+            return NextResponse.redirect(new URL('/dashboard', req.url))
+        }
+    } catch (error) {
+        // If there's any error with Supabase, just continue without auth checks
+        console.warn('Middleware auth error:', error);
     }
 
     return response

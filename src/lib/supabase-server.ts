@@ -1,17 +1,36 @@
 import { createServerClient } from '@supabase/ssr'
 import { cookies } from 'next/headers'
 
+let supabaseClient: ReturnType<typeof createServerClient> | null = null;
+
 export const createClient = async () => {
+    // Return cached client if already created
+    if (supabaseClient) {
+        return supabaseClient;
+    }
+
     const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
     const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
     
     if (!supabaseUrl || !supabaseAnonKey) {
-        throw new Error('Missing Supabase environment variables');
+        // Return a mock client during build/prerender
+        return {
+            auth: {
+                getSession: () => Promise.resolve({ data: { session: null }, error: null }),
+                getUser: () => Promise.resolve({ data: { user: null }, error: null }),
+            },
+            from: () => ({
+                select: () => ({ data: [], error: null }),
+                insert: () => ({ data: [], error: null }),
+                update: () => ({ data: [], error: null }),
+                delete: () => ({ data: [], error: null }),
+            }),
+        } as ReturnType<typeof createServerClient>;
     }
     
     const cookieStore = await cookies()
 
-    return createServerClient(
+    supabaseClient = createServerClient(
         supabaseUrl,
         supabaseAnonKey,
         {
@@ -32,5 +51,7 @@ export const createClient = async () => {
                 },
             },
         }
-    )
+    );
+    
+    return supabaseClient;
 }

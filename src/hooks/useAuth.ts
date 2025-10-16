@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { createClient } from "@/lib/supabase";
 import { useRouter } from "next/navigation";
-import type { User } from "@supabase/supabase-js";
+import type { User, Session } from "@supabase/supabase-js";
 
 export function useAuth() {
     const [user, setUser] = useState<User | null>(null);
@@ -23,7 +23,7 @@ export function useAuth() {
 
         // Escutar mudanças de autenticação
         const { data: { subscription } } = supabase.auth.onAuthStateChange(
-            async (event, session) => {
+            async (event: string, session: Session | null) => {
                 setUser(session?.user ?? null);
                 setLoading(false);
 
