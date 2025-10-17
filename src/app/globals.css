@@ -509,3 +509,20 @@ aside::-webkit-scrollbar-thumb:hover,
 main::-webkit-scrollbar-thumb:hover {
   background: #94a3b8;
 }
+
+/* Animação da borda ciano para cards expandidos */
+@keyframes cyan-pulse {
+  0% {
+    box-shadow: 0 0 0 0 rgba(34, 211, 238, 0.4);
+  }
+  50% {
+    box-shadow: 0 0 0 8px rgba(34, 211, 238, 0.1);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(34, 211, 238, 0.4);
+  }
+}
+
+.cyan-pulse {
+  animation: cyan-pulse 2s infinite;
+}

@@ -27,11 +27,13 @@ export function useAuth() {
                 setUser(session?.user ?? null);
                 setLoading(false);
 
+                // Só redireciona em eventos específicos de login/logout
+                // Não redireciona quando o usuário volta para a aba
                 if (event === "SIGNED_OUT") {
                     router.push("/login");
-                } else if (event === "SIGNED_IN" && session) {
-                    router.push("/dashboard");
                 }
+                // Removido o redirect automático para SIGNED_IN
+                // Isso permite que o usuário permaneça na página atual
             }
         );
 

@@ -9,7 +9,8 @@ export default function HomePage() {
   const { user, loading } = useAuth();
 
   useEffect(() => {
-    // Só redireciona se o usuário estiver autenticado
+    // Só redireciona se o usuário estiver na página raiz (/)
+    // Isso evita interferir com a navegação do usuário em outras páginas
     if (!loading && user) {
       router.push("/dashboard");
     } else if (!loading && !user) {

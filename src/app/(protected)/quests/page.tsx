@@ -35,6 +35,7 @@ export default function QuestsPage() {
   const [isConfirmModalOpen, setIsConfirmModalOpen] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
   const [viewMode, setViewMode] = useState<"list" | "grid">("grid");
+  const [expandedCards, setExpandedCards] = useState<Set<string>>(new Set());
 
   // Hooks
   const { success, error, info } = useToast();
@@ -175,17 +176,36 @@ export default function QuestsPage() {
     setIsModalOpen(true);
   };
 
+  const toggleCardExpansion = (questId: string) => {
+    setExpandedCards((prev) => {
+      const newSet = new Set(prev);
+      if (newSet.has(questId)) {
+        newSet.delete(questId);
+      } else {
+        newSet.add(questId);
+      }
+      return newSet;
+    });
+  };
+
+  const closeAllExpandedCards = () => {
+    setExpandedCards(new Set());
+  };
+
   return (
-    <div className="container mx-auto max-w-6xl px-4 py-8">
+    <div
+      className="container mx-auto max-w-6xl px-4 py-8"
+      onClick={closeAllExpandedCards}
+    >
       {/* Header */}
-      <div className="mb-8 flex items-center justify-between">
-        <div>
+      <div className="mb-8 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+        <div className="min-w-0 flex-1">
           <h1 className="text-title1 mb-2 font-bold">Gerenciar Quests</h1>
           <p className="text-paragraph text-muted-foreground">
             Crie, edite e organize suas quests personalizadas
           </p>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex flex-shrink-0 items-center gap-2">
           {/* Toggle View Mode */}
           <div className="bg-background flex items-center rounded-lg border">
             <Button
@@ -304,6 +324,8 @@ export default function QuestsPage() {
                   key={quest.id}
                   quest={quest}
                   viewMode={viewMode}
+                  isExpanded={expandedCards.has(quest.id)}
+                  onToggleExpansion={() => toggleCardExpansion(quest.id)}
                   onEdit={() =>
                     handleEditQuest({
                       id: quest.id,
@@ -402,47 +424,74 @@ export default function QuestsPage() {
 function QuestItem({
   quest,
   viewMode,
+  isExpanded,
+  onToggleExpansion,
   onEdit,
   onDelete,
   onDuplicate,
 }: {
   quest: Quest;
   viewMode: "list" | "grid";
+  isExpanded: boolean;
+  onToggleExpansion: () => void;
   onEdit: () => void;
   onDelete: () => void;
   onDuplicate: () => void;
 }) {
   if (viewMode === "list") {
     return (
-      <Card className="p-3 transition-all hover:shadow-md">
-        <div className="flex items-center justify-between gap-4">
-          <div className="flex items-center gap-4">
-            <div className="text-2xl">{quest.icon || "🎯"}</div>
-            <div className="flex-1">
-              <div className="flex items-center gap-2">
-                <h3 className="text-title3 font-semibold">{quest.title}</h3>
-                <span className="text-paragraph bg-primary/10 text-primary rounded-full px-2 py-0.5">
+      <Card
+        className={`cursor-pointer overflow-hidden p-3 transition-all hover:shadow-md ${
+          isExpanded
+            ? "ring-opacity-50 cyan-pulse shadow-lg ring-2 shadow-cyan-400/20 ring-cyan-400"
+            : ""
+        }`}
+        onClick={(e) => {
+          e.stopPropagation();
+          onToggleExpansion();
+        }}
+      >
+        <div className="flex min-w-0 flex-col justify-between gap-4 sm:flex-row sm:items-center">
+          <div className="flex min-w-0 flex-1 items-center gap-4">
+            <div className="flex-shrink-0 text-2xl">{quest.icon || "🎯"}</div>
+            <div className="min-w-0 flex-1">
+              <div className="mb-1 flex flex-wrap items-center gap-2">
+                <h3
+                  className={`text-title3 font-semibold transition-all ${
+                    isExpanded ? "line-clamp-none" : "truncate"
+                  }`}
+                >
+                  {quest.title}
+                </h3>
+                <span className="text-paragraph bg-primary/10 text-primary flex-shrink-0 rounded-full px-2 py-0.5">
                   {quest.category}
                 </span>
                 {quest.completed && (
-                  <span className="text-paragraph rounded-full bg-green-100 px-2 py-0.5 text-green-700">
+                  <span className="text-paragraph flex-shrink-0 rounded-full bg-green-100 px-2 py-0.5 text-green-700">
                     ✅ Concluída
                   </span>
                 )}
               </div>
-              <p className="text-paragraph text-muted-foreground line-clamp-1">
+              <p
+                className={`text-paragraph text-muted-foreground transition-all ${
+                  isExpanded ? "line-clamp-none" : "line-clamp-1"
+                }`}
+              >
                 {quest.description}
               </p>
             </div>
           </div>
-          <div className="flex items-center gap-3">
-            <span className="text-paragraph text-yellow-600">
+          <div className="flex flex-shrink-0 items-center gap-3">
+            <span className="text-paragraph whitespace-nowrap text-yellow-600">
               +{quest.xpReward} XP
             </span>
-            <span className="text-paragraph coin-text text-amber-600">
+            <span className="text-paragraph coin-text whitespace-nowrap text-amber-600">
               <span className="coin-emoji">🪙</span> {quest.coinReward}
             </span>
-            <div className="flex flex-shrink-0 items-center gap-1">
+            <div
+              className="flex items-center gap-1"
+              onClick={(e) => e.stopPropagation()}
+            >
               <Button
                 variant="ghost"
                 size="sm"
@@ -475,24 +524,44 @@ function QuestItem({
   }
 
   return (
-    <Card className="p-4 transition-all hover:shadow-md">
+    <Card
+      className={`cursor-pointer overflow-hidden p-4 transition-all hover:shadow-md ${
+        isExpanded
+          ? "ring-opacity-50 cyan-pulse shadow-lg ring-2 shadow-cyan-400/20 ring-cyan-400"
+          : ""
+      }`}
+      onClick={(e) => {
+        e.stopPropagation();
+        onToggleExpansion();
+      }}
+    >
       <div className="flex items-start justify-between gap-4">
-        <div className="flex-1">
+        <div className="min-w-0 flex-1">
           <div className="mb-2 flex items-center gap-2">
-            <div className="text-2xl">{quest.icon || "🎯"}</div>
-            <h3 className="text-title3 font-semibold">{quest.title}</h3>
-            <span className="text-paragraph bg-primary/10 text-primary rounded-full px-2 py-0.5">
+            <div className="flex-shrink-0 text-2xl">{quest.icon || "🎯"}</div>
+            <h3
+              className={`text-title3 font-semibold transition-all ${
+                isExpanded ? "line-clamp-none" : "truncate"
+              }`}
+            >
+              {quest.title}
+            </h3>
+            <span className="text-paragraph bg-primary/10 text-primary flex-shrink-0 rounded-full px-2 py-0.5">
               {quest.category}
             </span>
           </div>
-          <p className="text-paragraph text-muted-foreground mb-3">
+          <p
+            className={`text-paragraph text-muted-foreground mb-3 transition-all ${
+              isExpanded ? "line-clamp-none" : "line-clamp-2"
+            }`}
+          >
             {quest.description}
           </p>
-          <div className="flex items-center gap-3">
-            <span className="text-paragraph text-yellow-600">
+          <div className="flex flex-wrap items-center gap-3">
+            <span className="text-paragraph whitespace-nowrap text-yellow-600">
               +{quest.xpReward} XP
             </span>
-            <span className="text-paragraph coin-text text-amber-600">
+            <span className="text-paragraph coin-text whitespace-nowrap text-amber-600">
               <span className="coin-emoji">🪙</span> {quest.coinReward}
             </span>
             {quest.completed && (
@@ -504,7 +573,10 @@ function QuestItem({
           </div>
         </div>
 
-        <div className="flex flex-shrink-0 items-center gap-1">
+        <div
+          className="flex flex-shrink-0 items-center gap-1"
+          onClick={(e) => e.stopPropagation()}
+        >
           <Button
             variant="ghost"
             size="sm"

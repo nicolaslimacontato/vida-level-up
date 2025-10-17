@@ -286,7 +286,7 @@ export default function EstatisticasPage() {
                     <span className="text-sm font-medium">Redução de XP</span>
                   </div>
                   <span className="text-sm font-semibold text-red-600">
-                    -{strengthReduction}%
+                    {strengthReduction}%
                   </span>
                 </div>
 
@@ -308,7 +308,7 @@ export default function EstatisticasPage() {
                     </span>
                   </div>
                   <span className="text-sm font-semibold text-pink-600">
-                    -{charismaDiscount}%
+                    {charismaDiscount}%
                   </span>
                 </div>
 
