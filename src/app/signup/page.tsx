@@ -27,6 +27,21 @@ export default function SignupPage() {
     setError("");
     setSuccess(false);
 
+    // Validação client-side da senha
+    if (password.length < 8) {
+      setError("A senha deve ter pelo menos 8 caracteres.");
+      setLoading(false);
+      return;
+    }
+
+    if (!/(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/.test(password)) {
+      setError(
+        "A senha deve incluir pelo menos uma letra minúscula, uma maiúscula e um número.",
+      );
+      setLoading(false);
+      return;
+    }
+
     try {
       console.log("Attempting to sign up user:", email);
       const { data, error } = await supabase.auth.signUp({
@@ -42,7 +57,32 @@ export default function SignupPage() {
 
       if (error) {
         console.error("Signup error:", error);
-        setError(error.message);
+
+        // Tratar erros específicos de senha
+        if (
+          error.message.includes("password") ||
+          error.message.includes("Password")
+        ) {
+          if (
+            error.message.includes("breach") ||
+            error.message.includes("compromised")
+          ) {
+            setError(
+              "Esta senha foi encontrada em vazamentos de dados. Por favor, escolha uma senha mais segura e única.",
+            );
+          } else if (
+            error.message.includes("weak") ||
+            error.message.includes("length")
+          ) {
+            setError(
+              "A senha deve ter pelo menos 8 caracteres e incluir letras maiúsculas, minúsculas e números.",
+            );
+          } else {
+            setError("Senha inválida. Escolha uma senha mais forte e única.");
+          }
+        } else {
+          setError(error.message);
+        }
       } else {
         console.log("Signup successful:", data);
         setSuccess(true);
@@ -74,7 +114,7 @@ export default function SignupPage() {
       console.log("Creating user profile for:", userId);
       console.log("Email:", email);
       console.log("Name:", name);
-      
+
       // Verificar se o perfil já existe (criado pelo trigger automático)
       console.log("Checking if profile already exists...");
       const { data: existingProfile, error: checkError } = await supabase
@@ -85,7 +125,7 @@ export default function SignupPage() {
 
       console.log("Profile check result:", { existingProfile, checkError });
 
-      if (checkError && checkError.code !== 'PGRST116') {
+      if (checkError && checkError.code !== "PGRST116") {
         console.error("Error checking existing profile:", checkError);
         return;
       }
@@ -108,9 +148,9 @@ export default function SignupPage() {
           charisma: 0,
           discipline: 0,
         };
-        
+
         console.log("Profile data to insert:", profileData);
-        
+
         const { error } = await supabase.from("profiles").insert(profileData);
 
         if (error) {
@@ -121,7 +161,7 @@ export default function SignupPage() {
       } else {
         console.log("Profile already exists, skipping creation");
       }
-      
+
       console.log("=== createUserProfile END ===");
     } catch (err) {
       console.error("Erro inesperado ao criar perfil:", err);
@@ -245,11 +285,11 @@ export default function SignupPage() {
                     onChange={(e) => setPassword(e.target.value)}
                     className="pl-10"
                     required
-                    minLength={6}
+                    minLength={8}
                   />
                 </div>
                 <p className="text-muted-foreground text-xs">
-                  Mínimo 6 caracteres
+                  Mínimo 8 caracteres, incluindo maiúscula, minúscula e número
                 </p>
               </div>
 

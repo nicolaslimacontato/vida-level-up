@@ -19,6 +19,7 @@ import { SHOP_ITEMS, getItemsByCategory, searchItems } from "@/data/shopItems";
 import { ItemCategory } from "@/types/rpg";
 import { useRPGContext } from "@/contexts/RPGContext";
 import { useToast } from "@/components/Toast";
+import { useGameAudio } from "@/hooks/useGameAudio";
 
 export default function ShopPage() {
   const [selectedCategory, setSelectedCategory] = useState<string>("all");
@@ -30,6 +31,9 @@ export default function ShopPage() {
 
   // Hook de notificações
   const { success, error, info } = useToast();
+
+  // Hook de áudio
+  const { playShopPurchaseSound } = useGameAudio();
 
   // Função wrapper para compra com notificações
   const handlePurchase = (itemId: string) => {
@@ -52,6 +56,7 @@ export default function ShopPage() {
 
     try {
       buyItem(item);
+      playShopPurchaseSound();
       success("Item Comprado!", `${item.name} foi adicionado ao inventário.`);
 
       if (discount > 0) {

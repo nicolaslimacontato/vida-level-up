@@ -115,7 +115,7 @@ export default function DashboardPage() {
               <div className="flex items-center gap-2">
                 <Target className="text-primary h-6 w-6" />
                 <h2 className="text-title1 font-bold">Quests Diárias</h2>
-                <span className="text-title3 text-muted-foreground bg-secondary hidden rounded px-2 py-1 md:block">
+                <span className="text-title3 text-foreground bg-accent dark:bg-secondary hidden rounded px-2 py-1 md:block">
                   {quests ? quests.filter((q) => !q.completed).length : 0}{" "}
                   pendentes
                 </span>
@@ -163,7 +163,7 @@ export default function DashboardPage() {
                     className={`group relative flex h-full min-h-[240px] w-full cursor-pointer flex-col overflow-hidden rounded-lg border-2 p-4 transition-all duration-300 hover:scale-105 hover:shadow-xl sm:p-6 ${
                       quest.completed
                         ? "border-green-400 bg-gradient-to-br from-green-800 via-green-700 to-emerald-800 shadow-lg shadow-green-400/20"
-                        : "border-[#373962] bg-[#2d2f52] hover:border-[#4a4c7a]"
+                        : "border-border bg-card hover:border-primary/50 dark:border-[#373962] dark:bg-[#2d2f52] dark:hover:border-[#4a4c7a]"
                     }`}
                   >
                     {/* Efeito de brilho animado */}
@@ -179,26 +179,26 @@ export default function DashboardPage() {
                     <div className="mb-3 flex items-start justify-between">
                       <div className="flex items-center gap-2">
                         <div className="text-2xl">{quest.icon || "🎯"}</div>
-                        <h3 className="text-title2 font-bold text-white">
+                        <h3 className="text-title2 text-foreground font-bold">
                           {quest.title}
                         </h3>
                       </div>
                       <div className="flex items-center gap-1">
-                        <span className="text-title3 font-semibold text-yellow-300">
+                        <span className="text-title3 font-semibold text-yellow-600 dark:text-yellow-300">
                           +{quest.xpReward} XP
                         </span>
                       </div>
                     </div>
-                    <p className="text-paragraph mb-4 text-purple-200">
+                    <p className="text-paragraph text-muted-foreground mb-4">
                       {quest.description}
                     </p>
                     <div className="mt-auto flex items-center justify-between gap-2">
                       <div className="flex items-center justify-center gap-2 text-center">
-                        <span className="text-title3 coin-text text-center font-medium text-amber-200">
+                        <span className="text-title3 coin-text text-center font-medium text-amber-600 dark:text-amber-200">
                           <span className="coin-emoji">🪙</span>{" "}
                           {quest.coinReward}
                         </span>
-                        <span className="text-paragraph rounded-full bg-cyan-400/20 px-2 py-1 text-cyan-200">
+                        <span className="text-paragraph rounded-full bg-cyan-100 px-2 py-1 text-cyan-800 dark:bg-cyan-400/20 dark:text-cyan-200">
                           {quest.category}
                         </span>
                       </div>
@@ -246,7 +246,7 @@ export default function DashboardPage() {
               <div className="flex items-center gap-2">
                 <Trophy className="h-6 w-6 text-purple-500" />
                 <h2 className="text-title1 font-bold">Missões Principais</h2>
-                <span className="text-muted-foreground bg-secondary text-title3 rounded px-2 py-1">
+                <span className="text-foreground bg-accent dark:bg-secondary text-title3 rounded px-2 py-1">
                   {mainQuests
                     ? mainQuests.filter((q) => !q.completed).length
                     : 0}{" "}

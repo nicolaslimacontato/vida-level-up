@@ -152,37 +152,37 @@ export default function SettingsPage() {
               <div className="space-y-4">
                 <div className="grid gap-4 sm:grid-cols-2">
                   <div className="bg-muted rounded-lg p-4">
-                    <h3 className="text-muted-foreground text-sm font-semibold">
+                    <h3 className="text-muted-foreground text-xs font-semibold">
                       Nível Atual
                     </h3>
-                    <p className="text-primary text-2xl font-bold">
+                    <p className="text-primary text-lg font-bold">
                       {user.level}
                     </p>
                   </div>
 
                   <div className="bg-muted rounded-lg p-4">
-                    <h3 className="text-muted-foreground text-sm font-semibold">
+                    <h3 className="text-muted-foreground text-xs font-semibold">
                       Moedas
                     </h3>
-                    <p className="text-2xl font-bold text-amber-600 dark:text-amber-400">
+                    <p className="text-lg font-bold text-amber-600 dark:text-amber-400">
                       🪙 {user.coins}
                     </p>
                   </div>
 
                   <div className="bg-muted rounded-lg p-4">
-                    <h3 className="text-muted-foreground text-sm font-semibold">
+                    <h3 className="text-muted-foreground text-xs font-semibold">
                       Streak Atual
                     </h3>
-                    <p className="text-2xl font-bold text-green-600 dark:text-green-400">
+                    <p className="text-lg font-bold text-green-600 dark:text-green-400">
                       🔥 {user.currentStreak} dias
                     </p>
                   </div>
 
                   <div className="bg-muted rounded-lg p-4">
-                    <h3 className="text-muted-foreground text-sm font-semibold">
+                    <h3 className="text-muted-foreground text-xs font-semibold">
                       Melhor Streak
                     </h3>
-                    <p className="text-2xl font-bold text-purple-600 dark:text-purple-400">
+                    <p className="text-lg font-bold text-purple-600 dark:text-purple-400">
                       👑 {user.bestStreak} dias
                     </p>
                   </div>

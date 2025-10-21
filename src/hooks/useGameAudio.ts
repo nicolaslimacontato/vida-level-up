@@ -66,10 +66,20 @@ export function useGameAudio() {
     });
   }, [playSound]);
 
+  const playFlashbangSound = useCallback(() => {
+    playSound("/sound/cs-go-flashbang.mp3", { volume: 0.4 });
+  }, [playSound]);
+
+  const playShopPurchaseSound = useCallback(() => {
+    playSound("/sound/habbo-moeda-som.mp3", { volume: 0.5 });
+  }, [playSound]);
+
   // Preload all game sounds on hook initialization
   const preloadGameSounds = useCallback(() => {
     preloadAudio("/sound/levelup.mp3");
     preloadAudio("/sound/orb.mp3");
+    preloadAudio("/sound/cs-go-flashbang.mp3");
+    preloadAudio("/sound/habbo-moeda-som.mp3");
   }, [preloadAudio]);
 
   return {
@@ -77,6 +87,8 @@ export function useGameAudio() {
     playLevelUpSound,
     playOrbSound,
     playOrbSoundWithVariation,
+    playFlashbangSound,
+    playShopPurchaseSound,
     preloadGameSounds,
   };
 }
