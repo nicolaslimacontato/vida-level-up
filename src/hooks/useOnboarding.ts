@@ -13,15 +13,18 @@ export function useOnboarding() {
 
         const checkFirstTime = () => {
             const tourCompleted = localStorage.getItem(`tour_completed_${authUser.id}`);
-            const hasVisitedBefore = localStorage.getItem(`visited_${authUser.id}`);
-
-            if (!hasVisitedBefore) {
-                setIsFirstTime(true);
-                setIsTourActive(true);
-                localStorage.setItem(`visited_${authUser.id}`, 'true');
-            } else {
-                setHasCompletedTour(!!tourCompleted);
+            
+            // Se o tour já foi completado ou pulado, não mostrar novamente
+            if (tourCompleted) {
+                setHasCompletedTour(true);
+                setIsFirstTime(false);
+                setIsTourActive(false);
+                return;
             }
+
+            // Se é a primeira vez (não tem registro de tour completado)
+            setIsFirstTime(true);
+            setIsTourActive(true);
         };
 
         checkFirstTime();
@@ -52,7 +55,6 @@ export function useOnboarding() {
     const resetTour = useCallback(() => {
         if (authUser?.id) {
             localStorage.removeItem(`tour_completed_${authUser.id}`);
-            localStorage.removeItem(`visited_${authUser.id}`);
             setHasCompletedTour(false);
             setIsFirstTime(true);
             setIsTourActive(true);

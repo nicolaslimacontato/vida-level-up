@@ -274,36 +274,37 @@ export function OnboardingTour({
                 )}
 
                 {/* Navigation */}
-                <div className="flex items-center justify-between">
+                <div className="flex items-center justify-between gap-2">
                   <Button
                     variant="outline"
                     size="sm"
                     onClick={prevStep}
                     disabled={currentStep === 0}
-                    className="flex items-center gap-2"
+                    className="flex items-center gap-1 text-xs"
                   >
-                    <ChevronLeft className="h-4 w-4" />
+                    <ChevronLeft className="h-3 w-3" />
                     Anterior
                   </Button>
 
-                  <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-1">
                     <Button
                       variant="ghost"
                       size="sm"
                       onClick={skipTour}
-                      className="flex items-center gap-2"
+                      className="flex items-center gap-1 text-xs"
                     >
-                      <SkipForward className="h-4 w-4" />
+                      <SkipForward className="h-3 w-3" />
                       Pular
                     </Button>
                     <Button
                       onClick={nextStep}
-                      className="flex items-center gap-2"
+                      size="sm"
+                      className="flex items-center gap-1 text-xs"
                     >
                       {currentStep === TOUR_STEPS.length - 1
                         ? "Finalizar"
                         : "Próximo"}
-                      <ChevronRight className="h-4 w-4" />
+                      <ChevronRight className="h-3 w-3" />
                     </Button>
                   </div>
                 </div>
