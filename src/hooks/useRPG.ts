@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
-import { User, Quest, MainQuest, Reward, Upgrade, Item } from "@/types/rpg";
+import { User, Quest, MainQuest, Reward, Upgrade, Item, Achievement, Goal, ActivityLogEntry, DailyReward } from "@/types/rpg";
 import { UPGRADE_TEMPLATES } from "@/data/upgradeTemplates";
 import { useGameAudio } from "./useGameAudio";
 import { useToast } from "@/components/Toast";
@@ -32,6 +32,18 @@ import {
   subscribeToInventory,
   testSupabaseConnection,
   checkSupabaseConfig,
+  getAchievements,
+  seedAchievements,
+  subscribeToAchievements,
+  getGoals,
+  seedGoals,
+  subscribeToGoals,
+  getActivityLog,
+  subscribeToActivityLog,
+  getDailyRewards,
+  claimDailyReward,
+  generateDailyRewards,
+  subscribeToDailyRewards,
 } from "@/lib/supabase-rpg";
 
 const INITIAL_USER: User = {
@@ -68,6 +80,10 @@ export function useRPG() {
   const [mainQuests, setMainQuests] = useState<MainQuest[]>([]);
   const [rewards, setRewards] = useState<Reward[]>([]);
   const [upgrades, setUpgrades] = useState<Upgrade[]>(UPGRADE_TEMPLATES);
+  const [achievements, setAchievements] = useState<Achievement[]>([]);
+  const [goals, setGoals] = useState<Goal[]>([]);
+  const [activityLog, setActivityLog] = useState<ActivityLogEntry[]>([]);
+  const [dailyRewards, setDailyRewards] = useState<DailyReward[]>([]);
   const [showLevelUp, setShowLevelUp] = useState(false);
   const [newLevel, setNewLevel] = useState(1);
   const [loading, setLoading] = useState(true);
@@ -126,16 +142,42 @@ export function useRPG() {
       const userInventory = await getInventory(userId);
       setUser(prev => ({ ...prev, inventory: userInventory }));
 
+      // Load achievements
+      const userAchievements = await getAchievements(userId);
+      setAchievements(userAchievements);
+
+      // Load goals
+      const userGoals = await getGoals(userId);
+      setGoals(userGoals);
+
+      // Load activity log
+      const userActivityLog = await getActivityLog(userId);
+      setActivityLog(userActivityLog);
+
+      // Load daily rewards
+      const userDailyRewards = await getDailyRewards(userId);
+      setDailyRewards(userDailyRewards);
+
       // Seed initial data if user has no quests
       if (userQuests.length === 0) {
         await seedUserData(userId);
-        // Reload quests and rewards after seeding
+        await seedAchievements(userId);
+        await seedGoals(userId);
+        // Reload quests, rewards, achievements, goals and activity log after seeding
         const seededQuests = await getQuests(userId);
         const seededMainQuests = await getMainQuests(userId);
         const seededRewards = await getRewards(userId);
+        const seededAchievements = await getAchievements(userId);
+        const seededGoals = await getGoals(userId);
+        const seededActivityLog = await getActivityLog(userId);
+        const seededDailyRewards = await getDailyRewards(userId);
         setQuests(seededQuests);
         setMainQuests(seededMainQuests);
         setRewards(seededRewards);
+        setAchievements(seededAchievements);
+        setGoals(seededGoals);
+        setActivityLog(seededActivityLog);
+        setDailyRewards(seededDailyRewards);
       }
 
     } catch (error) {
@@ -172,6 +214,30 @@ export function useRPG() {
       setUser(prev => ({ ...prev, inventory: updatedInventory }));
     });
     subscriptions.push(inventorySub);
+
+    // Subscribe to achievements changes
+    const achievementsSub = subscribeToAchievements(userId, (updatedAchievements) => {
+      setAchievements(updatedAchievements);
+    });
+    subscriptions.push(achievementsSub);
+
+    // Subscribe to goals changes
+    const goalsSub = subscribeToGoals(userId, (updatedGoals) => {
+      setGoals(updatedGoals);
+    });
+    subscriptions.push(goalsSub);
+
+    // Subscribe to activity log changes
+    const activityLogSub = subscribeToActivityLog(userId, (updatedActivityLog) => {
+      setActivityLog(updatedActivityLog);
+    });
+    subscriptions.push(activityLogSub);
+
+    // Subscribe to daily rewards changes
+    const dailyRewardsSub = subscribeToDailyRewards(userId, (updatedDailyRewards) => {
+      setDailyRewards(updatedDailyRewards);
+    });
+    subscriptions.push(dailyRewardsSub);
 
     return subscriptions;
   }, []);
@@ -790,6 +856,10 @@ export function useRPG() {
     mainQuests,
     rewards,
     upgrades,
+    achievements,
+    goals,
+    activityLog,
+    dailyRewards,
     showLevelUp,
     newLevel,
     loading,

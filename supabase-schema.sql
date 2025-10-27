@@ -94,7 +94,7 @@ CREATE TABLE IF NOT EXISTS public.rewards (
   created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
--- 7. Criar tabela upgrades (NOVO)
+-- 7. Criar tabela upgrades
 CREATE TABLE IF NOT EXISTS public.upgrades (
   id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
   user_id UUID REFERENCES public.profiles(id) ON DELETE CASCADE,
@@ -120,11 +120,14 @@ CREATE TABLE IF NOT EXISTS public.achievements (
   title TEXT NOT NULL,
   description TEXT,
   icon TEXT,
-  category TEXT NOT NULL,
+  category TEXT NOT NULL, -- 'beginner', 'veteran', 'master', 'legendary'
+  rarity TEXT NOT NULL, -- 'common', 'rare', 'epic', 'legendary'
   unlocked BOOLEAN DEFAULT FALSE,
   unlocked_at TIMESTAMP WITH TIME ZONE,
   progress INTEGER DEFAULT 0,
   max_progress INTEGER DEFAULT 1,
+  xp_reward INTEGER DEFAULT 0,
+  coin_reward INTEGER DEFAULT 0,
   created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
@@ -151,6 +154,38 @@ CREATE TABLE IF NOT EXISTS public.notifications (
   read BOOLEAN DEFAULT FALSE,
   read_at TIMESTAMP WITH TIME ZONE,
   created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+-- 11. Criar tabela goals (NOVO)
+CREATE TABLE IF NOT EXISTS public.goals (
+  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  user_id UUID REFERENCES public.profiles(id) ON DELETE CASCADE,
+  goal_id TEXT NOT NULL,
+  title TEXT NOT NULL,
+  description TEXT,
+  type TEXT NOT NULL, -- 'daily', 'weekly', 'monthly'
+  target_value INTEGER NOT NULL,
+  current_value INTEGER DEFAULT 0,
+  xp_reward INTEGER DEFAULT 0,
+  coin_reward INTEGER DEFAULT 0,
+  completed BOOLEAN DEFAULT FALSE,
+  completed_at TIMESTAMP WITH TIME ZONE,
+  expires_at TIMESTAMP WITH TIME ZONE,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+-- 12. Criar tabela daily_rewards (NOVO)
+CREATE TABLE IF NOT EXISTS public.daily_rewards (
+  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  user_id UUID REFERENCES public.profiles(id) ON DELETE CASCADE,
+  reward_date DATE NOT NULL,
+  reward_type TEXT NOT NULL, -- 'xp', 'coins', 'item', 'upgrade'
+  reward_value INTEGER DEFAULT 0,
+  reward_data JSONB DEFAULT '{}'::jsonb,
+  claimed BOOLEAN DEFAULT FALSE,
+  claimed_at TIMESTAMP WITH TIME ZONE,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  UNIQUE(user_id, reward_date)
 );
 
 -- =============================================
@@ -182,6 +217,8 @@ ALTER TABLE public.upgrades ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.achievements ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.activity_log ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.notifications ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.goals ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.daily_rewards ENABLE ROW LEVEL SECURITY;
 
 -- Dropar políticas existentes (se existirem)
 DROP POLICY IF EXISTS "Users can view own profile" ON public.profiles;
@@ -195,6 +232,8 @@ DROP POLICY IF EXISTS "Users can manage own upgrades" ON public.upgrades;
 DROP POLICY IF EXISTS "Users can manage own achievements" ON public.achievements;
 DROP POLICY IF EXISTS "Users can manage own activity log" ON public.activity_log;
 DROP POLICY IF EXISTS "Users can manage own notifications" ON public.notifications;
+DROP POLICY IF EXISTS "Users can manage own goals" ON public.goals;
+DROP POLICY IF EXISTS "Users can manage own daily rewards" ON public.daily_rewards;
 
 -- Policies para profiles
 CREATE POLICY "Users can view own profile" ON public.profiles
@@ -222,7 +261,7 @@ CREATE POLICY "Users can manage own inventory" ON public.inventory
 CREATE POLICY "Users can manage own rewards" ON public.rewards
   FOR ALL USING ((SELECT auth.uid()) = user_id);
 
--- Policies para upgrades (NOVO)
+-- Policies para upgrades
 CREATE POLICY "Users can manage own upgrades" ON public.upgrades
   FOR ALL USING ((SELECT auth.uid()) = user_id);
 
@@ -236,6 +275,14 @@ CREATE POLICY "Users can manage own activity log" ON public.activity_log
 
 -- Policies para notifications (NOVO)
 CREATE POLICY "Users can manage own notifications" ON public.notifications
+  FOR ALL USING ((SELECT auth.uid()) = user_id);
+
+-- Policies para goals (NOVO)
+CREATE POLICY "Users can manage own goals" ON public.goals
+  FOR ALL USING ((SELECT auth.uid()) = user_id);
+
+-- Policies para daily_rewards (NOVO)
+CREATE POLICY "Users can manage own daily rewards" ON public.daily_rewards
   FOR ALL USING ((SELECT auth.uid()) = user_id);
 
 -- =============================================
@@ -332,10 +379,19 @@ CREATE INDEX IF NOT EXISTS idx_upgrades_user_id ON public.upgrades(user_id);
 CREATE INDEX IF NOT EXISTS idx_upgrades_purchased ON public.upgrades(purchased);
 CREATE INDEX IF NOT EXISTS idx_achievements_user_id ON public.achievements(user_id);
 CREATE INDEX IF NOT EXISTS idx_achievements_unlocked ON public.achievements(unlocked);
+CREATE INDEX IF NOT EXISTS idx_achievements_category ON public.achievements(category);
+CREATE INDEX IF NOT EXISTS idx_achievements_achievement_id ON public.achievements(achievement_id);
 CREATE INDEX IF NOT EXISTS idx_activity_log_user_id ON public.activity_log(user_id);
 CREATE INDEX IF NOT EXISTS idx_activity_log_created_at ON public.activity_log(created_at);
 CREATE INDEX IF NOT EXISTS idx_notifications_user_id ON public.notifications(user_id);
 CREATE INDEX IF NOT EXISTS idx_notifications_read ON public.notifications(read);
+CREATE INDEX IF NOT EXISTS idx_goals_user_id ON public.goals(user_id);
+CREATE INDEX IF NOT EXISTS idx_goals_type ON public.goals(type);
+CREATE INDEX IF NOT EXISTS idx_goals_completed ON public.goals(completed);
+CREATE INDEX IF NOT EXISTS idx_goals_expires_at ON public.goals(expires_at);
+CREATE INDEX IF NOT EXISTS idx_daily_rewards_user_id ON public.daily_rewards(user_id);
+CREATE INDEX IF NOT EXISTS idx_daily_rewards_reward_date ON public.daily_rewards(reward_date);
+CREATE INDEX IF NOT EXISTS idx_daily_rewards_claimed ON public.daily_rewards(claimed);
 
 -- =============================================
 -- VERIFICAÇÕES FINAIS
@@ -345,19 +401,19 @@ CREATE INDEX IF NOT EXISTS idx_notifications_read ON public.notifications(read);
 SELECT table_name 
 FROM information_schema.tables 
 WHERE table_schema = 'public' 
-AND table_name IN ('profiles', 'quests', 'main_quests', 'inventory', 'rewards', 'upgrades', 'achievements', 'activity_log', 'notifications');
+AND table_name IN ('profiles', 'quests', 'main_quests', 'inventory', 'rewards', 'upgrades', 'achievements', 'activity_log', 'notifications', 'goals', 'daily_rewards');
 
 -- Verificar se RLS está habilitado
 SELECT schemaname, tablename, rowsecurity 
 FROM pg_tables 
 WHERE schemaname = 'public' 
-AND tablename IN ('profiles', 'quests', 'main_quests', 'inventory', 'rewards', 'upgrades', 'achievements', 'activity_log', 'notifications');
+AND tablename IN ('profiles', 'quests', 'main_quests', 'inventory', 'rewards', 'upgrades', 'achievements', 'activity_log', 'notifications', 'goals', 'daily_rewards');
 
 -- Verificar se as políticas foram criadas
 SELECT schemaname, tablename, policyname, permissive, roles, cmd, qual 
 FROM pg_policies 
 WHERE schemaname = 'public' 
-AND tablename IN ('profiles', 'quests', 'main_quests', 'inventory', 'rewards', 'upgrades', 'achievements', 'activity_log', 'notifications');
+AND tablename IN ('profiles', 'quests', 'main_quests', 'inventory', 'rewards', 'upgrades', 'achievements', 'activity_log', 'notifications', 'goals', 'daily_rewards');
 
 -- Verificar se as funções foram criadas
 SELECT proname, prosrc 

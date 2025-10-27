@@ -13,6 +13,9 @@ import {
   Package,
   BarChart3,
   Settings,
+  Award,
+  Calendar,
+  History,
 } from "lucide-react";
 import { LogoDesktop } from "@/components/LogoDesktop";
 
@@ -31,6 +34,26 @@ const menuItems = [
     name: "Missões Principais",
     href: "/missoes-principais",
     icon: Trophy,
+  },
+  {
+    name: "Conquistas",
+    href: "/conquistas",
+    icon: Award,
+  },
+  {
+    name: "Metas",
+    href: "/metas",
+    icon: Calendar,
+  },
+  {
+    name: "Atividades",
+    href: "/atividades",
+    icon: History,
+  },
+  {
+    name: "Recompensas Diárias",
+    href: "/recompensas-diarias",
+    icon: Calendar,
   },
   {
     name: "Loja",
@@ -77,6 +100,7 @@ export function Sidebar() {
 
       {/* Sidebar */}
       <aside
+        id="sidebar"
         className={`border-border bg-background fixed top-0 left-0 z-40 h-screen w-[280px] border-r transition-transform duration-300 lg:translate-x-0 ${
           isOpen ? "translate-x-0" : "-translate-x-full"
         }`}

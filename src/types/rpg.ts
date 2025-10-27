@@ -131,3 +131,135 @@ export interface Item {
   acquiredAt?: string; // Data de aquisição (ISO string)
   usedAt?: string; // Data de uso (ISO string) - para histórico
 }
+
+// ========== SISTEMA DE CONQUISTAS ==========
+
+export type AchievementCategory = 'beginner' | 'veteran' | 'master' | 'legendary';
+export type AchievementRarity = 'common' | 'rare' | 'epic' | 'legendary';
+
+export interface Achievement {
+  id: string;
+  achievementId: string;
+  title: string;
+  description: string;
+  icon: string;
+  category: AchievementCategory;
+  rarity: AchievementRarity;
+  unlocked: boolean;
+  unlockedAt?: string;
+  progress: number;
+  maxProgress: number;
+  xpReward: number;
+  coinReward: number;
+}
+
+export interface AchievementTemplate {
+  achievementId: string;
+  title: string;
+  description: string;
+  icon: string;
+  category: AchievementCategory;
+  rarity: AchievementRarity;
+  maxProgress: number;
+  xpReward: number;
+  coinReward: number;
+  condition: (user: User, quests: Quest[], mainQuests: MainQuest[]) => number;
+}
+
+// ========== SISTEMA DE METAS ==========
+
+export type GoalType = 'daily' | 'weekly' | 'monthly';
+
+export interface Goal {
+  id: string;
+  goalId: string;
+  title: string;
+  description: string;
+  type: GoalType;
+  targetValue: number;
+  currentValue: number;
+  xpReward: number;
+  coinReward: number;
+  completed: boolean;
+  completedAt?: string;
+  expiresAt?: string;
+}
+
+export interface GoalTemplate {
+  goalId: string;
+  title: string;
+  description: string;
+  type: GoalType;
+  targetValue: number;
+  xpReward: number;
+  coinReward: number;
+  condition: (user: User, quests: Quest[], mainQuests: MainQuest[]) => number;
+}
+
+// ========== SISTEMA DE LOG DE ATIVIDADES ==========
+
+export type ActivityType =
+  | 'quest_completed'
+  | 'main_quest_step_completed'
+  | 'main_quest_completed'
+  | 'level_up'
+  | 'achievement_unlocked'
+  | 'goal_completed'
+  | 'item_purchased'
+  | 'item_used'
+  | 'upgrade_purchased'
+  | 'streak_updated'
+  | 'daily_reset'
+  | 'login';
+
+export interface ActivityLog {
+  id: string;
+  actionType: ActivityType;
+  actionData: Record<string, any>;
+  xpGained: number;
+  coinsGained: number;
+  levelBefore: number;
+  levelAfter: number;
+  createdAt: string;
+}
+
+export interface ActivityLogEntry {
+  id: string;
+  actionType: ActivityType;
+  actionData: Record<string, any>;
+  xpGained: number;
+  coinsGained: number;
+  levelBefore: number;
+  levelAfter: number;
+  createdAt: string;
+  // Computed fields for display
+  title: string;
+  description: string;
+  icon: string;
+  color: string;
+}
+
+// ========== SISTEMA DE RECOMPENSAS DIÁRIAS ==========
+
+export type DailyRewardType = 'xp' | 'coins' | 'item' | 'upgrade';
+
+export interface DailyReward {
+  id: string;
+  rewardDate: string;
+  rewardType: DailyRewardType;
+  rewardValue: number;
+  rewardData: Record<string, any>;
+  claimed: boolean;
+  claimedAt?: string;
+}
+
+export interface DailyRewardTemplate {
+  day: number;
+  rewardType: DailyRewardType;
+  rewardValue: number;
+  rewardData: Record<string, any>;
+  title: string;
+  description: string;
+  icon: string;
+  isSpecial: boolean;
+}

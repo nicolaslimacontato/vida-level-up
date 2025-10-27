@@ -1,7 +1,7 @@
 "use client";
 
 import { createClient } from "@/lib/supabase";
-import { User, Quest, MainQuest, Reward, Upgrade, Item } from "@/types/rpg";
+import { User, Quest, MainQuest, Reward, Upgrade, Item, Achievement, Goal, ActivityLog, ActivityLogEntry, DailyReward } from "@/types/rpg";
 import { INITIAL_QUESTS, INITIAL_MAIN_QUESTS, INITIAL_REWARDS } from "@/data/initialData";
 
 const supabase = createClient();
@@ -889,6 +889,926 @@ export function subscribeToInventory(userId: string, callback: (inventory: Item[
             async () => {
                 const inventory = await getInventory(userId);
                 callback(inventory);
+            }
+        )
+        .subscribe();
+}
+
+// ========== ACHIEVEMENTS FUNCTIONS ==========
+
+export async function getAchievements(userId: string): Promise<Achievement[]> {
+    try {
+        const { data, error } = await supabase
+            .from("achievements")
+            .select("*")
+            .eq("user_id", userId)
+            .order("created_at", { ascending: true });
+
+        if (error) {
+            console.error("Error fetching achievements:", error);
+            return [];
+        }
+
+        return (data || []).map((achievement: any) => ({
+            id: achievement.id,
+            achievementId: achievement.achievement_id,
+            title: achievement.title,
+            description: achievement.description,
+            icon: achievement.icon,
+            category: achievement.category,
+            rarity: achievement.rarity,
+            unlocked: achievement.unlocked,
+            unlockedAt: achievement.unlocked_at,
+            progress: achievement.progress,
+            maxProgress: achievement.max_progress,
+            xpReward: achievement.xp_reward,
+            coinReward: achievement.coin_reward,
+        }));
+    } catch (error) {
+        console.error("Error in getAchievements:", error);
+        return [];
+    }
+}
+
+export async function createAchievement(userId: string, achievementData: Omit<Achievement, "id">): Promise<Achievement | null> {
+    try {
+        const { data, error } = await supabase
+            .from("achievements")
+            .insert({
+                user_id: userId,
+                achievement_id: achievementData.achievementId,
+                title: achievementData.title,
+                description: achievementData.description,
+                icon: achievementData.icon,
+                category: achievementData.category,
+                rarity: achievementData.rarity,
+                unlocked: achievementData.unlocked,
+                unlocked_at: achievementData.unlockedAt,
+                progress: achievementData.progress,
+                max_progress: achievementData.maxProgress,
+                xp_reward: achievementData.xpReward,
+                coin_reward: achievementData.coinReward,
+            })
+            .select()
+            .single();
+
+        if (error) {
+            console.error("Error creating achievement:", error);
+            return null;
+        }
+
+        return {
+            id: data.id,
+            achievementId: data.achievement_id,
+            title: data.title,
+            description: data.description,
+            icon: data.icon,
+            category: data.category,
+            rarity: data.rarity,
+            unlocked: data.unlocked,
+            unlockedAt: data.unlocked_at,
+            progress: data.progress,
+            maxProgress: data.max_progress,
+            xpReward: data.xp_reward,
+            coinReward: data.coin_reward,
+        };
+    } catch (error) {
+        console.error("Error in createAchievement:", error);
+        return null;
+    }
+}
+
+export async function updateAchievementProgress(
+    userId: string,
+    achievementId: string,
+    progress: number
+): Promise<boolean> {
+    try {
+        const { error } = await supabase
+            .from("achievements")
+            .update({ progress })
+            .eq("user_id", userId)
+            .eq("achievement_id", achievementId);
+
+        if (error) {
+            console.error("Error updating achievement progress:", error);
+            return false;
+        }
+
+        return true;
+    } catch (error) {
+        console.error("Error in updateAchievementProgress:", error);
+        return false;
+    }
+}
+
+export async function unlockAchievement(
+    userId: string,
+    achievementId: string,
+    xpReward: number,
+    coinReward: number
+): Promise<boolean> {
+    try {
+        // Update achievement
+        const { error: achievementError } = await supabase
+            .from("achievements")
+            .update({
+                unlocked: true,
+                unlocked_at: new Date().toISOString(),
+            })
+            .eq("user_id", userId)
+            .eq("achievement_id", achievementId);
+
+        if (achievementError) {
+            console.error("Error unlocking achievement:", achievementError);
+            return false;
+        }
+
+        // Update user profile with rewards
+        const profile = await getUserProfile(userId);
+        if (profile) {
+            const newTotalXP = profile.totalXP + xpReward;
+            const newCurrentXP = profile.currentXP + xpReward;
+            const newCoins = profile.coins + coinReward;
+
+            // Calculate new level
+            let newLevel = profile.level;
+            let remainingXP = newCurrentXP;
+            let xpForNextLevel = 0;
+
+            // Check for level up
+            while (true) {
+                xpForNextLevel = Math.floor(100 * Math.pow(newLevel, 1.5));
+                if (remainingXP >= xpForNextLevel) {
+                    remainingXP -= xpForNextLevel;
+                    newLevel++;
+                } else {
+                    break;
+                }
+            }
+
+            await updateUserProfile(userId, {
+                level: newLevel,
+                currentXP: remainingXP,
+                totalXP: newTotalXP,
+                coins: newCoins,
+            });
+        }
+
+        return true;
+    } catch (error) {
+        console.error("Error unlocking achievement:", error);
+        return false;
+    }
+}
+
+export async function seedAchievements(userId: string): Promise<boolean> {
+    try {
+        // Check if user already has achievements
+        const existingAchievements = await getAchievements(userId);
+        if (existingAchievements.length > 0) {
+            console.log("User already has achievements, skipping seed");
+            return true;
+        }
+
+        // Import templates dynamically to avoid circular dependency
+        const { ACHIEVEMENT_TEMPLATES } = await import('@/data/achievementTemplates');
+
+        // Create achievements for user
+        for (const template of ACHIEVEMENT_TEMPLATES) {
+            await createAchievement(userId, {
+                achievementId: template.achievementId,
+                title: template.title,
+                description: template.description,
+                icon: template.icon,
+                category: template.category,
+                rarity: template.rarity,
+                unlocked: false,
+                progress: 0,
+                maxProgress: template.maxProgress,
+                xpReward: template.xpReward,
+                coinReward: template.coinReward,
+            });
+        }
+
+        console.log("Successfully seeded achievements for user:", userId);
+        return true;
+    } catch (error) {
+        console.error("Error seeding achievements:", error);
+        return false;
+    }
+}
+
+export function subscribeToAchievements(userId: string, callback: (achievements: Achievement[]) => void) {
+    return supabase
+        .channel(`achievements:${userId}`)
+        .on(
+            "postgres_changes",
+            {
+                event: "*",
+                schema: "public",
+                table: "achievements",
+                filter: `user_id=eq.${userId}`,
+            },
+            async () => {
+                const achievements = await getAchievements(userId);
+                callback(achievements);
+            }
+        )
+        .subscribe();
+}
+
+// ========== GOALS FUNCTIONS ==========
+
+export async function getGoals(userId: string): Promise<Goal[]> {
+    try {
+        const { data, error } = await supabase
+            .from("goals")
+            .select("*")
+            .eq("user_id", userId)
+            .order("created_at", { ascending: true });
+
+        if (error) {
+            console.error("Error fetching goals:", JSON.stringify(error, null, 2));
+            return [];
+        }
+
+        return (data || []).map((goal: any) => ({
+            id: goal.id,
+            goalId: goal.goal_id,
+            title: goal.title,
+            description: goal.description,
+            type: goal.type,
+            targetValue: goal.target_value,
+            currentValue: goal.current_value,
+            xpReward: goal.xp_reward,
+            coinReward: goal.coin_reward,
+            completed: goal.completed,
+            completedAt: goal.completed_at,
+            expiresAt: goal.expires_at,
+        }));
+    } catch (error) {
+        console.error("Error in getGoals:", error);
+        return [];
+    }
+}
+
+export async function createGoal(userId: string, goalData: Omit<Goal, "id">): Promise<Goal | null> {
+    try {
+        const { data, error } = await supabase
+            .from("goals")
+            .insert({
+                user_id: userId,
+                goal_id: goalData.goalId,
+                title: goalData.title,
+                description: goalData.description,
+                type: goalData.type,
+                target_value: goalData.targetValue,
+                current_value: goalData.currentValue,
+                xp_reward: goalData.xpReward,
+                coin_reward: goalData.coinReward,
+                completed: goalData.completed,
+                completed_at: goalData.completedAt,
+                expires_at: goalData.expiresAt,
+            })
+            .select()
+            .single();
+
+        if (error) {
+            console.error("Error creating goal:", error);
+            return null;
+        }
+
+        return {
+            id: data.id,
+            goalId: data.goal_id,
+            title: data.title,
+            description: data.description,
+            type: data.type,
+            targetValue: data.target_value,
+            currentValue: data.current_value,
+            xpReward: data.xp_reward,
+            coinReward: data.coin_reward,
+            completed: data.completed,
+            completedAt: data.completed_at,
+            expiresAt: data.expires_at,
+        };
+    } catch (error) {
+        console.error("Error in createGoal:", error);
+        return null;
+    }
+}
+
+export async function updateGoalProgress(
+    userId: string,
+    goalId: string,
+    currentValue: number
+): Promise<boolean> {
+    try {
+        const { error } = await supabase
+            .from("goals")
+            .update({ current_value: currentValue })
+            .eq("user_id", userId)
+            .eq("goal_id", goalId);
+
+        if (error) {
+            console.error("Error updating goal progress:", error);
+            return false;
+        }
+
+        return true;
+    } catch (error) {
+        console.error("Error in updateGoalProgress:", error);
+        return false;
+    }
+}
+
+export async function completeGoal(
+    userId: string,
+    goalId: string,
+    xpReward: number,
+    coinReward: number
+): Promise<boolean> {
+    try {
+        // Update goal
+        const { error: goalError } = await supabase
+            .from("goals")
+            .update({
+                completed: true,
+                completed_at: new Date().toISOString(),
+            })
+            .eq("user_id", userId)
+            .eq("goal_id", goalId);
+
+        if (goalError) {
+            console.error("Error completing goal:", goalError);
+            return false;
+        }
+
+        // Update user profile with rewards
+        const profile = await getUserProfile(userId);
+        if (profile) {
+            const newTotalXP = profile.totalXP + xpReward;
+            const newCurrentXP = profile.currentXP + xpReward;
+            const newCoins = profile.coins + coinReward;
+
+            // Calculate new level
+            let newLevel = profile.level;
+            let remainingXP = newCurrentXP;
+            let xpForNextLevel = 0;
+
+            // Check for level up
+            while (true) {
+                xpForNextLevel = Math.floor(100 * Math.pow(newLevel, 1.5));
+                if (remainingXP >= xpForNextLevel) {
+                    remainingXP -= xpForNextLevel;
+                    newLevel++;
+                } else {
+                    break;
+                }
+            }
+
+            await updateUserProfile(userId, {
+                level: newLevel,
+                currentXP: remainingXP,
+                totalXP: newTotalXP,
+                coins: newCoins,
+            });
+        }
+
+        return true;
+    } catch (error) {
+        console.error("Error completing goal:", error);
+        return false;
+    }
+}
+
+export async function seedGoals(userId: string): Promise<boolean> {
+    try {
+        // Check if user already has goals
+        const existingGoals = await getGoals(userId);
+        if (existingGoals.length > 0) {
+            console.log("User already has goals, skipping seed");
+            return true;
+        }
+
+        // Import templates dynamically to avoid circular dependency
+        const { GOAL_TEMPLATES } = await import('@/data/goalTemplates');
+
+        // Create goals for user
+        for (const template of GOAL_TEMPLATES) {
+            const expiresAt = getGoalExpirationDate(template.type);
+
+            await createGoal(userId, {
+                goalId: template.goalId,
+                title: template.title,
+                description: template.description,
+                type: template.type,
+                targetValue: template.targetValue,
+                currentValue: 0,
+                xpReward: template.xpReward,
+                coinReward: template.coinReward,
+                completed: false,
+                expiresAt: expiresAt,
+            });
+        }
+
+        console.log("Successfully seeded goals for user:", userId);
+        return true;
+    } catch (error) {
+        console.error("Error seeding goals:", error);
+        return false;
+    }
+}
+
+function getGoalExpirationDate(type: 'daily' | 'weekly' | 'monthly'): string {
+    const now = new Date();
+
+    switch (type) {
+        case 'daily':
+            const tomorrow = new Date(now);
+            tomorrow.setDate(tomorrow.getDate() + 1);
+            tomorrow.setHours(0, 0, 0, 0);
+            return tomorrow.toISOString();
+
+        case 'weekly':
+            const nextWeek = new Date(now);
+            nextWeek.setDate(nextWeek.getDate() + 7);
+            nextWeek.setHours(0, 0, 0, 0);
+            return nextWeek.toISOString();
+
+        case 'monthly':
+            const nextMonth = new Date(now);
+            nextMonth.setMonth(nextMonth.getMonth() + 1);
+            nextMonth.setDate(1);
+            nextMonth.setHours(0, 0, 0, 0);
+            return nextMonth.toISOString();
+
+        default:
+            return new Date(now.getTime() + 24 * 60 * 60 * 1000).toISOString();
+    }
+}
+
+export function subscribeToGoals(userId: string, callback: (goals: Goal[]) => void) {
+    return supabase
+        .channel(`goals:${userId}`)
+        .on(
+            "postgres_changes",
+            {
+                event: "*",
+                schema: "public",
+                table: "goals",
+                filter: `user_id=eq.${userId}`,
+            },
+            async () => {
+                const goals = await getGoals(userId);
+                callback(goals);
+            }
+        )
+        .subscribe();
+}
+
+// ========== ACTIVITY LOG FUNCTIONS ==========
+
+export async function getActivityLog(userId: string, limit: number = 50): Promise<ActivityLogEntry[]> {
+    try {
+        const { data, error } = await supabase
+            .from("activity_log")
+            .select("*")
+            .eq("user_id", userId)
+            .order("created_at", { ascending: false })
+            .limit(limit);
+
+        if (error) {
+            console.error("Error fetching activity log:", error);
+            return [];
+        }
+
+        return (data || []).map((activity: any) => {
+            const entry = {
+                id: activity.id,
+                actionType: activity.action_type,
+                actionData: activity.action_data || {},
+                xpGained: activity.xp_gained || 0,
+                coinsGained: activity.coins_gained || 0,
+                levelBefore: activity.level_before || 0,
+                levelAfter: activity.level_after || 0,
+                createdAt: activity.created_at,
+            };
+
+            // Add computed display fields
+            return {
+                ...entry,
+                ...getActivityDisplayInfo(entry),
+            };
+        });
+    } catch (error) {
+        console.error("Error in getActivityLog:", error);
+        return [];
+    }
+}
+
+export async function logActivity(
+    userId: string,
+    actionType: string,
+    actionData: Record<string, any> = {},
+    xpGained: number = 0,
+    coinsGained: number = 0,
+    levelBefore: number = 0,
+    levelAfter: number = 0
+): Promise<boolean> {
+    try {
+        const { error } = await supabase
+            .from("activity_log")
+            .insert({
+                user_id: userId,
+                action_type: actionType,
+                action_data: actionData,
+                xp_gained: xpGained,
+                coins_gained: coinsGained,
+                level_before: levelBefore,
+                level_after: levelAfter,
+            });
+
+        if (error) {
+            console.error("Error logging activity:", error);
+            return false;
+        }
+
+        return true;
+    } catch (error) {
+        console.error("Error in logActivity:", error);
+        return false;
+    }
+}
+
+function getActivityDisplayInfo(activity: ActivityLog): { title: string; description: string; icon: string; color: string } {
+    const { actionType, actionData, xpGained, coinsGained, levelBefore, levelAfter } = activity;
+
+    switch (actionType) {
+        case 'quest_completed':
+            return {
+                title: 'Quest Concluída',
+                description: `"${actionData.questTitle}" completada`,
+                icon: '🎯',
+                color: 'text-green-600',
+            };
+
+        case 'main_quest_step_completed':
+            return {
+                title: 'Etapa Concluída',
+                description: `Etapa "${actionData.stepTitle}" de "${actionData.questTitle}"`,
+                icon: '📋',
+                color: 'text-blue-600',
+            };
+
+        case 'main_quest_completed':
+            return {
+                title: 'Missão Principal Concluída',
+                description: `"${actionData.questTitle}" finalizada`,
+                icon: '🏆',
+                color: 'text-purple-600',
+            };
+
+        case 'level_up':
+            return {
+                title: 'Level Up!',
+                description: `Subiu do nível ${levelBefore} para ${levelAfter}`,
+                icon: '⬆️',
+                color: 'text-yellow-600',
+            };
+
+        case 'achievement_unlocked':
+            return {
+                title: 'Conquista Desbloqueada',
+                description: `"${actionData.achievementTitle}" conquistada`,
+                icon: '🏅',
+                color: 'text-orange-600',
+            };
+
+        case 'goal_completed':
+            return {
+                title: 'Meta Concluída',
+                description: `"${actionData.goalTitle}" finalizada`,
+                icon: '🎯',
+                color: 'text-cyan-600',
+            };
+
+        case 'item_purchased':
+            return {
+                title: 'Item Comprado',
+                description: `"${actionData.itemName}" adquirido`,
+                icon: '🛒',
+                color: 'text-pink-600',
+            };
+
+        case 'item_used':
+            return {
+                title: 'Item Usado',
+                description: `"${actionData.itemName}" utilizado`,
+                icon: '✨',
+                color: 'text-indigo-600',
+            };
+
+        case 'upgrade_purchased':
+            return {
+                title: 'Upgrade Comprado',
+                description: `"${actionData.upgradeName}" desbloqueado`,
+                icon: '🔧',
+                color: 'text-red-600',
+            };
+
+        case 'streak_updated':
+            return {
+                title: 'Streak Atualizado',
+                description: `Streak atual: ${actionData.currentStreak} dias`,
+                icon: '🔥',
+                color: 'text-red-500',
+            };
+
+        case 'daily_reset':
+            return {
+                title: 'Reset Diário',
+                description: 'Quests diárias foram resetadas',
+                icon: '🔄',
+                color: 'text-gray-600',
+            };
+
+        case 'login':
+            return {
+                title: 'Login Realizado',
+                description: 'Usuário fez login no sistema',
+                icon: '👋',
+                color: 'text-gray-500',
+            };
+
+        default:
+            return {
+                title: 'Atividade',
+                description: 'Ação realizada no sistema',
+                icon: '📝',
+                color: 'text-gray-600',
+            };
+    }
+}
+
+export function subscribeToActivityLog(userId: string, callback: (activities: ActivityLogEntry[]) => void) {
+    return supabase
+        .channel(`activity_log:${userId}`)
+        .on(
+            "postgres_changes",
+            {
+                event: "*",
+                schema: "public",
+                table: "activity_log",
+                filter: `user_id=eq.${userId}`,
+            },
+            async () => {
+                const activities = await getActivityLog(userId);
+                callback(activities);
+            }
+        )
+        .subscribe();
+}
+
+// ========== DAILY REWARDS FUNCTIONS ==========
+
+export async function getDailyRewards(userId: string): Promise<DailyReward[]> {
+    try {
+        const { data, error } = await supabase
+            .from("daily_rewards")
+            .select("*")
+            .eq("user_id", userId)
+            .order("reward_date", { ascending: true });
+
+        if (error) {
+            console.error("Error fetching daily rewards:", JSON.stringify(error, null, 2));
+            return [];
+        }
+
+        return (data || []).map((reward: any) => ({
+            id: reward.id,
+            rewardDate: reward.reward_date,
+            rewardType: reward.reward_type,
+            rewardValue: reward.reward_value,
+            rewardData: reward.reward_data || {},
+            claimed: reward.claimed,
+            claimedAt: reward.claimed_at,
+        }));
+    } catch (error) {
+        console.error("Error in getDailyRewards:", error);
+        return [];
+    }
+}
+
+export async function claimDailyReward(userId: string, rewardDate: string): Promise<boolean> {
+    try {
+        // Get the reward
+        const { data: rewardData, error: fetchError } = await supabase
+            .from("daily_rewards")
+            .select("*")
+            .eq("user_id", userId)
+            .eq("reward_date", rewardDate)
+            .single();
+
+        if (fetchError || !rewardData) {
+            console.error("Error fetching reward:", fetchError);
+            return false;
+        }
+
+        if (rewardData.claimed) {
+            console.error("Reward already claimed");
+            return false;
+        }
+
+        // Update reward as claimed
+        const { error: updateError } = await supabase
+            .from("daily_rewards")
+            .update({
+                claimed: true,
+                claimed_at: new Date().toISOString(),
+            })
+            .eq("user_id", userId)
+            .eq("reward_date", rewardDate);
+
+        if (updateError) {
+            console.error("Error claiming reward:", updateError);
+            return false;
+        }
+
+        // Apply reward to user profile
+        const profile = await getUserProfile(userId);
+        if (!profile) {
+            console.error("User profile not found");
+            return false;
+        }
+
+        let updates: Partial<User> = {};
+
+        switch (rewardData.reward_type) {
+            case 'xp':
+                const newTotalXP = profile.totalXP + rewardData.reward_value;
+                const newCurrentXP = profile.currentXP + rewardData.reward_value;
+
+                // Calculate new level
+                let newLevel = profile.level;
+                let remainingXP = newCurrentXP;
+                let xpForNextLevel = 0;
+
+                while (true) {
+                    xpForNextLevel = Math.floor(100 * Math.pow(newLevel, 1.5));
+                    if (remainingXP >= xpForNextLevel) {
+                        remainingXP -= xpForNextLevel;
+                        newLevel++;
+                    } else {
+                        break;
+                    }
+                }
+
+                updates = {
+                    level: newLevel,
+                    currentXP: remainingXP,
+                    totalXP: newTotalXP,
+                };
+                break;
+
+            case 'coins':
+                updates = {
+                    coins: profile.coins + rewardData.reward_value,
+                };
+                break;
+
+            case 'item':
+                // Add item to inventory
+                const itemData = rewardData.reward_data;
+                await addToInventory(userId, {
+                    id: itemData.itemId,
+                    name: itemData.itemName,
+                    description: itemData.itemDescription,
+                    type: 'consumable',
+                    effect: 'xp_boost',
+                    duration: 3600000, // 1 hour in milliseconds
+                    value: 1,
+                    icon: '✨',
+                });
+                break;
+
+            case 'upgrade':
+                // This would unlock an upgrade
+                // For now, just add coins as a placeholder
+                updates = {
+                    coins: profile.coins + rewardData.reward_value,
+                };
+                break;
+        }
+
+        if (Object.keys(updates).length > 0) {
+            await updateUserProfile(userId, updates);
+        }
+
+        return true;
+    } catch (error) {
+        console.error("Error claiming daily reward:", error);
+        return false;
+    }
+}
+
+export async function generateDailyRewards(userId: string): Promise<boolean> {
+    try {
+        // Import templates dynamically to avoid circular dependency
+        const { DAILY_REWARD_TEMPLATES } = await import('@/data/dailyRewardTemplates');
+
+        // Get current date
+        const today = new Date();
+        const todayString = today.toISOString().split('T')[0];
+
+        // Check if user already has rewards for today
+        const existingRewards = await getDailyRewards(userId);
+        const hasTodayReward = existingRewards.some(reward => reward.rewardDate === todayString);
+
+        if (hasTodayReward) {
+            console.log("User already has reward for today");
+            return true;
+        }
+
+        // Calculate streak (consecutive days with rewards)
+        const streakDays = calculateStreakDays(existingRewards);
+        const rewardDay = Math.min(streakDays + 1, DAILY_REWARD_TEMPLATES.length);
+        const template = DAILY_REWARD_TEMPLATES[rewardDay - 1];
+
+        if (!template) {
+            console.error("No template found for day:", rewardDay);
+            return false;
+        }
+
+        // Create daily reward
+        const { error } = await supabase
+            .from("daily_rewards")
+            .insert({
+                user_id: userId,
+                reward_date: todayString,
+                reward_type: template.rewardType,
+                reward_value: template.rewardValue,
+                reward_data: template.rewardData,
+                claimed: false,
+            });
+
+        if (error) {
+            console.error("Error creating daily reward:", error);
+            return false;
+        }
+
+        console.log("Successfully generated daily reward for user:", userId);
+        return true;
+    } catch (error) {
+        console.error("Error generating daily rewards:", error);
+        return false;
+    }
+}
+
+function calculateStreakDays(rewards: DailyReward[]): number {
+    if (rewards.length === 0) return 0;
+
+    // Sort rewards by date (most recent first)
+    const sortedRewards = rewards.sort((a, b) =>
+        new Date(b.rewardDate).getTime() - new Date(a.rewardDate).getTime()
+    );
+
+    let streakDays = 0;
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    for (let i = 0; i < sortedRewards.length; i++) {
+        const rewardDate = new Date(sortedRewards[i].rewardDate);
+        rewardDate.setHours(0, 0, 0, 0);
+
+        const expectedDate = new Date(today);
+        expectedDate.setDate(expectedDate.getDate() - i);
+
+        if (rewardDate.getTime() === expectedDate.getTime()) {
+            streakDays++;
+        } else {
+            break;
+        }
+    }
+
+    return streakDays;
+}
+
+export function subscribeToDailyRewards(userId: string, callback: (rewards: DailyReward[]) => void) {
+    return supabase
+        .channel(`daily_rewards:${userId}`)
+        .on(
+            "postgres_changes",
+            {
+                event: "*",
+                schema: "public",
+                table: "daily_rewards",
+                filter: `user_id=eq.${userId}`,
+            },
+            async () => {
+                const rewards = await getDailyRewards(userId);
+                callback(rewards);
             }
         )
         .subscribe();

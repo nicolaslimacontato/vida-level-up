@@ -58,7 +58,7 @@ export function UserHeader({
       </CardHeader>
 
       <CardContent className="space-y-4">
-        <div className="space-y-2">
+        <div id="level-progress" className="space-y-2">
           <div className="text-title3 flex justify-between">
             <span className="font-medium text-amber-700 dark:text-amber-300">
               Progresso para o próximo nível

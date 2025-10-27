@@ -14,12 +14,25 @@ import {
 } from "lucide-react";
 import { useTheme } from "@/components/ThemeProvider";
 import { useRPGContext } from "@/contexts/RPGContext";
+import { useOnboarding } from "@/hooks/useOnboarding";
 import { useToast } from "@/components/Toast";
 
 export default function SettingsPage() {
   const { theme, setTheme, resolvedTheme } = useTheme();
   const { user } = useRPGContext();
-  const { error } = useToast();
+  const { resetTour } = useOnboarding();
+  const { error, success } = useToast();
+
+  // Função para reiniciar o tour
+  const handleRestartTour = () => {
+    if (window.confirm("Deseja reiniciar o tour de introdução?")) {
+      resetTour();
+      success(
+        "Tour Reiniciado",
+        "O tour será exibido na próxima vez que você acessar o dashboard.",
+      );
+    }
+  };
 
   // Função para resetar tudo com confirmação
   const handleResetAll = () => {
@@ -240,6 +253,32 @@ export default function SettingsPage() {
                     {user.attributes.discipline}
                   </p>
                 </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Seção de Tour */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Settings className="text-primary h-5 w-5" />
+                Tour de Introdução
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4">
+                <p className="text-muted-foreground text-sm">
+                  Reinicie o tour de introdução para relembrar como usar o Vida
+                  Level Up.
+                </p>
+                <Button
+                  variant="outline"
+                  onClick={handleRestartTour}
+                  className="w-full"
+                >
+                  <RotateCcw className="mr-2 h-4 w-4" />
+                  Reiniciar Tour
+                </Button>
               </div>
             </CardContent>
           </Card>

@@ -71,6 +71,7 @@ export default function QuestsPage() {
         xpReward: questData.xpReward,
         coinReward: questData.coinReward,
         category: questData.category,
+        icon: questData.icon,
         attributeBonus: questData.attributeBonus,
       });
       if (questUpdated) {
@@ -90,6 +91,7 @@ export default function QuestsPage() {
         xpReward: questData.xpReward,
         coinReward: questData.coinReward,
         category: questData.category,
+        icon: questData.icon,
         progress: 0,
         maxProgress: 1,
         completed: false,

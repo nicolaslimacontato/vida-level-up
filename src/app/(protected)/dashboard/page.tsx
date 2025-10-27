@@ -3,15 +3,26 @@
 import React, { useState, useEffect } from "react";
 import { UserHeader } from "@/components/UserHeader";
 import { LevelUpNotification } from "@/components/LevelUpNotification";
+import { AchievementNotification } from "@/components/AchievementNotification";
+import { GoalNotification } from "@/components/GoalNotification";
+import { OnboardingTour } from "@/components/OnboardingTour";
 import { XPParticles } from "@/components/XPParticles";
 import { CollapsibleMainQuestCard } from "@/components/CollapsibleMainQuestCard";
 import { useRPGContext } from "@/contexts/RPGContext";
 import { useXPParticles } from "@/hooks/useXPParticles";
+import { useAchievements } from "@/hooks/useAchievements";
+import { useGoals } from "@/hooks/useGoals";
+import { useOnboarding } from "@/hooks/useOnboarding";
+import { useDailyRewards } from "@/hooks/useDailyRewards";
+import { DailyRewardNotification } from "@/components/DailyRewardNotification";
 import { Button } from "@/components/ui/button";
 import { Target, Trophy, ChevronLeft, ChevronRight } from "lucide-react";
 
 export default function DashboardPage() {
   const [questIndex, setQuestIndex] = useState(0);
+  const [showDailyRewardNotification, setShowDailyRewardNotification] =
+    useState(false);
+  const [claimedDailyReward, setClaimedDailyReward] = useState<any>(null);
 
   // Sistema de partículas XP
   const {
@@ -22,10 +33,28 @@ export default function DashboardPage() {
     setTriggerParticles,
   } = useXPParticles();
 
+  // Sistema de conquistas
+  const {
+    newlyUnlockedAchievement,
+    dismissNotification: dismissAchievementNotification,
+  } = useAchievements();
+
+  // Sistema de metas
+  const { newlyCompletedGoal, dismissNotification: dismissGoalNotification } =
+    useGoals();
+
+  // Sistema de onboarding
+  const { isFirstTime, isTourActive, completeTour, skipTour } = useOnboarding();
+
+  // Sistema de recompensas diárias
+  const { getTodaysReward, getConsecutiveDays, canClaimToday, claimReward } =
+    useDailyRewards();
+
   const {
     user,
     quests,
     mainQuests,
+    dailyRewards,
     showLevelUp,
     newLevel,
     completeQuestWithNotification,
@@ -66,6 +95,20 @@ export default function DashboardPage() {
     return () => window.removeEventListener("resize", handleResize);
   }, []);
 
+  // Verificar recompensas diárias disponíveis
+  useEffect(() => {
+    if (!user || !dailyRewards) return;
+
+    const todaysReward = getTodaysReward(dailyRewards);
+    const consecutiveDays = getConsecutiveDays(dailyRewards);
+
+    // Se há uma recompensa disponível hoje, mostrar notificação
+    if (todaysReward && canClaimToday(dailyRewards)) {
+      // Auto-claim da recompensa diária (opcional)
+      // claimReward(todaysReward.id);
+    }
+  }, [user, dailyRewards, getTodaysReward, getConsecutiveDays, canClaimToday]);
+
   // Quantas cartas mostrar por vez baseado no tamanho da tela
   const questsPerPage = windowWidth >= 1024 ? 3 : windowWidth >= 768 ? 2 : 1;
 
@@ -97,7 +140,7 @@ export default function DashboardPage() {
     <div className="bg-background min-h-full">
       <div className="container mx-auto max-w-6xl px-4 py-8">
         {/* Status do usuário */}
-        <div className="mb-8">
+        <div id="user-header" className="mb-8">
           <UserHeader
             user={user}
             getXPForNextLevel={getXPForNextLevel}
@@ -110,7 +153,7 @@ export default function DashboardPage() {
         {/* Layout de Cards Horizontal */}
         <div className="space-y-8">
           {/* Seção de Quests Diárias */}
-          <div>
+          <div id="daily-quests">
             <div className="mb-4 flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <Target className="text-primary h-6 w-6" />
@@ -290,6 +333,25 @@ export default function DashboardPage() {
         onClose={() => setShowLevelUp(false)}
       />
 
+      {/* Notificação de Conquista */}
+      <AchievementNotification
+        achievement={newlyUnlockedAchievement}
+        onClose={dismissAchievementNotification}
+      />
+
+      {/* Notificação de Meta Completa */}
+      <GoalNotification
+        goal={newlyCompletedGoal}
+        onClose={dismissGoalNotification}
+      />
+
+      {/* Tour de Onboarding */}
+      <OnboardingTour
+        isActive={isTourActive}
+        onComplete={completeTour}
+        onSkip={skipTour}
+      />
+
       {/* Sistema de Partículas XP */}
       <XPParticles
         trigger={triggerParticles}
@@ -298,6 +360,18 @@ export default function DashboardPage() {
         particleCount={8}
         onComplete={() => setTriggerParticles(false)}
       />
+
+      {/* Notificação de Recompensa Diária */}
+      {showDailyRewardNotification && claimedDailyReward && (
+        <DailyRewardNotification
+          reward={claimedDailyReward}
+          onClose={() => {
+            setShowDailyRewardNotification(false);
+            setClaimedDailyReward(null);
+          }}
+          consecutiveDays={getConsecutiveDays(dailyRewards)}
+        />
+      )}
     </div>
   );
 }
