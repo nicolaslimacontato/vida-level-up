@@ -11,7 +11,7 @@ export function useActivityLog() {
     // Log activity helper
     const logUserActivity = useCallback(async (
         actionType: string,
-        actionData: Record<string, any> = {},
+        actionData: Record<string, unknown> = {},
         xpGained: number = 0,
         coinsGained: number = 0,
         levelBefore: number = user.level,

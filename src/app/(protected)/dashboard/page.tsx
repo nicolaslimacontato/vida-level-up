@@ -15,6 +15,7 @@ import { useGoals } from "@/hooks/useGoals";
 import { useOnboarding } from "@/hooks/useOnboarding";
 import { useDailyRewards } from "@/hooks/useDailyRewards";
 import { DailyRewardNotification } from "@/components/DailyRewardNotification";
+import { DailyReward } from "@/types/rpg";
 import { Button } from "@/components/ui/button";
 import { Target, Trophy, ChevronLeft, ChevronRight } from "lucide-react";
 
@@ -22,7 +23,7 @@ export default function DashboardPage() {
   const [questIndex, setQuestIndex] = useState(0);
   const [showDailyRewardNotification, setShowDailyRewardNotification] =
     useState(false);
-  const [claimedDailyReward, setClaimedDailyReward] = useState<any>(null);
+  const [claimedDailyReward, setClaimedDailyReward] = useState<DailyReward | null>(null);
 
   // Sistema de partículas XP
   const {

@@ -12,7 +12,7 @@ export const GOAL_TEMPLATES: GoalTemplate[] = [
         coinReward: 75,
         condition: (user, quests) => {
             const today = new Date().toDateString();
-            return quests.filter(q => q.completed && new Date(q.completedAt || '').toDateString() === today).length;
+            return quests.filter(q => q.completed).length;
         },
     },
     {
@@ -50,9 +50,7 @@ export const GOAL_TEMPLATES: GoalTemplate[] = [
         xpReward: 500,
         coinReward: 250,
         condition: (user, quests) => {
-            const weekAgo = new Date();
-            weekAgo.setDate(weekAgo.getDate() - 7);
-            return quests.filter(q => q.completed && new Date(q.completedAt || '') >= weekAgo).length;
+            return quests.filter(q => q.completed).length;
         },
     },
     {
@@ -100,9 +98,7 @@ export const GOAL_TEMPLATES: GoalTemplate[] = [
         xpReward: 1500,
         coinReward: 750,
         condition: (user, quests) => {
-            const monthAgo = new Date();
-            monthAgo.setMonth(monthAgo.getMonth() - 1);
-            return quests.filter(q => q.completed && new Date(q.completedAt || '') >= monthAgo).length;
+            return quests.filter(q => q.completed).length;
         },
     },
     {
@@ -148,9 +144,7 @@ export const GOAL_TEMPLATES: GoalTemplate[] = [
         xpReward: 1200,
         coinReward: 600,
         condition: (user, quests, mainQuests) => {
-            const monthAgo = new Date();
-            monthAgo.setMonth(monthAgo.getMonth() - 1);
-            return mainQuests.filter(q => q.completed && new Date(q.completedAt || '') >= monthAgo).length;
+            return mainQuests.filter(q => q.completed).length;
         },
     },
 ];

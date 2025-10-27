@@ -1,7 +1,7 @@
 "use client";
 
 import { createClient } from "@/lib/supabase";
-import { User, Quest, MainQuest, Reward, Upgrade, Item, Achievement, Goal, ActivityLog, ActivityLogEntry, DailyReward } from "@/types/rpg";
+import { User, Quest, MainQuest, Reward, Upgrade, Item, Achievement, Goal, ActivityLog, ActivityLogEntry, ActivityType, DailyReward } from "@/types/rpg";
 import { INITIAL_QUESTS, INITIAL_MAIN_QUESTS, INITIAL_REWARDS } from "@/data/initialData";
 
 const supabase = createClient();
@@ -909,7 +909,7 @@ export async function getAchievements(userId: string): Promise<Achievement[]> {
             return [];
         }
 
-        return (data || []).map((achievement: any) => ({
+        return (data || []).map((achievement: Record<string, unknown>) => ({
             id: achievement.id,
             achievementId: achievement.achievement_id,
             title: achievement.title,
@@ -1133,7 +1133,7 @@ export async function getGoals(userId: string): Promise<Goal[]> {
             return [];
         }
 
-        return (data || []).map((goal: any) => ({
+        return (data || []).map((goal: Record<string, unknown>) => ({
             id: goal.id,
             goalId: goal.goal_id,
             title: goal.title,
@@ -1384,16 +1384,16 @@ export async function getActivityLog(userId: string, limit: number = 50): Promis
             return [];
         }
 
-        return (data || []).map((activity: any) => {
+        return (data || []).map((activity: Record<string, unknown>) => {
             const entry = {
-                id: activity.id,
-                actionType: activity.action_type,
-                actionData: activity.action_data || {},
-                xpGained: activity.xp_gained || 0,
-                coinsGained: activity.coins_gained || 0,
-                levelBefore: activity.level_before || 0,
-                levelAfter: activity.level_after || 0,
-                createdAt: activity.created_at,
+                id: activity.id as string,
+                actionType: activity.action_type as ActivityType,
+                actionData: (activity.action_data as Record<string, unknown>) || {},
+                xpGained: (activity.xp_gained as number) || 0,
+                coinsGained: (activity.coins_gained as number) || 0,
+                levelBefore: (activity.level_before as number) || 0,
+                levelAfter: (activity.level_after as number) || 0,
+                createdAt: activity.created_at as string,
             };
 
             // Add computed display fields
@@ -1411,7 +1411,7 @@ export async function getActivityLog(userId: string, limit: number = 50): Promis
 export async function logActivity(
     userId: string,
     actionType: string,
-    actionData: Record<string, any> = {},
+    actionData: Record<string, unknown> = {},
     xpGained: number = 0,
     coinsGained: number = 0,
     levelBefore: number = 0,
@@ -1586,7 +1586,7 @@ export async function getDailyRewards(userId: string): Promise<DailyReward[]> {
             return [];
         }
 
-        return (data || []).map((reward: any) => ({
+        return (data || []).map((reward: Record<string, unknown>) => ({
             id: reward.id,
             rewardDate: reward.reward_date,
             rewardType: reward.reward_type,
@@ -1682,13 +1682,12 @@ export async function claimDailyReward(userId: string, rewardDate: string): Prom
                 // Add item to inventory
                 const itemData = rewardData.reward_data;
                 await addToInventory(userId, {
-                    id: itemData.itemId,
                     name: itemData.itemName,
                     description: itemData.itemDescription,
                     type: 'consumable',
+                    category: 'boost',
                     effect: 'xp_boost',
-                    duration: 3600000, // 1 hour in milliseconds
-                    value: 1,
+                    price: 0,
                     icon: '✨',
                 });
                 break;

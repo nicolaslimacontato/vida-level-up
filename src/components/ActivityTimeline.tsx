@@ -44,7 +44,7 @@ export function ActivityTimeline({
 
   const getRewardsDisplay = (
     activity: ActivityLogEntry,
-  ): JSX.Element | null => {
+  ): React.ReactElement | null => {
     if (activity.xpGained === 0 && activity.coinsGained === 0) return null;
 
     return (

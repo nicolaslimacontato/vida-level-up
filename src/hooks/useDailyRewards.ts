@@ -10,9 +10,9 @@ import {
 } from "@/lib/supabase-rpg";
 
 export const useDailyRewards = () => {
-    const { authUser } = useAuth();
-    const { showToast } = useToast();
-    const { logDailyRewardClaimed } = useActivityLog();
+    const { user: authUser } = useAuth();
+    const { success: showSuccess, error: showError } = useToast();
+    const { logUserActivity } = useActivityLog();
     const [loading, setLoading] = useState(false);
 
     // Claim a daily reward
@@ -25,36 +25,24 @@ export const useDailyRewards = () => {
             const success = await claimDailyReward(authUser.id, rewardId);
 
             if (success) {
-                showToast({
-                    type: "success",
-                    title: "Recompensa Coletada! 🎁",
-                    message: "Você coletou sua recompensa diária com sucesso!"
-                });
+                showSuccess("Recompensa Coletada! 🎁", "Você coletou sua recompensa diária com sucesso!");
 
                 // Log the activity
-                await logDailyRewardClaimed(rewardId);
+                await logUserActivity("daily_reward_claimed", { rewardId });
 
                 return true;
             } else {
-                showToast({
-                    type: "error",
-                    title: "Erro",
-                    message: "Não foi possível coletar a recompensa. Tente novamente."
-                });
+                showError("Erro", "Não foi possível coletar a recompensa. Tente novamente.");
                 return false;
             }
         } catch (error) {
             console.error("Error claiming daily reward:", error);
-            showToast({
-                type: "error",
-                title: "Erro",
-                message: "Ocorreu um erro ao coletar a recompensa."
-            });
+            showError("Erro", "Ocorreu um erro ao coletar a recompensa.");
             return false;
         } finally {
             setLoading(false);
         }
-    }, [authUser?.id, showToast, logDailyRewardClaimed]);
+    }, [authUser?.id, showSuccess, showError, logUserActivity]);
 
     // Generate daily rewards for the month
     const generateRewards = useCallback(async () => {
@@ -66,32 +54,20 @@ export const useDailyRewards = () => {
             const success = await generateDailyRewards(authUser.id);
 
             if (success) {
-                showToast({
-                    type: "success",
-                    title: "Recompensas Geradas! 📅",
-                    message: "As recompensas diárias do mês foram geradas com sucesso!"
-                });
+                showSuccess("Recompensas Geradas! 📅", "As recompensas diárias do mês foram geradas com sucesso!");
                 return true;
             } else {
-                showToast({
-                    type: "error",
-                    title: "Erro",
-                    message: "Não foi possível gerar as recompensas. Tente novamente."
-                });
+                showError("Erro", "Não foi possível gerar as recompensas. Tente novamente.");
                 return false;
             }
         } catch (error) {
             console.error("Error generating daily rewards:", error);
-            showToast({
-                type: "error",
-                title: "Erro",
-                message: "Ocorreu um erro ao gerar as recompensas."
-            });
+            showError("Erro", "Ocorreu um erro ao gerar as recompensas.");
             return false;
         } finally {
             setLoading(false);
         }
-    }, [authUser?.id, showToast]);
+    }, [authUser?.id, showSuccess, showError]);
 
     // Get today's reward
     const getTodaysReward = useCallback((rewards: DailyReward[]) => {
@@ -99,7 +75,7 @@ export const useDailyRewards = () => {
         const todayStr = today.toISOString().split('T')[0];
 
         return rewards.find(reward =>
-            reward.date === todayStr && !reward.claimed
+            reward.rewardDate === todayStr && !reward.claimed
         );
     }, []);
 
@@ -110,7 +86,7 @@ export const useDailyRewards = () => {
         const currentYear = today.getFullYear();
 
         return rewards.filter(reward => {
-            const rewardDate = new Date(reward.date);
+            const rewardDate = new Date(reward.rewardDate);
             return reward.claimed &&
                 rewardDate.getMonth() === currentMonth &&
                 rewardDate.getFullYear() === currentYear;
@@ -125,11 +101,11 @@ export const useDailyRewards = () => {
         // Sort rewards by date descending
         const sortedRewards = rewards
             .filter(reward => reward.claimed)
-            .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+            .sort((a, b) => new Date(b.rewardDate).getTime() - new Date(a.rewardDate).getTime());
 
         // Count consecutive days from today backwards
         for (let i = 0; i < sortedRewards.length; i++) {
-            const rewardDate = new Date(sortedRewards[i].date);
+            const rewardDate = new Date(sortedRewards[i].rewardDate);
             const expectedDate = new Date(today);
             expectedDate.setDate(today.getDate() - i);
 

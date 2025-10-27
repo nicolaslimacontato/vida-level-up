@@ -80,20 +80,20 @@ export const DailyRewardCard: React.FC<DailyRewardCardProps> = ({
   isToday = false,
   consecutiveDays = 0,
 }) => {
-  const dayNumber = parseInt(reward.date.split("-")[2]);
+  const dayNumber = parseInt(reward.rewardDate.split("-")[2]);
   const rarity = getRewardRarity(dayNumber);
-  const rewardColor = getRewardColor(reward.type);
+  const rewardColor = getRewardColor(reward.rewardType);
   const rarityColor = getRarityColor(rarity);
 
   const formatRewardValue = () => {
-    if (reward.type === "coins") {
-      return `${reward.value} moedas`;
-    } else if (reward.type === "xp") {
-      return `${reward.value} XP`;
-    } else if (reward.type === "item") {
-      return reward.itemName || "Item especial";
+    if (reward.rewardType === "coins") {
+      return `${reward.rewardValue} moedas`;
+    } else if (reward.rewardType === "xp") {
+      return `${reward.rewardValue} XP`;
+    } else if (reward.rewardType === "item") {
+      return (reward.rewardData as Record<string, unknown>)?.itemName as string || "Item especial";
     } else {
-      return reward.description;
+      return (reward.rewardData as Record<string, unknown>)?.description as string || "Recompensa especial";
     }
   };
 
@@ -139,7 +139,7 @@ export const DailyRewardCard: React.FC<DailyRewardCardProps> = ({
         {/* Reward Icon */}
         <div className="mb-3 flex items-center justify-center">
           <div className="rounded-full bg-white p-3 shadow-md dark:bg-gray-800">
-            {getRewardIcon(reward.type)}
+            {getRewardIcon(reward.rewardType)}
           </div>
         </div>
 
@@ -147,7 +147,7 @@ export const DailyRewardCard: React.FC<DailyRewardCardProps> = ({
         <div className="mb-4 text-center">
           <h3 className="mb-1 text-lg font-semibold">{formatRewardValue()}</h3>
           <p className="text-sm text-gray-600 dark:text-gray-400">
-            {reward.description}
+            {(reward.rewardData as Record<string, unknown>)?.description as string || "Recompensa especial"}
           </p>
 
           {/* Streak Bonus */}
@@ -176,7 +176,7 @@ export const DailyRewardCard: React.FC<DailyRewardCardProps> = ({
             <div className="flex items-center text-gray-500">
               <Calendar className="mr-1 h-4 w-4" />
               <span className="text-sm">
-                {new Date(reward.date).toLocaleDateString("pt-BR")}
+                {new Date(reward.rewardDate).toLocaleDateString("pt-BR")}
               </span>
             </div>
           )}

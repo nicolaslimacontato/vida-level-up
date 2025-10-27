@@ -215,7 +215,7 @@ export type ActivityType =
 export interface ActivityLog {
   id: string;
   actionType: ActivityType;
-  actionData: Record<string, any>;
+  actionData: Record<string, unknown>;
   xpGained: number;
   coinsGained: number;
   levelBefore: number;
@@ -226,7 +226,7 @@ export interface ActivityLog {
 export interface ActivityLogEntry {
   id: string;
   actionType: ActivityType;
-  actionData: Record<string, any>;
+  actionData: Record<string, unknown>;
   xpGained: number;
   coinsGained: number;
   levelBefore: number;
@@ -248,7 +248,7 @@ export interface DailyReward {
   rewardDate: string;
   rewardType: DailyRewardType;
   rewardValue: number;
-  rewardData: Record<string, any>;
+  rewardData: Record<string, unknown>;
   claimed: boolean;
   claimedAt?: string;
 }
@@ -257,7 +257,7 @@ export interface DailyRewardTemplate {
   day: number;
   rewardType: DailyRewardType;
   rewardValue: number;
-  rewardData: Record<string, any>;
+  rewardData: Record<string, unknown>;
   title: string;
   description: string;
   icon: string;

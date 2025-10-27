@@ -5,6 +5,7 @@ import { useRPGContext } from "@/contexts/RPGContext";
 import { useDailyRewards } from "@/hooks/useDailyRewards";
 import { DailyRewardCard } from "@/components/DailyRewardCard";
 import { DailyRewardNotification } from "@/components/DailyRewardNotification";
+import { DailyReward } from "@/types/rpg";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -31,7 +32,7 @@ export default function DailyRewardsPage() {
   } = useDailyRewards();
 
   const [showNotification, setShowNotification] = useState(false);
-  const [claimedReward, setClaimedReward] = useState<any>(null);
+  const [claimedReward, setClaimedReward] = useState<DailyReward | null>(null);
   const [filter, setFilter] = useState<"all" | "claimed" | "available">("all");
 
   const todaysReward = getTodaysReward(dailyRewards);
@@ -56,7 +57,7 @@ export default function DailyRewardsPage() {
     if (success) {
       const reward = dailyRewards.find((r) => r.id === rewardId);
       if (reward) {
-        setClaimedReward({ ...reward, consecutiveDays });
+        setClaimedReward(reward);
         setShowNotification(true);
       }
     }
@@ -222,9 +223,9 @@ export default function DailyRewardsPage() {
         {filteredRewards.length > 0 ? (
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
             {filteredRewards.map((reward) => {
-              const dayNumber = parseInt(reward.date.split("-")[2]);
+              const dayNumber = parseInt(reward.rewardDate.split("-")[2]);
               const isToday =
-                reward.date === new Date().toISOString().split("T")[0];
+                reward.rewardDate === new Date().toISOString().split("T")[0];
 
               return (
                 <DailyRewardCard

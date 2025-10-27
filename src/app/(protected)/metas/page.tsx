@@ -41,10 +41,14 @@ export default function MetasPage() {
     ).length || 0;
   const totalGoals = goals?.length || 0;
 
-  const getTypeStats = () => {
-    if (!goals) return {};
+  const getTypeStats = (): Record<string, { active: number; completed: number; total: number }> => {
+    if (!goals) return {
+      daily: { active: 0, completed: 0, total: 0 },
+      weekly: { active: 0, completed: 0, total: 0 },
+      monthly: { active: 0, completed: 0, total: 0 },
+    };
 
-    const stats = {
+    const stats: Record<string, { active: number; completed: number; total: number }> = {
       daily: { active: 0, completed: 0, total: 0 },
       weekly: { active: 0, completed: 0, total: 0 },
       monthly: { active: 0, completed: 0, total: 0 },

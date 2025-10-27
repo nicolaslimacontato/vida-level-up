@@ -54,14 +54,14 @@ export const DailyRewardNotification: React.FC<
   };
 
   const formatRewardValue = () => {
-    if (reward.type === "coins") {
-      return `${reward.value} moedas`;
-    } else if (reward.type === "xp") {
-      return `${reward.value} XP`;
-    } else if (reward.type === "item") {
-      return reward.itemName || "Item especial";
+    if (reward.rewardType === "coins") {
+      return `${reward.rewardValue} moedas`;
+    } else if (reward.rewardType === "xp") {
+      return `${reward.rewardValue} XP`;
+    } else if (reward.rewardType === "item") {
+      return (reward.rewardData as Record<string, unknown>)?.itemName as string || "Item especial";
     } else {
-      return reward.description;
+      return (reward.rewardData as Record<string, unknown>)?.description as string || "Recompensa especial";
     }
   };
 
@@ -122,7 +122,7 @@ export const DailyRewardNotification: React.FC<
                   transition={{ delay: 0.2, type: "spring", stiffness: 200 }}
                   className="mb-2 inline-flex h-16 w-16 items-center justify-center rounded-full bg-white shadow-lg dark:bg-gray-800"
                 >
-                  {getRewardIcon(reward.type)}
+                  {getRewardIcon(reward.rewardType)}
                 </motion.div>
 
                 <h3 className="text-lg font-bold text-gray-900 dark:text-white">
@@ -136,7 +136,7 @@ export const DailyRewardNotification: React.FC<
                   {formatRewardValue()}
                 </div>
                 <p className="text-sm text-gray-600 dark:text-gray-400">
-                  {reward.description}
+                  {(reward.rewardData as Record<string, unknown>)?.description as string || "Recompensa especial"}
                 </p>
               </div>
 
